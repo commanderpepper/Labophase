@@ -2,7 +2,7 @@ package commanderpepper.labophase.screens.roundentry
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import commanderpepper.labophase.models.LEADERS_LIST
+import commanderpepper.labophase.logic.LeaderOrderDecider
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Round
 import commanderpepper.labophase.models.RoundResult
@@ -13,9 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlin.math.round
 
-class RoundEntryViewModelImpl : RoundEntryViewModel, ViewModel() {
+class RoundEntryViewModelImpl(private val leaderOrderDecider: LeaderOrderDecider) : RoundEntryViewModel, ViewModel() {
 
     private var roundId: Int = 0
 
@@ -27,10 +26,15 @@ class RoundEntryViewModelImpl : RoundEntryViewModel, ViewModel() {
         .map { it.values.toList() }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    private val _leaders: MutableStateFlow<List<Leader>> = MutableStateFlow(
-        LEADERS_LIST
+    private val _playerLeaderList: MutableStateFlow<List<Leader>> = MutableStateFlow(
+        leaderOrderDecider.getPlayerLeaderSelect()
     )
-    override val leaders: StateFlow<List<Leader>> = _leaders.asStateFlow()
+    override val playerLeaderList: StateFlow<List<Leader>> = _playerLeaderList.asStateFlow()
+
+    private val _roundLeaderList: MutableStateFlow<List<Leader>> = MutableStateFlow(
+        leaderOrderDecider.getRoundLeaderSelect()
+    )
+    override val roundLeaderList: StateFlow<List<Leader>> = _roundLeaderList
 
     private val _punkRecordEntry: MutableStateFlow<String> = MutableStateFlow("")
     override val punkRecordEntry: StateFlow<String> = _punkRecordEntry
@@ -43,15 +47,9 @@ class RoundEntryViewModelImpl : RoundEntryViewModel, ViewModel() {
     override fun transformEntry() {
         val rounds = _rounds.value.values.toList().map { round ->
             "${if (round.roundResult == RoundResult.Win) "W" else "L"} ${round.leader.name} ${if (round.turnOrder == TurnOrder.First) "1st" else "2nd"}"
-        }
-        val a = rounds.joinToString(separator = "\n")
-        val z = "!PR add\n${leaderSelected.value.name}\n$a"
-        val entry = """
-            !PR add 
-            ${leaderSelected.value.name}
-            ${rounds.map { it + "\n" }}
-        """.trimIndent()
-        _punkRecordEntry.value = z
+        }.joinToString(separator = "\n")
+        val entry = "!PR add\n${leaderSelected.value.name}\n$rounds"
+        _punkRecordEntry.value = entry
     }
 
     override fun chooseLeader(leader: Leader) {

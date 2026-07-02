@@ -41,14 +41,16 @@ fun RoundEntryScreen(
     modifier: Modifier = Modifier,
     roundEntryViewModel: RoundEntryViewModel = koinViewModel<RoundEntryViewModelImpl>()
 ) {
-    val leaders = roundEntryViewModel.leaders.collectAsState()
+    val playerLeaderList = roundEntryViewModel.playerLeaderList.collectAsState()
+    val roundLeaderList = roundEntryViewModel.roundLeaderList.collectAsState()
     val leaderSelected = roundEntryViewModel.leaderSelected.collectAsState()
     val rounds = roundEntryViewModel.rounds.collectAsState()
     val punkRecordEntry = roundEntryViewModel.punkRecordEntry.collectAsState()
     RoundEntryScreen(
         modifier = modifier,
         leaderSelected = leaderSelected.value,
-        leaders = leaders.value,
+        playerLeaderList = playerLeaderList.value,
+        roundLeaderList = roundLeaderList.value,
         rounds = rounds.value,
         punkRecordEntry = punkRecordEntry.value,
         addNewRound = roundEntryViewModel::addNewRound,
@@ -66,7 +68,8 @@ fun RoundEntryScreen(
     modifier: Modifier = Modifier,
     leaderSelected: Leader,
     rounds: List<Round>,
-    leaders: List<Leader>,
+    playerLeaderList: List<Leader>,
+    roundLeaderList: List<Leader>,
     punkRecordEntry: String,
     addNewRound: () -> Unit,
     transformEntry: () -> Unit,
@@ -81,7 +84,7 @@ fun RoundEntryScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        LeaderPlayerInTournamentSelection(leaderSelected = leaderSelected, leaders = leaders, onLeaderSelected = chooseLeader)
+        LeaderPlayerInTournamentSelection(leaderSelected = leaderSelected, leaders = playerLeaderList, onLeaderSelected = chooseLeader)
         Button(onClick = { transformEntry() }) { Text("Make a punk record entry") }
         Button(onClick = { addNewRound() }) { Text("Add a new round") }
         if (punkRecordEntry.isNotEmpty()) {
@@ -92,7 +95,7 @@ fun RoundEntryScreen(
                 items(rounds) { round ->
                     RoundEntry(
                         round = round,
-                        leaders = leaders,
+                        leaders = roundLeaderList,
                         leaderSelected = chooseRoundLeader,
                         roundResult = chooseRoundResult,
                         turnOrder = chooseRoundTurnOrder,

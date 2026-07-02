@@ -1,6 +1,5 @@
 package commanderpepper.labophase.screens.roundentry
 
-import commanderpepper.labophase.models.Entry
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Round
 import commanderpepper.labophase.models.RoundResult
@@ -13,7 +12,9 @@ interface RoundEntryViewModel {
 
     val rounds: StateFlow<List<Round>>
 
-    val leaders: StateFlow<List<Leader>>
+    val playerLeaderList: StateFlow<List<Leader>>
+
+    val roundLeaderList: StateFlow<List<Leader>>
 
     val punkRecordEntry: StateFlow<String>
 
