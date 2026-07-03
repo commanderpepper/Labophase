@@ -1,6 +1,7 @@
 package commanderpepper.labophase.screens.roundentry
 
 import android.content.ClipData
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -125,7 +126,7 @@ fun LeaderPlayerInTournamentSelection(leaderSelected: Leader, leaders: List<Lead
             Text(text = leaderSelected.name)
             IconButton(onClick = { isExpanded.value = !isExpanded.value }) { Icon(Icons.Default.Expand, contentDescription = "Expand / Close") }
         }
-        if (isExpanded.value) {
+        AnimatedVisibility(visible = isExpanded.value) {
             LeaderSelection(leaders = leaders, onLeaderSelected = onLeaderSelected)
         }
     }
@@ -182,16 +183,18 @@ fun RoundEntry(
             IconButton(onClick = { isExpanded.value = !isExpanded.value }) { Icon(Icons.Default.Expand, contentDescription = "Expand / Close") }
             IconButton(onClick = { removeRound(round.roundId) }) { Icon(Icons.Default.DeleteForever, contentDescription = "Delete") }
         }
-        if (isExpanded.value) {
-            LeaderSelection(leaders = leaders) { leader ->
-                leaderSelected(round.roundId, leader)
-            }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                RoundResultSelection(round.roundResult) { result ->
-                    roundResult(round.roundId, result)
+        AnimatedVisibility(visible = isExpanded.value) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                LeaderSelection(leaders = leaders) { leader ->
+                    leaderSelected(round.roundId, leader)
                 }
-                TurnOrderSelection(round.turnOrder) { turnOrder ->
-                    turnOrder(round.roundId, turnOrder)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    RoundResultSelection(round.roundResult) { result ->
+                        roundResult(round.roundId, result)
+                    }
+                    TurnOrderSelection(round.turnOrder) { turnOrder ->
+                        turnOrder(round.roundId, turnOrder)
+                    }
                 }
             }
         }
