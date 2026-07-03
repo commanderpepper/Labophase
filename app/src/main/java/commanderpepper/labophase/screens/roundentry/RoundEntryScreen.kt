@@ -1,24 +1,30 @@
 package commanderpepper.labophase.screens.roundentry
 
 import android.content.ClipData
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Expand
 import androidx.compose.material3.Button
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.carousel.HorizontalCenteredHeroCarousel
+import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Round
 import commanderpepper.labophase.models.RoundResult
@@ -85,8 +92,10 @@ fun RoundEntryScreen(
             .padding(16.dp)
     ) {
         LeaderPlayerInTournamentSelection(leaderSelected = leaderSelected, leaders = playerLeaderList, onLeaderSelected = chooseLeader)
-        Button(onClick = { transformEntry() }) { Text("Make a punk record entry") }
-        Button(onClick = { addNewRound() }) { Text("Add a new round") }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Button(onClick = { transformEntry() }) { Text("Make a punk record entry") }
+            Button(onClick = { addNewRound() }) { Text("New round") }
+        }
         if (punkRecordEntry.isNotEmpty()) {
             CopyableResult(punkRecordEntry)
         }
@@ -107,56 +116,52 @@ fun RoundEntryScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeaderPlayerInTournamentSelection(leaderSelected: Leader, leaders: List<Leader>, onLeaderSelected: (Leader) -> Unit) {
     val isExpanded = remember { mutableStateOf(true) }
     Column(modifier = Modifier.fillMaxWidth()) {
-        Button(onClick = { isExpanded.value = !isExpanded.value }) { Text("Expand / Close") }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text(text = leaderSelected.name)
+            IconButton(onClick = { isExpanded.value = !isExpanded.value }) { Icon(Icons.Default.Expand, contentDescription = "Expand / Close") }
+        }
         if (isExpanded.value) {
-            Text(text = "Your Leader: " + leaderSelected.name)
             LeaderSelection(leaders = leaders, onLeaderSelected = onLeaderSelected)
         }
-        else {
-            Text(text = "Your Leader: " + leaderSelected.name)
-        }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeaderSelection(leaders: List<Leader>, onLeaderSelected: (Leader) -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        LazyHorizontalGrid(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(96.dp), rows = GridCells.Fixed(2)
-        ) {
-            items(leaders) { leader ->
-                TextButton(onClick = { onLeaderSelected(leader) }) { Text(text = leader.name) }
-            }
+    HorizontalCenteredHeroCarousel( state = rememberCarouselState { leaders.count() },
+        maxItemWidth = 128.dp,
+        itemSpacing = 8.dp,
+        contentPadding = PaddingValues(horizontal = 16.dp)) { index ->
+        val leader = leaders[index]
+        ElevatedCard(modifier = Modifier.maskClip(shape = RoundedCornerShape(corner = CornerSize(2.dp)))) {
+            AsyncImage(
+                modifier = Modifier.clickable(onClick = { onLeaderSelected(leader) }),
+                model = "file:///android_asset/leader_images/${leader.cardId}.webp",
+                contentDescription = leader.name
+            )
         }
     }
 }
 
 @Composable
-fun RoundSelection(roundResult: RoundResult, onRoundSelected: (RoundResult) -> Unit) {
-    val isDub = roundResult == RoundResult.Win
-    Column {
-        Text(text = if (isDub) "You Won!" else "you lost...")
-        Row {
-            Button(onClick = { onRoundSelected(RoundResult.Win) }) { Text("WIN") }
-            Button(onClick = { onRoundSelected(RoundResult.Loss) }) { Text("LOST") }
-        }
+fun RoundResultSelection(roundResult: RoundResult, onRoundSelected: (RoundResult) -> Unit) {
+    Row {
+        Button(onClick = { onRoundSelected(RoundResult.Win) }) { Text("W") }
+        Button(onClick = { onRoundSelected(RoundResult.Loss) }) { Text("L") }
     }
 }
 
 @Composable
 fun TurnOrderSelection(turnOrder: TurnOrder, onTurnOrderSelected: (TurnOrder) -> Unit) {
-    Column() {
-        Text(if (turnOrder == TurnOrder.First) "First" else "Second")
-        Row {
-            Button(onClick = { onTurnOrderSelected(TurnOrder.First) }) { Text("FIRST") }
-            Button(onClick = { onTurnOrderSelected(TurnOrder.Second) }) { Text("SECOND") }
-        }
+    Row {
+        Button(onClick = { onTurnOrderSelected(TurnOrder.First) }) { Text("1st") }
+        Button(onClick = { onTurnOrderSelected(TurnOrder.Second) }) { Text("2nd") }
     }
 }
 
@@ -172,24 +177,23 @@ fun RoundEntry(
 ) {
     val isExpanded = remember { mutableStateOf(true) }
     Column(modifier) {
-        Row{
-            Button(onClick = {isExpanded.value = !isExpanded.value}) { Text("Expand/Close") }
-            Button(onClick = { removeRound(round.roundId) }) { Text("Remove Round") }
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(round.singleLine(), modifier = Modifier.weight(1f))
+            IconButton(onClick = { isExpanded.value = !isExpanded.value }) { Icon(Icons.Default.Expand, contentDescription = "Expand / Close") }
+            IconButton(onClick = { removeRound(round.roundId) }) { Icon(Icons.Default.DeleteForever, contentDescription = "Delete") }
         }
         if (isExpanded.value) {
-            Text("Opponent: " + round.leader.name)
             LeaderSelection(leaders = leaders) { leader ->
                 leaderSelected(round.roundId, leader)
             }
-            RoundSelection(round.roundResult) { result ->
-                roundResult(round.roundId, result)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                RoundResultSelection(round.roundResult) { result ->
+                    roundResult(round.roundId, result)
+                }
+                TurnOrderSelection(round.turnOrder) { turnOrder ->
+                    turnOrder(round.roundId, turnOrder)
+                }
             }
-            TurnOrderSelection(round.turnOrder) { turnOrder ->
-                turnOrder(round.roundId, turnOrder)
-            }
-        }
-        else {
-            Text(round.singleLine())
         }
     }
 }
