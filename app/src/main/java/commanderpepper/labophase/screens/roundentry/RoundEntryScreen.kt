@@ -123,7 +123,7 @@ fun LeaderPlayerInTournamentSelection(leaderSelected: Leader, leaders: List<Lead
     val isExpanded = rememberSaveable { mutableStateOf(true) }
     val carouselState = rememberSaveable(saver = CarouselState.Saver) { CarouselState { leaders.count() } }
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Row(modifier = Modifier.fillMaxWidth().clickable(onClick = { isExpanded.value = !isExpanded.value }), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text(text = leaderSelected.name)
             IconButton(onClick = { isExpanded.value = !isExpanded.value }) { Icon(Icons.Default.Expand, contentDescription = "Expand / Close") }
         }
@@ -181,7 +181,7 @@ fun RoundEntry(
     val isExpanded = rememberSaveable { mutableStateOf(true) }
     val carouselState = rememberSaveable(saver = CarouselState.Saver) { CarouselState { leaders.count() } }
     Column(modifier) {
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Row(modifier = Modifier.fillMaxWidth().clickable(onClick = { isExpanded.value = !isExpanded.value }), verticalAlignment = Alignment.CenterVertically) {
             Text(round.singleLine(), modifier = Modifier.weight(1f))
             IconButton(onClick = { isExpanded.value = !isExpanded.value }) { Icon(Icons.Default.Expand, contentDescription = "Expand / Close") }
             IconButton(onClick = { removeRound(round.roundId) }) { Icon(Icons.Default.DeleteForever, contentDescription = "Delete") }
