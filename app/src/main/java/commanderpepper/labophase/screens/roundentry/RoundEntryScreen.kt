@@ -24,13 +24,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.carousel.CarouselState
 import androidx.compose.material3.carousel.HorizontalCenteredHeroCarousel
-import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
@@ -120,22 +120,23 @@ fun RoundEntryScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeaderPlayerInTournamentSelection(leaderSelected: Leader, leaders: List<Leader>, onLeaderSelected: (Leader) -> Unit) {
-    val isExpanded = remember { mutableStateOf(true) }
+    val isExpanded = rememberSaveable { mutableStateOf(true) }
+    val carouselState = rememberSaveable(saver = CarouselState.Saver) { CarouselState { leaders.count() } }
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Text(text = leaderSelected.name)
             IconButton(onClick = { isExpanded.value = !isExpanded.value }) { Icon(Icons.Default.Expand, contentDescription = "Expand / Close") }
         }
         AnimatedVisibility(visible = isExpanded.value) {
-            LeaderSelection(leaders = leaders, onLeaderSelected = onLeaderSelected)
+            LeaderSelection(leaders = leaders, state = carouselState, onLeaderSelected = onLeaderSelected)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LeaderSelection(leaders: List<Leader>, onLeaderSelected: (Leader) -> Unit) {
-    HorizontalCenteredHeroCarousel( state = rememberCarouselState { leaders.count() },
+fun LeaderSelection(leaders: List<Leader>, state: CarouselState, onLeaderSelected: (Leader) -> Unit) {
+    HorizontalCenteredHeroCarousel(state = state,
         maxItemWidth = 128.dp,
         itemSpacing = 8.dp,
         contentPadding = PaddingValues(horizontal = 16.dp)) { index ->
@@ -166,6 +167,7 @@ fun TurnOrderSelection(turnOrder: TurnOrder, onTurnOrderSelected: (TurnOrder) ->
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoundEntry(
     modifier: Modifier = Modifier,
@@ -176,7 +178,8 @@ fun RoundEntry(
     roundResult: (Int, RoundResult) -> Unit,
     turnOrder: (Int, TurnOrder) -> Unit
 ) {
-    val isExpanded = remember { mutableStateOf(true) }
+    val isExpanded = rememberSaveable { mutableStateOf(true) }
+    val carouselState = rememberSaveable(saver = CarouselState.Saver) { CarouselState { leaders.count() } }
     Column(modifier) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(round.singleLine(), modifier = Modifier.weight(1f))
@@ -185,7 +188,7 @@ fun RoundEntry(
         }
         AnimatedVisibility(visible = isExpanded.value) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                LeaderSelection(leaders = leaders) { leader ->
+                LeaderSelection(leaders = leaders, state = carouselState) { leader ->
                     leaderSelected(round.roundId, leader)
                 }
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
