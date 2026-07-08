@@ -174,7 +174,7 @@ sealed class Set(val name: String, val code: String, val number: Int, val blockN
     object ST29 : Set(name = "Egghead", code = "ST29", number = 48, blockNumber = 4)
     object EB03 : Set(name = "One Piece Heroines Edition", code = "EB03", number = 49, blockNumber = 4)
     object OP15 : Set(name = "Adventure on Kami's Island", code = "OP15", number = 50, blockNumber = 4)
-    object OP16 : Set(name = "The Time of Battle", code = "OP16", number = 51, blockNumber = 4)
+    object OP16 : Set(name = "The Time of Battle", code = "OP16", number = 51, blockNumber = 5)
     object ST30 : Set(name = "EX Luffy & Ace", code = "ST30", number = 52, blockNumber = 5)
     object PROMOS : Set(name = "Promotional Cards", code = "PROMOS", number = 0, blockNumber = 0)
 }
