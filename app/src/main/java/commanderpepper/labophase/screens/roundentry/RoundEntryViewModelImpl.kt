@@ -18,7 +18,7 @@ class RoundEntryViewModelImpl(private val leaderOrderDecider: LeaderOrderDecider
 
     private var roundId: Int = 0
 
-    private val _leaderSelected: MutableStateFlow<Leader> = MutableStateFlow(Leader.PLuffy)
+    private val _leaderSelected: MutableStateFlow<Leader> = MutableStateFlow(Leader.UGLuffy)
     override val leaderSelected: StateFlow<Leader> = _leaderSelected
 
     private val _rounds = MutableStateFlow<Map<Int, Round>>(emptyMap())
