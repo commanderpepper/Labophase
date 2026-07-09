@@ -40,7 +40,7 @@ class RoundEntryViewModelImpl(private val leaderOrderDecider: LeaderOrderDecider
     override val punkRecordEntry: StateFlow<String> = _punkRecordEntry
 
     override fun addNewRound() {
-        val round = Round(roundId++)
+        val round = Round(roundId = roundId++, roundNumber = 1)
         _rounds.value = _rounds.value + (round.roundId to round)
     }
 
