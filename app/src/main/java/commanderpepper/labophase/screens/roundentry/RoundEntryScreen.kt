@@ -30,18 +30,21 @@ import androidx.compose.material3.carousel.HorizontalCenteredHeroCarousel
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Round
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
+import commanderpepper.labophase.ui.theme.LabophaseTheme
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -237,5 +240,118 @@ fun CopyableResult(text: String) {
         ) {
             Icon(Icons.Default.ContentCopy, contentDescription = "Copy")
         }
+    }
+}
+
+private val previewLeaders = listOf(Leader.PBLuffy, Leader.RShanks, Leader.GZoro)
+private val previewRound1 = Round(roundId = 1, roundNumber = 1)
+private val previewRound2 = Round(roundId = 2, roundNumber = 2, roundResult = RoundResult.Loss, turnOrder = TurnOrder.Second)
+private val previewPunkRecord = "!PR add\n" +
+        "UG Luffy\n" +
+        "W G Bonney 2nd\n" +
+        "W UY Nami 1st\n" +
+        "W G Mihawk 1st\n" +
+        "W UY Nami 1st"
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewRoundEntryScreen() {
+    LabophaseTheme {
+        RoundEntryScreen(
+            leaderSelected = Leader.PBLuffy,
+            rounds = listOf(previewRound1, previewRound2),
+            playerLeaderList = previewLeaders,
+            roundLeaderList = previewLeaders,
+            punkRecordEntry = previewPunkRecord,
+            addNewRound = {},
+            transformEntry = {},
+            chooseLeader = {},
+            chooseRoundLeader = { _, _ -> },
+            chooseRoundTurnOrder = { _, _ -> },
+            chooseRoundResult = { _, _ -> },
+            removeRound = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewRoundEntryScreenEmpty() {
+    LabophaseTheme {
+        RoundEntryScreen(
+            leaderSelected = Leader.PBLuffy,
+            rounds = emptyList(),
+            playerLeaderList = previewLeaders,
+            roundLeaderList = previewLeaders,
+            punkRecordEntry = "",
+            addNewRound = {},
+            transformEntry = {},
+            chooseLeader = {},
+            chooseRoundLeader = { _, _ -> },
+            chooseRoundTurnOrder = { _, _ -> },
+            chooseRoundResult = { _, _ -> },
+            removeRound = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewLeaderPlayerInTournamentSelection() {
+    LabophaseTheme {
+        LeaderPlayerInTournamentSelection(
+            leaderSelected = Leader.PBLuffy,
+            leaders = previewLeaders,
+            onLeaderSelected = {}
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showBackground = true)
+@Composable
+private fun PreviewLeaderSelection() {
+    LabophaseTheme {
+        val state = remember { CarouselState { previewLeaders.count() } }
+        LeaderSelection(leaders = previewLeaders, state = state, onLeaderSelected = {})
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewRoundEntry() {
+    LabophaseTheme {
+        RoundEntry(
+            round = previewRound1,
+            leaders = previewLeaders,
+            leaderSelected = { _, _ -> },
+            roundResult = { _, _ -> },
+            turnOrder = { _, _ -> },
+            removeRound = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewRoundResultSelection() {
+    LabophaseTheme {
+        RoundResultSelection(roundResult = RoundResult.Win, onRoundSelected = {})
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewTurnOrderSelection() {
+    LabophaseTheme {
+        TurnOrderSelection(turnOrder = TurnOrder.First, onTurnOrderSelected = {})
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewCopyableResult() {
+    LabophaseTheme {
+        CopyableResult(text = previewPunkRecord)
     }
 }
