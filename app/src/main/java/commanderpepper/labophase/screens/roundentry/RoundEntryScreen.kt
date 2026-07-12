@@ -169,8 +169,7 @@ fun Modifier.animatedBorder(
 @Composable
 fun LeaderThumbnail(leader: Leader) {
     val colors = if (leader.leaderColors.size == 1) {
-        val c = leader.leaderColors.first().color
-        listOf(c, c.copy(alpha = 0.3f), c)
+        listOf(leader.leaderColors.first().color, Color.White, leader.leaderColors.first().color)
     } else {
         leader.leaderColors.map { it.color }
     }
