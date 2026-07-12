@@ -2,6 +2,11 @@ package commanderpepper.labophase.screens.roundentry
 
 import android.content.ClipData
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,6 +25,7 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Expand
 import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -29,15 +35,23 @@ import androidx.compose.material3.carousel.CarouselState
 import androidx.compose.material3.carousel.HorizontalCenteredHeroCarousel
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import commanderpepper.labophase.models.Leader
@@ -121,6 +135,54 @@ fun RoundEntryScreen(
     }
 }
 
+@Composable
+fun Modifier.animatedBorder(
+    colors: List<Color>,
+    shape: Shape = CardDefaults.elevatedShape,
+    borderWidth: Dp = 2.dp,
+    durationMs: Int = 2500
+): Modifier {
+    val infiniteTransition = rememberInfiniteTransition(label = "border")
+    val angle by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = durationMs, easing = LinearEasing)
+        ),
+        label = "angle"
+    )
+    return this
+        .clip(shape)
+        .drawWithContent {
+            rotate(degrees = angle) {
+                drawCircle(
+                    brush = Brush.sweepGradient(colors),
+                    radius = size.maxDimension
+                )
+            }
+            drawContent()
+        }
+        .padding(borderWidth)
+        .clip(shape)
+}
+
+@Composable
+fun LeaderThumbnail(leader: Leader) {
+    val colors = if (leader.leaderColors.size == 1) {
+        val c = leader.leaderColors.first().color
+        listOf(c, c.copy(alpha = 0.3f), c)
+    } else {
+        leader.leaderColors.map { it.color }
+    }
+    ElevatedCard(modifier = Modifier.animatedBorder(colors = colors)) {
+        AsyncImage(
+            modifier = Modifier.size(48.dp),
+            model = "file:///android_asset/leader_thumbnails/${leader.cardId}.webp",
+            contentDescription = leader.name
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeaderPlayerInTournamentSelection(leaderSelected: Leader, leaders: List<Leader>, onLeaderSelected: (Leader) -> Unit) {
@@ -128,13 +190,7 @@ fun LeaderPlayerInTournamentSelection(leaderSelected: Leader, leaders: List<Lead
     val carouselState = rememberSaveable(saver = CarouselState.Saver) { CarouselState { leaders.count() } }
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth().clickable(onClick = { isExpanded.value = !isExpanded.value }), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            ElevatedCard() {
-                AsyncImage(
-                    modifier = Modifier.size(48.dp),
-                    model = "file:///android_asset/leader_thumbnails/${leaderSelected.cardId}.webp",
-                    contentDescription = leaderSelected.name
-                )
-            }
+            LeaderThumbnail(leader = leaderSelected)
             Text(text = leaderSelected.name)
             IconButton(onClick = { isExpanded.value = !isExpanded.value }) { Icon(Icons.Default.Expand, contentDescription = "Expand / Close") }
         }
@@ -193,13 +249,7 @@ fun RoundEntry(
     val carouselState = rememberSaveable(saver = CarouselState.Saver) { CarouselState { leaders.count() } }
     Column(modifier) {
         Row(modifier = Modifier.fillMaxWidth().clickable(onClick = { isExpanded.value = !isExpanded.value }), verticalAlignment = Alignment.CenterVertically) {
-            ElevatedCard() {
-                AsyncImage(
-                    modifier = Modifier.size(48.dp),
-                    model = "file:///android_asset/leader_thumbnails/${round.leader.cardId}.webp",
-                    contentDescription = round.leader.name
-                )
-            }
+            LeaderThumbnail(leader = round.leader)
             Text(round.singleLine(), modifier = Modifier.weight(1f))
             IconButton(onClick = { isExpanded.value = !isExpanded.value }) { Icon(Icons.Default.Expand, contentDescription = "Expand / Close") }
             IconButton(onClick = { removeRound(round.roundId) }) { Icon(Icons.Default.DeleteForever, contentDescription = "Delete") }
