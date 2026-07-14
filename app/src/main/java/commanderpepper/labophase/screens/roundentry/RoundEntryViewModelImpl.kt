@@ -2,19 +2,27 @@ package commanderpepper.labophase.screens.roundentry
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import commanderpepper.labophase.data.EntryRepository
 import commanderpepper.labophase.logic.LeaderOrderDecider
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Round
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 
-class RoundEntryViewModelImpl(private val leaderOrderDecider: LeaderOrderDecider) : RoundEntryViewModel, ViewModel() {
+class RoundEntryViewModelImpl(
+    private val leaderOrderDecider: LeaderOrderDecider,
+    private val entryRepository: EntryRepository
+) : RoundEntryViewModel, ViewModel() {
 
     private var roundId: Int = 0
 
@@ -26,15 +34,20 @@ class RoundEntryViewModelImpl(private val leaderOrderDecider: LeaderOrderDecider
         .map { it.values.toList() }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    private val _playerLeaderList: MutableStateFlow<List<Leader>> = MutableStateFlow(
-        leaderOrderDecider.getPlayerLeaderSelect()
-    )
+    private val _playerLeaderList: MutableStateFlow<List<Leader>> = MutableStateFlow(emptyList())
     override val playerLeaderList: StateFlow<List<Leader>> = _playerLeaderList.asStateFlow()
 
-    private val _roundLeaderList: MutableStateFlow<List<Leader>> = MutableStateFlow(
-        leaderOrderDecider.getRoundLeaderSelect()
-    )
+    private val _roundLeaderList: MutableStateFlow<List<Leader>> = MutableStateFlow(emptyList())
     override val roundLeaderList: StateFlow<List<Leader>> = _roundLeaderList
+
+    init {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                _playerLeaderList.value = leaderOrderDecider.getPlayerLeaderSelect()
+                _roundLeaderList.value = leaderOrderDecider.getRoundLeaderSelect()
+            }
+        }
+    }
 
     private val _punkRecordEntry: MutableStateFlow<String> = MutableStateFlow("")
     override val punkRecordEntry: StateFlow<String> = _punkRecordEntry
@@ -45,11 +58,21 @@ class RoundEntryViewModelImpl(private val leaderOrderDecider: LeaderOrderDecider
     }
 
     override fun transformEntry() {
-        val rounds = _rounds.value.values.toList().map { round ->
+        val leader = _leaderSelected.value
+        val rounds = _rounds.value.values.toList()
+        updatePunkRecord(leader, rounds)
+        viewModelScope.launch { saveEntry(leader, rounds) }
+    }
+
+    private fun updatePunkRecord(leader: Leader, rounds: List<Round>) {
+        val formatted = rounds.map { round ->
             "${if (round.roundResult == RoundResult.Win) "W" else "L"} ${round.leader.name} ${if (round.turnOrder == TurnOrder.First) "1st" else "2nd"}"
         }.joinToString(separator = "\n")
-        val entry = "!PR add\n${leaderSelected.value.name}\n$rounds"
-        _punkRecordEntry.value = entry
+        _punkRecordEntry.value = "!PR add\n${leader.name}\n$formatted"
+    }
+
+    private suspend fun saveEntry(leader: Leader, rounds: List<Round>) {
+        entryRepository.saveEntry(leader, rounds)
     }
 
     override fun chooseLeader(leader: Leader) {

@@ -186,7 +186,7 @@ fun LeaderThumbnail(leader: Leader) {
 @Composable
 fun LeaderPlayerInTournamentSelection(leaderSelected: Leader, leaders: List<Leader>, onLeaderSelected: (Leader) -> Unit) {
     val isExpanded = rememberSaveable { mutableStateOf(true) }
-    val carouselState = rememberSaveable(saver = CarouselState.Saver) { CarouselState { leaders.count() } }
+    val carouselState = rememberSaveable(leaders.size, saver = CarouselState.Saver) { CarouselState { leaders.count() } }
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth().clickable(onClick = { isExpanded.value = !isExpanded.value }), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             LeaderThumbnail(leader = leaderSelected)
@@ -245,7 +245,7 @@ fun RoundEntry(
     turnOrder: (Int, TurnOrder) -> Unit
 ) {
     val isExpanded = rememberSaveable { mutableStateOf(true) }
-    val carouselState = rememberSaveable(saver = CarouselState.Saver) { CarouselState { leaders.count() } }
+    val carouselState = rememberSaveable(leaders.size, saver = CarouselState.Saver) { CarouselState { leaders.count() } }
     Column(modifier) {
         Row(modifier = Modifier.fillMaxWidth().clickable(onClick = { isExpanded.value = !isExpanded.value }), verticalAlignment = Alignment.CenterVertically) {
             LeaderThumbnail(leader = round.leader)
