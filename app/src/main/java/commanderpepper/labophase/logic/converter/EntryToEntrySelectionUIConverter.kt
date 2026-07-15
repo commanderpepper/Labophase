@@ -31,7 +31,7 @@ fun getLosses(rounds: List<RoundEntity>): Int {
 
 fun getPunkRecord(leader: Leader, rounds: List<RoundEntity>): String {
     val formatted = rounds.map { round ->
-        "${if (round.roundResult == "Win") "W" else "L"} ${leaderByCardId(round.leaderCardId)} ${if (round.turnOrder == "First") "1st" else "2nd"}"
+        "${if (round.roundResult == "Win") "W" else "L"} ${leaderByCardId(round.leaderCardId).name} ${if (round.turnOrder == "First") "1st" else "2nd"}"
     }.joinToString(separator = "\n")
     return "!PR add\n${leader.name}\n$formatted"
 }

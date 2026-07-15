@@ -12,6 +12,7 @@ composeBom = "2026.02.01"
 koin-bom = "4.1.1"
 coil = "3.5.0"
 room = "2.8.4"
+navigation = "2.9.8"
 timber = "5.0.1"
 
 [libraries]
@@ -37,6 +38,7 @@ coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" 
 androidx-room-runtime  = { group = "androidx.room", name = "room-runtime",  version.ref = "room" }
 androidx-room-ktx      = { group = "androidx.room", name = "room-ktx",      version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler",  version.ref = "room" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 
 [plugins]

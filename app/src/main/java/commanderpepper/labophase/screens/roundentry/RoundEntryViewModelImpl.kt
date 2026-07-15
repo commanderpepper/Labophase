@@ -8,6 +8,7 @@ import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Round
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
+import commanderpepper.labophase.models.leaderByCardId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,7 +22,8 @@ import timber.log.Timber
 
 class RoundEntryViewModelImpl(
     private val leaderOrderDecider: LeaderOrderDecider,
-    private val entryRepository: EntryRepository
+    private val entryRepository: EntryRepository,
+    private val entryId: Int = -1
 ) : RoundEntryViewModel, ViewModel() {
 
     private var roundId: Int = 0
@@ -43,6 +45,23 @@ class RoundEntryViewModelImpl(
     init {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
+                if (entryId != -1) {
+                    val existing = entryRepository.getEntryById(entryId)
+                    if (existing != null) {
+                        _leaderSelected.value = leaderByCardId(existing.entry.leaderCardId)
+                        val loaded = existing.rounds.mapIndexed { index, r ->
+                            Round(
+                                roundId = index,
+                                roundNumber = r.roundNumber,
+                                leader = leaderByCardId(r.leaderCardId),
+                                roundResult = if (r.roundResult == "Win") RoundResult.Win else RoundResult.Loss,
+                                turnOrder = if (r.turnOrder == "First") TurnOrder.First else TurnOrder.Second
+                            )
+                        }
+                        _rounds.value = loaded.associateBy { it.roundId }
+                        roundId = loaded.size
+                    }
+                }
                 _playerLeaderList.value = leaderOrderDecider.getPlayerLeaderSelect()
                 _roundLeaderList.value = leaderOrderDecider.getRoundLeaderSelect()
             }

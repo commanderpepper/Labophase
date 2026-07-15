@@ -61,11 +61,15 @@ import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.ui.theme.LabophaseTheme
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
 fun RoundEntryScreen(
     modifier: Modifier = Modifier,
-    roundEntryViewModel: RoundEntryViewModel = koinViewModel<RoundEntryViewModelImpl>()
+    entryId: Int = -1,
+    roundEntryViewModel: RoundEntryViewModel = koinViewModel<RoundEntryViewModelImpl>(
+        parameters = { parametersOf(entryId) }
+    )
 ) {
     val playerLeaderList = roundEntryViewModel.playerLeaderList.collectAsState()
     val roundLeaderList = roundEntryViewModel.roundLeaderList.collectAsState()
@@ -74,6 +78,7 @@ fun RoundEntryScreen(
     val punkRecordEntry = roundEntryViewModel.punkRecordEntry.collectAsState()
     RoundEntryScreen(
         modifier = modifier,
+        leaderSelectExpanded = entryId == -1,
         leaderSelected = leaderSelected.value,
         playerLeaderList = playerLeaderList.value,
         roundLeaderList = roundLeaderList.value,
@@ -92,6 +97,7 @@ fun RoundEntryScreen(
 @Composable
 fun RoundEntryScreen(
     modifier: Modifier = Modifier,
+    leaderSelectExpanded: Boolean = true,
     leaderSelected: Leader,
     rounds: List<Round>,
     playerLeaderList: List<Leader>,
@@ -110,7 +116,7 @@ fun RoundEntryScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        LeaderPlayerInTournamentSelection(leaderSelected = leaderSelected, leaders = playerLeaderList, onLeaderSelected = chooseLeader)
+        LeaderPlayerInTournamentSelection(leaderSelected = leaderSelected, leaders = playerLeaderList, onLeaderSelected = chooseLeader, initiallyExpanded = leaderSelectExpanded)
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Button(onClick = { transformEntry() }) { Text("Make a punk record entry") }
             Button(onClick = { addNewRound() }) { Text("New round") }
@@ -124,6 +130,7 @@ fun RoundEntryScreen(
                     RoundEntry(
                         round = round,
                         leaders = roundLeaderList,
+                        initiallyExpanded = leaderSelectExpanded,
                         leaderSelected = chooseRoundLeader,
                         roundResult = chooseRoundResult,
                         turnOrder = chooseRoundTurnOrder,
@@ -184,8 +191,8 @@ fun LeaderThumbnail(leader: Leader) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LeaderPlayerInTournamentSelection(leaderSelected: Leader, leaders: List<Leader>, onLeaderSelected: (Leader) -> Unit) {
-    val isExpanded = rememberSaveable { mutableStateOf(true) }
+fun LeaderPlayerInTournamentSelection(leaderSelected: Leader, leaders: List<Leader>, onLeaderSelected: (Leader) -> Unit, initiallyExpanded: Boolean = true) {
+    val isExpanded = rememberSaveable { mutableStateOf(initiallyExpanded) }
     val carouselState = rememberSaveable(leaders.size, saver = CarouselState.Saver) { CarouselState { leaders.count() } }
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth().clickable(onClick = { isExpanded.value = !isExpanded.value }), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -242,9 +249,10 @@ fun RoundEntry(
     removeRound: (Int) -> Unit,
     leaderSelected: (Int, Leader) -> Unit,
     roundResult: (Int, RoundResult) -> Unit,
-    turnOrder: (Int, TurnOrder) -> Unit
+    turnOrder: (Int, TurnOrder) -> Unit,
+    initiallyExpanded: Boolean = true
 ) {
-    val isExpanded = rememberSaveable { mutableStateOf(true) }
+    val isExpanded = rememberSaveable { mutableStateOf(initiallyExpanded) }
     val carouselState = rememberSaveable(leaders.size, saver = CarouselState.Saver) { CarouselState { leaders.count() } }
     Column(modifier) {
         Row(modifier = Modifier.fillMaxWidth().clickable(onClick = { isExpanded.value = !isExpanded.value }), verticalAlignment = Alignment.CenterVertically) {

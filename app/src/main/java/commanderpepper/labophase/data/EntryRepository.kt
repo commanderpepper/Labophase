@@ -10,6 +10,7 @@ interface EntryRepository {
     suspend fun saveEntry(leader: Leader, rounds: List<Round>)
     fun getAllEntries(): Flow<List<EntryWithRounds>>
     suspend fun getEntries(): List<EntryWithRounds>
+    suspend fun getEntryById(id: Int): EntryWithRounds?
 }
 
 class EntryRepositoryImpl(private val dao: EntryDao) : EntryRepository {
@@ -28,7 +29,7 @@ class EntryRepositoryImpl(private val dao: EntryDao) : EntryRepository {
 
     override fun getAllEntries(): Flow<List<EntryWithRounds>> = dao.getAllEntries()
 
-    override suspend fun getEntries(): List<EntryWithRounds> {
-        return dao.getEntries()
-    }
+    override suspend fun getEntries(): List<EntryWithRounds> = dao.getEntries()
+
+    override suspend fun getEntryById(id: Int): EntryWithRounds? = dao.getEntryById(id)
 }

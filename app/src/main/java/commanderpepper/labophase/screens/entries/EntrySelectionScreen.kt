@@ -1,5 +1,6 @@
 package commanderpepper.labophase.screens.entries
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,9 +23,13 @@ fun EntrySelectionScreen(
     entrySelectionViewModel: EntrySelectionViewModel = koinViewModel<EntrySelectionViewModelImpl>(),
     onEntrySelect: (Int) -> Unit,
     newEntry: () -> Unit
-){
+) {
     val entries = entrySelectionViewModel.entries.collectAsState()
-    EntrySelectionScreen(entries = entries.value, onEntrySelect = onEntrySelect, newEntry = newEntry)
+    EntrySelectionScreen(
+        entries = entries.value,
+        onEntrySelect = onEntrySelect,
+        newEntry = newEntry
+    )
 }
 
 @Composable
@@ -60,6 +65,6 @@ fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit) {
                 punkRecordVisibility.value = !punkRecordVisibility.value
             }) { Text("Show PR") }
         }
-        Text(text = entrySelectionUI.punkRecord)
+        AnimatedVisibility(visible = punkRecordVisibility.value) { Text(text = entrySelectionUI.punkRecord) }
     }
 }

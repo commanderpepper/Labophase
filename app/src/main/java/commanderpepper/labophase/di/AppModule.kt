@@ -11,6 +11,7 @@ import commanderpepper.labophase.screens.entries.EntrySelectionViewModelImpl
 import commanderpepper.labophase.screens.roundentry.RoundEntryViewModelImpl
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
+import org.koin.core.parameter.parametersOf
 import org.koin.dsl.module
 
 val appModule = module {
@@ -20,6 +21,6 @@ val appModule = module {
     single { TournamentResultInterpreter }
     single<LeaderOrderDecider> { LeaderOrderDeciderImpl(get()) }
     single { EntryToEntrySelectionUIConverter() }
-    viewModel { RoundEntryViewModelImpl(get(), get()) }
+    viewModel { params -> RoundEntryViewModelImpl(get(), get(), params.getOrNull() ?: -1) }
     viewModel { EntrySelectionViewModelImpl(get(), get()) }
 }
