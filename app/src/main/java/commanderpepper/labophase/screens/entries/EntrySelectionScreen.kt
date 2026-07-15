@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import commanderpepper.labophase.screens.entries.models.EntrySelectionUI
+import commanderpepper.labophase.screens.roundentry.CopyableResult
 import commanderpepper.labophase.screens.roundentry.LeaderThumbnail
 import org.koin.androidx.compose.koinViewModel
 
@@ -65,6 +66,6 @@ fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit) {
                 punkRecordVisibility.value = !punkRecordVisibility.value
             }) { Text("Show PR") }
         }
-        AnimatedVisibility(visible = punkRecordVisibility.value) { Text(text = entrySelectionUI.punkRecord) }
+        AnimatedVisibility(visible = punkRecordVisibility.value) { CopyableResult(text = entrySelectionUI.punkRecord) }
     }
 }
