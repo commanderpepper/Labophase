@@ -91,7 +91,11 @@ class RoundEntryViewModelImpl(
     }
 
     private suspend fun saveEntry(leader: Leader, rounds: List<Round>) {
-        entryRepository.saveEntry(leader, rounds)
+        if (entryId == -1) {
+            entryRepository.saveEntry(leader, rounds)
+        } else {
+            entryRepository.updateEntry(entryId, leader, rounds)
+        }
     }
 
     override fun chooseLeader(leader: Leader) {

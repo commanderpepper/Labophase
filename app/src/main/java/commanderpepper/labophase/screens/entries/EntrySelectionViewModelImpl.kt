@@ -5,23 +5,15 @@ import androidx.lifecycle.viewModelScope
 import commanderpepper.labophase.data.EntryRepository
 import commanderpepper.labophase.logic.converter.EntryToEntrySelectionUIConverter
 import commanderpepper.labophase.screens.entries.models.EntrySelectionUI
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 class EntrySelectionViewModelImpl(private val eventRepository: EntryRepository, private val entrySelectionUIConverter: EntryToEntrySelectionUIConverter) : EntrySelectionViewModel, ViewModel() {
 
-    private val _entries: MutableStateFlow<List<EntrySelectionUI>> = MutableStateFlow(emptyList())
-    override val entries: StateFlow<List<EntrySelectionUI>> = _entries
-
-    init {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                val entries = eventRepository.getEntries()
-                _entries.value = entries.map { e -> entrySelectionUIConverter.entryToEntrySelectionUI(e)}
-            }
-        }
-    }
+    override val entries: StateFlow<List<EntrySelectionUI>> = eventRepository
+        .getAllEntries()
+        .map { list -> list.map { entrySelectionUIConverter.entryToEntrySelectionUI(it) } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 }
