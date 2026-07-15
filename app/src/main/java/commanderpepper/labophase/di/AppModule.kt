@@ -6,6 +6,8 @@ import commanderpepper.labophase.data.EntryRepositoryImpl
 import commanderpepper.labophase.logic.LeaderOrderDecider
 import commanderpepper.labophase.logic.LeaderOrderDeciderImpl
 import commanderpepper.labophase.logic.TournamentResultInterpreter
+import commanderpepper.labophase.logic.converter.EntryToEntrySelectionUIConverter
+import commanderpepper.labophase.screens.entries.EntrySelectionViewModelImpl
 import commanderpepper.labophase.screens.roundentry.RoundEntryViewModelImpl
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -17,5 +19,7 @@ val appModule = module {
     single<EntryRepository> { EntryRepositoryImpl(get()) }
     single { TournamentResultInterpreter }
     single<LeaderOrderDecider> { LeaderOrderDeciderImpl(get()) }
+    single { EntryToEntrySelectionUIConverter() }
     viewModel { RoundEntryViewModelImpl(get(), get()) }
+    viewModel { EntrySelectionViewModelImpl(get(), get()) }
 }

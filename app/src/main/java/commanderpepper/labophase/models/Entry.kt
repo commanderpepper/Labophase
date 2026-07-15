@@ -296,3 +296,5 @@ val LEADERS_LIST = listOf(
     Leader.YLuffyST29,
     Leader.RGLuffyAce
 )
+
+fun leaderByCardId(cardId: String): Leader = LEADERS_LIST.first { it.cardId == cardId }
