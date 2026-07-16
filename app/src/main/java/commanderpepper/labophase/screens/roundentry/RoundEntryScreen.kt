@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CornerSize
@@ -125,7 +127,7 @@ fun RoundEntryScreen(
             CopyableResult(punkRecordEntry)
         }
         if (rounds.isNotEmpty()) {
-            LazyColumn() {
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(rounds) { round ->
                     RoundEntry(
                         round = round,
@@ -197,6 +199,7 @@ fun LeaderPlayerInTournamentSelection(leaderSelected: Leader, leaders: List<Lead
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth().clickable(onClick = { isExpanded.value = !isExpanded.value }), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             LeaderThumbnail(leader = leaderSelected)
+            Spacer(modifier = Modifier.width(8.dp))
             Text(text = leaderSelected.name)
             IconButton(onClick = { isExpanded.value = !isExpanded.value }) { Icon(Icons.Default.Expand, contentDescription = "Expand / Close") }
         }
@@ -254,9 +257,10 @@ fun RoundEntry(
 ) {
     val isExpanded = rememberSaveable { mutableStateOf(initiallyExpanded) }
     val carouselState = rememberSaveable(leaders.size, saver = CarouselState.Saver) { CarouselState { leaders.count() } }
-    Column(modifier) {
+    Column(modifier.padding(vertical = 4.dp)) {
         Row(modifier = Modifier.fillMaxWidth().clickable(onClick = { isExpanded.value = !isExpanded.value }), verticalAlignment = Alignment.CenterVertically) {
             LeaderThumbnail(leader = round.leader)
+            Spacer(modifier = Modifier.width(8.dp))
             Text(round.singleLine(), modifier = Modifier.weight(1f))
             IconButton(onClick = { isExpanded.value = !isExpanded.value }) { Icon(Icons.Default.Expand, contentDescription = "Expand / Close") }
             IconButton(onClick = { removeRound(round.roundId) }) { Icon(Icons.Default.DeleteForever, contentDescription = "Delete") }

@@ -2,10 +2,14 @@ package commanderpepper.labophase.screens.entries
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -20,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import commanderpepper.labophase.screens.entries.models.EntrySelectionUI
 import commanderpepper.labophase.screens.roundentry.CopyableResult
 import commanderpepper.labophase.screens.roundentry.LeaderThumbnail
@@ -45,7 +50,10 @@ fun EntrySelectionScreen(
     onEntrySelect: (Int) -> Unit,
     newEntry: () -> Unit
 ) {
-    LazyColumn() {
+    LazyColumn(
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         item {
             Button(modifier = Modifier.fillMaxWidth(), onClick = { newEntry() }) {
                 Text("New Round")
@@ -60,7 +68,7 @@ fun EntrySelectionScreen(
 @Composable
 fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit) {
     val punkRecordVisibility = rememberSaveable() { mutableStateOf(false) }
-    Column {
+    Column(modifier = Modifier.padding(vertical = 4.dp)) {
         Row(
             modifier = Modifier
                 .clickable(onClick = { onEntrySelect(entrySelectionUI.entryId) })
@@ -68,6 +76,7 @@ fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             LeaderThumbnail(entrySelectionUI.leader)
+            Spacer(modifier = Modifier.width(8.dp))
             Text("W: ${entrySelectionUI.wins} - L: ${entrySelectionUI.losses}")
             Spacer(modifier = Modifier.weight(1f))
             IconButton(
@@ -81,6 +90,7 @@ fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit) {
                     entrySelectionUI.rounds.forEach { round ->
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             LeaderThumbnail(round.leader)
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(round.summary)
                         }
                     }
