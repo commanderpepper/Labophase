@@ -9,6 +9,7 @@ import commanderpepper.labophase.models.Round
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.models.leaderByCardId
+import commanderpepper.labophase.screens.roundentry.models.RoundUI
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -32,8 +33,8 @@ class RoundEntryViewModelImpl(
     override val leaderSelected: StateFlow<Leader> = _leaderSelected
 
     private val _rounds = MutableStateFlow<Map<Int, Round>>(emptyMap())
-    override val rounds: StateFlow<List<Round>> = _rounds
-        .map { it.values.toList() }
+    override val rounds: StateFlow<List<RoundUI>> = _rounds
+        .map { map -> map.values.map { it.toRoundUI() } }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val _playerLeaderList: MutableStateFlow<List<Leader>> = MutableStateFlow(emptyList())
@@ -111,13 +112,21 @@ class RoundEntryViewModelImpl(
         updateRound(roundId) { it.copy(leader = leader) }
     }
 
-    override fun roundTurnOrderSelect(roundId: Int, turnOrder: TurnOrder) {
-        updateRound(roundId) { it.copy(turnOrder = turnOrder) }
+    override fun roundTurnOrderSelect(roundId: Int, turnOrder: String) {
+        updateRound(roundId) { it.copy(turnOrder = if (turnOrder == "First") TurnOrder.First else TurnOrder.Second) }
     }
 
-    override fun roundResultSelect(roundId: Int, roundResult: RoundResult) {
-        updateRound(roundId) { it.copy(roundResult = roundResult) }
+    override fun roundResultSelect(roundId: Int, roundResult: String) {
+        updateRound(roundId) { it.copy(roundResult = if (roundResult == "Win") RoundResult.Win else RoundResult.Loss) }
     }
+
+    private fun Round.toRoundUI() = RoundUI(
+        roundId = roundId,
+        leader = leader,
+        summary = singleLine(),
+        roundResult = if (roundResult == RoundResult.Win) "Win" else "Loss",
+        turnOrder = if (turnOrder == TurnOrder.First) "First" else "Second"
+    )
 
     override fun removeRound(roundId: Int) {
         _rounds.value = _rounds.value.minus(roundId)

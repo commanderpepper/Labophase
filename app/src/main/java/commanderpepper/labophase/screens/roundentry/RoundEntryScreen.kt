@@ -57,9 +57,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import commanderpepper.labophase.models.Leader
-import commanderpepper.labophase.models.Round
-import commanderpepper.labophase.models.RoundResult
-import commanderpepper.labophase.models.TurnOrder
+import commanderpepper.labophase.screens.roundentry.models.RoundUI
 import commanderpepper.labophase.ui.theme.LabophaseTheme
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -101,7 +99,7 @@ fun RoundEntryScreen(
     modifier: Modifier = Modifier,
     leaderSelectExpanded: Boolean = true,
     leaderSelected: Leader,
-    rounds: List<Round>,
+    rounds: List<RoundUI>,
     playerLeaderList: List<Leader>,
     roundLeaderList: List<Leader>,
     punkRecordEntry: String,
@@ -109,8 +107,8 @@ fun RoundEntryScreen(
     transformEntry: () -> Unit,
     chooseLeader: (Leader) -> Unit,
     chooseRoundLeader: (Int, Leader) -> Unit,
-    chooseRoundTurnOrder: (Int, TurnOrder) -> Unit,
-    chooseRoundResult: (Int, RoundResult) -> Unit,
+    chooseRoundTurnOrder: (Int, String) -> Unit,
+    chooseRoundResult: (Int, String) -> Unit,
     removeRound: (Int) -> Unit
 ) {
     Column(
@@ -228,18 +226,18 @@ fun LeaderSelection(leaders: List<Leader>, state: CarouselState, onLeaderSelecte
 }
 
 @Composable
-fun RoundResultSelection(roundResult: RoundResult, onRoundSelected: (RoundResult) -> Unit) {
+fun RoundResultSelection(roundResult: String, onRoundSelected: (String) -> Unit) {
     Row {
-        Button(onClick = { onRoundSelected(RoundResult.Win) }) { Text("W") }
-        Button(onClick = { onRoundSelected(RoundResult.Loss) }) { Text("L") }
+        Button(onClick = { onRoundSelected("Win") }) { Text("W") }
+        Button(onClick = { onRoundSelected("Loss") }) { Text("L") }
     }
 }
 
 @Composable
-fun TurnOrderSelection(turnOrder: TurnOrder, onTurnOrderSelected: (TurnOrder) -> Unit) {
+fun TurnOrderSelection(turnOrder: String, onTurnOrderSelected: (String) -> Unit) {
     Row {
-        Button(onClick = { onTurnOrderSelected(TurnOrder.First) }) { Text("1st") }
-        Button(onClick = { onTurnOrderSelected(TurnOrder.Second) }) { Text("2nd") }
+        Button(onClick = { onTurnOrderSelected("First") }) { Text("1st") }
+        Button(onClick = { onTurnOrderSelected("Second") }) { Text("2nd") }
     }
 }
 
@@ -247,12 +245,12 @@ fun TurnOrderSelection(turnOrder: TurnOrder, onTurnOrderSelected: (TurnOrder) ->
 @Composable
 fun RoundEntry(
     modifier: Modifier = Modifier,
-    round: Round,
+    round: RoundUI,
     leaders: List<Leader>,
     removeRound: (Int) -> Unit,
     leaderSelected: (Int, Leader) -> Unit,
-    roundResult: (Int, RoundResult) -> Unit,
-    turnOrder: (Int, TurnOrder) -> Unit,
+    roundResult: (Int, String) -> Unit,
+    turnOrder: (Int, String) -> Unit,
     initiallyExpanded: Boolean = true
 ) {
     val isExpanded = rememberSaveable { mutableStateOf(initiallyExpanded) }
@@ -261,7 +259,7 @@ fun RoundEntry(
         Row(modifier = Modifier.fillMaxWidth().clickable(onClick = { isExpanded.value = !isExpanded.value }), verticalAlignment = Alignment.CenterVertically) {
             LeaderThumbnail(leader = round.leader)
             Spacer(modifier = Modifier.width(8.dp))
-            Text(round.singleLine(), modifier = Modifier.weight(1f))
+            Text(round.summary, modifier = Modifier.weight(1f))
             IconButton(onClick = { isExpanded.value = !isExpanded.value }) { Icon(Icons.Default.Expand, contentDescription = "Expand / Close") }
             IconButton(onClick = { removeRound(round.roundId) }) { Icon(Icons.Default.DeleteForever, contentDescription = "Delete") }
         }
@@ -274,8 +272,8 @@ fun RoundEntry(
                     RoundResultSelection(round.roundResult) { result ->
                         roundResult(round.roundId, result)
                     }
-                    TurnOrderSelection(round.turnOrder) { turnOrder ->
-                        turnOrder(round.roundId, turnOrder)
+                    TurnOrderSelection(round.turnOrder) { order ->
+                        turnOrder(round.roundId, order)
                     }
                 }
             }
@@ -305,8 +303,8 @@ fun CopyableResult(text: String) {
 }
 
 private val previewLeaders = listOf(Leader.PBLuffy, Leader.RShanks, Leader.GZoro)
-private val previewRound1 = Round(roundId = 1, roundNumber = 1)
-private val previewRound2 = Round(roundId = 2, roundNumber = 2, roundResult = RoundResult.Loss, turnOrder = TurnOrder.Second)
+private val previewRound1 = RoundUI(roundId = 1, leader = Leader.PBLuffy, summary = "PB Luffy, W, 1", roundResult = "Win", turnOrder = "First")
+private val previewRound2 = RoundUI(roundId = 2, leader = Leader.RShanks, summary = "R Shanks, L, 2", roundResult = "Loss", turnOrder = "Second")
 private val previewPunkRecord = "!PR add\n" +
         "UG Luffy\n" +
         "W G Bonney 2nd\n" +
@@ -397,7 +395,7 @@ private fun PreviewRoundEntry() {
 @Composable
 private fun PreviewRoundResultSelection() {
     LabophaseTheme {
-        RoundResultSelection(roundResult = RoundResult.Win, onRoundSelected = {})
+        RoundResultSelection(roundResult = "Win", onRoundSelected = {})
     }
 }
 
@@ -405,7 +403,7 @@ private fun PreviewRoundResultSelection() {
 @Composable
 private fun PreviewTurnOrderSelection() {
     LabophaseTheme {
-        TurnOrderSelection(turnOrder = TurnOrder.First, onTurnOrderSelected = {})
+        TurnOrderSelection(turnOrder = "First", onTurnOrderSelected = {})
     }
 }
 

@@ -1,16 +1,14 @@
 package commanderpepper.labophase.screens.roundentry
 
 import commanderpepper.labophase.models.Leader
-import commanderpepper.labophase.models.Round
-import commanderpepper.labophase.models.RoundResult
-import commanderpepper.labophase.models.TurnOrder
+import commanderpepper.labophase.screens.roundentry.models.RoundUI
 import kotlinx.coroutines.flow.StateFlow
 
 interface RoundEntryViewModel {
 
     val leaderSelected: StateFlow<Leader>
 
-    val rounds: StateFlow<List<Round>>
+    val rounds: StateFlow<List<RoundUI>>
 
     val playerLeaderList: StateFlow<List<Leader>>
 
@@ -26,9 +24,9 @@ interface RoundEntryViewModel {
 
     fun roundLeaderSelect(roundId: Int, leader: Leader)
 
-    fun roundTurnOrderSelect(roundId: Int, turnOrder: TurnOrder)
+    fun roundTurnOrderSelect(roundId: Int, turnOrder: String)
 
-    fun roundResultSelect(roundId: Int, roundResult: RoundResult)
+    fun roundResultSelect(roundId: Int, roundResult: String)
 
     fun removeRound(roundId: Int)
 }
