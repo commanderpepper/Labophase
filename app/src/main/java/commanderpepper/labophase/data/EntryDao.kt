@@ -32,4 +32,7 @@ interface EntryDao {
     @Transaction
     @Query("SELECT * FROM entries WHERE id = :id")
     suspend fun getEntryById(id: Int): EntryWithRounds?
+
+    @Query("DELETE FROM entries")
+    suspend fun deleteAllEntries()
 }

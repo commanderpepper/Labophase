@@ -6,4 +6,5 @@ sealed class Screen(val route: String) {
         const val ARG = "entryId"
         fun navigate(entryId: Int = -1) = "round_entry?entryId=$entryId"
     }
+    object Settings: Screen("settings")
 }
