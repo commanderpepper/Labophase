@@ -24,7 +24,7 @@ val appModule = module {
     single<EntryRepository> { EntryRepositoryImpl(get()) }
     single<SettingsRepository> { SettingsRepositoryImpl(androidContext().settingsDataStore, get()) }
     single { TournamentResultInterpreter }
-    single<LeaderOrderDecider> { LeaderOrderDeciderImpl(get()) }
+    single<LeaderOrderDecider> { LeaderOrderDeciderImpl(get(), get()) }
     single { EntryToEntrySelectionUIConverter() }
     viewModel { params -> RoundEntryViewModelImpl(get(), get(), params.getOrNull() ?: -1) }
     viewModel { EntrySelectionViewModelImpl(get(), get()) }

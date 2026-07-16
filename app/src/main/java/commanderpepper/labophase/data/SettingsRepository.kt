@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -20,6 +21,8 @@ interface SettingsRepository {
     suspend fun toggleDieRoll()
 
     suspend fun toggleLeadersShown()
+
+    suspend fun isShowingAllLeaders(): Boolean
 
     suspend fun clearHistory()
 
@@ -49,6 +52,9 @@ class SettingsRepositoryImpl(private val dataStore: DataStore<Preferences>, priv
             prefs[SHOW_ALL_LEADERS] = !(prefs[SHOW_ALL_LEADERS] ?: false)
         }
     }
+
+    override suspend fun isShowingAllLeaders(): Boolean =
+        dataStore.data.map { it[SHOW_ALL_LEADERS] ?: false }.first()
 
     override suspend fun clearHistory() {
         entryRepository.deleteAllEntries()
