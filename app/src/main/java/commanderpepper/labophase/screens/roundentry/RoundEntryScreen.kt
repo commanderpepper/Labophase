@@ -4,6 +4,7 @@ import android.content.ClipData
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -23,15 +24,22 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.Expand
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.carousel.CarouselState
 import androidx.compose.material3.carousel.HorizontalCenteredHeroCarousel
@@ -46,6 +54,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -66,6 +75,7 @@ import org.koin.core.parameter.parametersOf
 @Composable
 fun RoundEntryScreen(
     modifier: Modifier = Modifier,
+    onBack: () -> Unit = {},
     entryId: Int = -1,
     roundEntryViewModel: RoundEntryViewModel = koinViewModel<RoundEntryViewModelImpl>(
         parameters = { parametersOf(entryId) }
@@ -78,6 +88,7 @@ fun RoundEntryScreen(
     val punkRecordEntry = roundEntryViewModel.punkRecordEntry.collectAsState()
     RoundEntryScreen(
         modifier = modifier,
+        onBack = onBack,
         leaderSelectExpanded = entryId == -1,
         leaderSelected = leaderSelected.value,
         playerLeaderList = playerLeaderList.value,
@@ -94,9 +105,11 @@ fun RoundEntryScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoundEntryScreen(
     modifier: Modifier = Modifier,
+    onBack: () -> Unit = {},
     leaderSelectExpanded: Boolean = true,
     leaderSelected: Leader,
     rounds: List<RoundUI>,
@@ -111,31 +124,65 @@ fun RoundEntryScreen(
     chooseRoundResult: (Int, String) -> Unit,
     removeRound: (Int) -> Unit
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        LeaderPlayerInTournamentSelection(leaderSelected = leaderSelected, leaders = playerLeaderList, onLeaderSelected = chooseLeader, initiallyExpanded = leaderSelectExpanded)
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Button(onClick = { transformEntry() }) { Text("Make a punk record entry") }
-            Button(onClick = { addNewRound() }) { Text("New round") }
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text(leaderSelected.name) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
         }
-        if (punkRecordEntry.isNotEmpty()) {
-            CopyableResult(punkRecordEntry)
-        }
-        if (rounds.isNotEmpty()) {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(rounds) { round ->
-                    RoundEntry(
-                        round = round,
-                        leaders = roundLeaderList,
-                        initiallyExpanded = leaderSelectExpanded,
-                        leaderSelected = chooseRoundLeader,
-                        roundResult = chooseRoundResult,
-                        turnOrder = chooseRoundTurnOrder,
-                        removeRound = removeRound
+    ) { innerPadding ->
+        Column(
+            modifier = modifier
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp)
+                .fillMaxSize()
+        ) {
+            LeaderPlayerInTournamentSelection(leaderSelected = leaderSelected, leaders = playerLeaderList, rounds = rounds, onLeaderSelected = chooseLeader, initiallyExpanded = leaderSelectExpanded)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Button(onClick = { transformEntry() }) { Text("Make a punk record entry") }
+                OutlinedButton(onClick = { addNewRound() }) { Text("New round") }
+            }
+            if (punkRecordEntry.isNotEmpty()) {
+                val punkRecordVisible = rememberSaveable { mutableStateOf(true) }
+                val punkRecordRotation by animateFloatAsState(
+                    targetValue = if (punkRecordVisible.value) 180f else 0f,
+                    label = "punk_record_rotation"
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { punkRecordVisible.value = !punkRecordVisible.value },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Punk Record", modifier = Modifier.weight(1f))
+                    Icon(
+                        Icons.Default.ExpandMore,
+                        contentDescription = if (punkRecordVisible.value) "Hide" else "Show",
+                        modifier = Modifier.rotate(punkRecordRotation)
                     )
+                }
+                AnimatedVisibility(visible = punkRecordVisible.value) {
+                    CopyableResult(punkRecordEntry)
+                }
+            }
+            if (rounds.isNotEmpty()) {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(rounds) { round ->
+                        RoundEntry(
+                            round = round,
+                            leaders = roundLeaderList,
+                            initiallyExpanded = leaderSelectExpanded,
+                            leaderSelected = chooseRoundLeader,
+                            roundResult = chooseRoundResult,
+                            turnOrder = chooseRoundTurnOrder,
+                            removeRound = removeRound
+                        )
+                    }
                 }
             }
         }
@@ -191,15 +238,27 @@ fun LeaderThumbnail(leader: Leader) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LeaderPlayerInTournamentSelection(leaderSelected: Leader, leaders: List<Leader>, onLeaderSelected: (Leader) -> Unit, initiallyExpanded: Boolean = true) {
+fun LeaderPlayerInTournamentSelection(leaderSelected: Leader, leaders: List<Leader>, rounds: List<RoundUI>, onLeaderSelected: (Leader) -> Unit, initiallyExpanded: Boolean = true) {
     val isExpanded = rememberSaveable { mutableStateOf(initiallyExpanded) }
     val carouselState = rememberSaveable(leaders.size, saver = CarouselState.Saver) { CarouselState { leaders.count() } }
+    val rotation by animateFloatAsState(
+        targetValue = if (isExpanded.value) 180f else 0f,
+        label = "leader_expand_rotation"
+    )
+    val wins = rounds.count { it.roundResult == "Win" }
+    val losses = rounds.count { it.roundResult == "Loss" }
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(modifier = Modifier.fillMaxWidth().clickable(onClick = { isExpanded.value = !isExpanded.value }), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Row(modifier = Modifier.fillMaxWidth().clickable(onClick = { isExpanded.value = !isExpanded.value }), verticalAlignment = Alignment.CenterVertically) {
             LeaderThumbnail(leader = leaderSelected)
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text = leaderSelected.name)
-            IconButton(onClick = { isExpanded.value = !isExpanded.value }) { Icon(Icons.Default.Expand, contentDescription = "Expand / Close") }
+            Text("W: $wins - L: $losses", modifier = Modifier.weight(1f))
+            IconButton(onClick = { isExpanded.value = !isExpanded.value }) {
+                Icon(
+                    Icons.Default.ExpandMore,
+                    contentDescription = if (isExpanded.value) "Collapse" else "Expand",
+                    modifier = Modifier.rotate(rotation)
+                )
+            }
         }
         AnimatedVisibility(visible = isExpanded.value) {
             LeaderSelection(leaders = leaders, state = carouselState, onLeaderSelected = onLeaderSelected)
@@ -225,19 +284,37 @@ fun LeaderSelection(leaders: List<Leader>, state: CarouselState, onLeaderSelecte
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoundResultSelection(roundResult: String, onRoundSelected: (String) -> Unit) {
-    Row {
-        Button(onClick = { onRoundSelected("Win") }) { Text("W") }
-        Button(onClick = { onRoundSelected("Loss") }) { Text("L") }
+    SingleChoiceSegmentedButtonRow {
+        SegmentedButton(
+            selected = roundResult == "Win",
+            onClick = { onRoundSelected("Win") },
+            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+        ) { Text("W") }
+        SegmentedButton(
+            selected = roundResult == "Loss",
+            onClick = { onRoundSelected("Loss") },
+            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+        ) { Text("L") }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TurnOrderSelection(turnOrder: String, onTurnOrderSelected: (String) -> Unit) {
-    Row {
-        Button(onClick = { onTurnOrderSelected("First") }) { Text("1st") }
-        Button(onClick = { onTurnOrderSelected("Second") }) { Text("2nd") }
+    SingleChoiceSegmentedButtonRow {
+        SegmentedButton(
+            selected = turnOrder == "First",
+            onClick = { onTurnOrderSelected("First") },
+            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+        ) { Text("1st") }
+        SegmentedButton(
+            selected = turnOrder == "Second",
+            onClick = { onTurnOrderSelected("Second") },
+            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+        ) { Text("2nd") }
     }
 }
 
@@ -255,12 +332,22 @@ fun RoundEntry(
 ) {
     val isExpanded = rememberSaveable { mutableStateOf(initiallyExpanded) }
     val carouselState = rememberSaveable(leaders.size, saver = CarouselState.Saver) { CarouselState { leaders.count() } }
+    val rotation by animateFloatAsState(
+        targetValue = if (isExpanded.value) 180f else 0f,
+        label = "round_expand_rotation"
+    )
     Column(modifier.padding(vertical = 4.dp)) {
         Row(modifier = Modifier.fillMaxWidth().clickable(onClick = { isExpanded.value = !isExpanded.value }), verticalAlignment = Alignment.CenterVertically) {
             LeaderThumbnail(leader = round.leader)
             Spacer(modifier = Modifier.width(8.dp))
             Text(round.summary, modifier = Modifier.weight(1f))
-            IconButton(onClick = { isExpanded.value = !isExpanded.value }) { Icon(Icons.Default.Expand, contentDescription = "Expand / Close") }
+            IconButton(onClick = { isExpanded.value = !isExpanded.value }) {
+                Icon(
+                    Icons.Default.ExpandMore,
+                    contentDescription = if (isExpanded.value) "Collapse" else "Expand",
+                    modifier = Modifier.rotate(rotation)
+                )
+            }
             IconButton(onClick = { removeRound(round.roundId) }) { Icon(Icons.Default.DeleteForever, contentDescription = "Delete") }
         }
         AnimatedVisibility(visible = isExpanded.value) {
@@ -317,6 +404,7 @@ private val previewPunkRecord = "!PR add\n" +
 private fun PreviewRoundEntryScreen() {
     LabophaseTheme {
         RoundEntryScreen(
+            onBack = {},
             leaderSelected = Leader.PBLuffy,
             rounds = listOf(previewRound1, previewRound2),
             playerLeaderList = previewLeaders,
@@ -338,6 +426,7 @@ private fun PreviewRoundEntryScreen() {
 private fun PreviewRoundEntryScreenEmpty() {
     LabophaseTheme {
         RoundEntryScreen(
+            onBack = {},
             leaderSelected = Leader.PBLuffy,
             rounds = emptyList(),
             playerLeaderList = previewLeaders,
@@ -361,6 +450,7 @@ private fun PreviewLeaderPlayerInTournamentSelection() {
         LeaderPlayerInTournamentSelection(
             leaderSelected = Leader.PBLuffy,
             leaders = previewLeaders,
+            rounds = listOf(previewRound1, previewRound2),
             onLeaderSelected = {}
         )
     }

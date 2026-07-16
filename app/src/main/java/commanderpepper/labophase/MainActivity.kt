@@ -91,7 +91,10 @@ class MainActivity : ComponentActivity() {
                             })
                         ) { backStackEntry ->
                             val entryId = backStackEntry.arguments?.getInt(Screen.RoundEntry.ARG) ?: -1
-                            RoundEntryScreen(entryId = entryId)
+                            RoundEntryScreen(
+                                entryId = entryId,
+                                onBack = { navController.navigateUp() }
+                            )
                         }
                         composable(Screen.Settings.route) {
                             SettingsScreen()
