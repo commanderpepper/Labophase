@@ -39,6 +39,35 @@ sealed class Leader(val name: String, val set: Set, val cardId: String, val lead
     object GPLuffy : Leader(name = "GP Luffy", set = Set.EB02, cardId = "EB02-010", leaderColors = listOf(LeaderColor.Green, LeaderColor.Purple))
     object URVivi : Leader(name = "UR Vivi", set = Set.EB03, cardId = "EB03-001", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Red))
     object RYBonney : Leader(name = "RY Bonney", set = Set.EB04, cardId = "EB04-001", leaderColors = listOf(LeaderColor.Red, LeaderColor.Yellow))
+    object RZoro : Leader(name = "R Zoro", set = Set.OP01, cardId = "OP01-001", leaderColors = listOf(LeaderColor.Red))
+    object RGLaw : Leader(name = "RG Law", set = Set.OP01, cardId = "OP01-002", leaderColors = listOf(LeaderColor.Red, LeaderColor.Green))
+    object RGLuffy01 : Leader(name = "RG Luffy01", set = Set.OP01, cardId = "OP01-003", leaderColors = listOf(LeaderColor.Red, LeaderColor.Green))
+    object GOden : Leader(name = "G Oden", set = Set.OP01, cardId = "OP01-022", leaderColors = listOf(LeaderColor.Green))
+    object UDoflamingo : Leader(name = "U Doflamingo", set = Set.OP01, cardId = "OP01-042", leaderColors = listOf(LeaderColor.Blue))
+    object UPKaido : Leader(name = "UP Kaido", set = Set.OP01, cardId = "OP01-060", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Purple))
+    object UPCrocodile : Leader(name = "UP Crocodile", set = Set.OP01, cardId = "OP01-061", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Purple))
+    object PKing : Leader(name = "P King", set = Set.OP01, cardId = "OP01-080", leaderColors = listOf(LeaderColor.Purple))
+    object RNewgate : Leader(name = "R Newgate", set = Set.OP02, cardId = "OP02-001", leaderColors = listOf(LeaderColor.Red))
+    object RBGarp : Leader(name = "RB Garp", set = Set.OP02, cardId = "OP02-002", leaderColors = listOf(LeaderColor.Red, LeaderColor.Black))
+    object GKinemon : Leader(name = "G Kin'emon", set = Set.OP02, cardId = "OP02-025", leaderColors = listOf(LeaderColor.Green))
+    object UGSanji : Leader(name = "UG Sanji", set = Set.OP02, cardId = "OP02-026", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Green))
+    object UIvankov : Leader(name = "U Ivankov", set = Set.OP02, cardId = "OP02-049", leaderColors = listOf(LeaderColor.Blue))
+    object PMagellan : Leader(name = "P Magellan", set = Set.OP02, cardId = "OP02-071", leaderColors = listOf(LeaderColor.Purple))
+    object PBZephyr : Leader(name = "PB Zephyr", set = Set.OP02, cardId = "OP02-072", leaderColors = listOf(LeaderColor.Purple, LeaderColor.Black))
+    object BSmoker : Leader(name = "B Smoker", set = Set.OP02, cardId = "OP02-093", leaderColors = listOf(LeaderColor.Black))
+    object RAce03 : Leader(name = "R Ace03", set = Set.OP03, cardId = "OP03-001", leaderColors = listOf(LeaderColor.Red))
+    object GKuro : Leader(name = "G Kuro", set = Set.OP03, cardId = "OP03-022", leaderColors = listOf(LeaderColor.Green))
+    object GYArlong : Leader(name = "GY Arlong", set = Set.OP03, cardId = "OP03-023", leaderColors = listOf(LeaderColor.Green, LeaderColor.Yellow))
+    object PIceberg : Leader(name = "P Iceberg", set = Set.OP03, cardId = "OP03-058", leaderColors = listOf(LeaderColor.Purple))
+    object BLucci03 : Leader(name = "B Lucci03", set = Set.OP03, cardId = "OP03-077", leaderColors = listOf(LeaderColor.Black))
+    object BYLinlin : Leader(name = "BY Linlin", set = Set.OP03, cardId = "OP03-078", leaderColors = listOf(LeaderColor.Black, LeaderColor.Yellow))
+    object YKatakuri : Leader(name = "Y Katakuri", set = Set.OP03, cardId = "OP03-099", leaderColors = listOf(LeaderColor.Yellow))
+    object URVivi04 : Leader(name = "UR Vivi04", set = Set.OP04, cardId = "OP04-001", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Red))
+    object GPDoflamingo : Leader(name = "GP Doflamingo", set = Set.OP04, cardId = "OP04-020", leaderColors = listOf(LeaderColor.Green, LeaderColor.Purple))
+    object GBIssho : Leader(name = "GB Issho", set = Set.OP04, cardId = "OP04-021", leaderColors = listOf(LeaderColor.Green, LeaderColor.Black))
+    object UBRebecca : Leader(name = "UB Rebecca", set = Set.OP04, cardId = "OP04-040", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Black))
+    object UYQueen : Leader(name = "UY Queen", set = Set.OP04, cardId = "OP04-058", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Yellow))
+    object PYCrocodile : Leader(name = "PY Crocodile", set = Set.OP04, cardId = "OP04-079", leaderColors = listOf(LeaderColor.Purple, LeaderColor.Yellow))
     object RBSabo05 : Leader(name = "RB Sabo05", set = Set.OP05, cardId = "OP05-001", leaderColors = listOf(LeaderColor.Red, LeaderColor.Black))
     object RYBetty : Leader(name = "RY Betty", set = Set.OP05, cardId = "OP05-002", leaderColors = listOf(LeaderColor.Red, LeaderColor.Yellow))
     object UGRosinante : Leader(name = "UG Rosinante", set = Set.OP05, cardId = "OP05-022", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Green))
@@ -117,6 +146,15 @@ sealed class Leader(val name: String, val set: Set, val cardId: String, val lead
     object RPLawP : Leader(name = "RP LawP", set = Set.PROMOS, cardId = "P-086", leaderColors = listOf(LeaderColor.Red, LeaderColor.Purple), blockNumber = 3)
     object UNami : Leader(name = "U Nami", set = Set.PROMOS, cardId = "P-117", leaderColors = listOf(LeaderColor.Blue), blockNumber = 4)
     object RSanji : Leader(name = "R Sanji", set = Set.PRB01, cardId = "PRB01-001", leaderColors = listOf(LeaderColor.Red))
+    object RLuffyST01 : Leader(name = "R LuffyST01", set = Set.ST01, cardId = "ST01-001", leaderColors = listOf(LeaderColor.Red))
+    object GKid : Leader(name = "G Kid", set = Set.ST02, cardId = "ST02-001", leaderColors = listOf(LeaderColor.Green))
+    object UCrocodile : Leader(name = "U Crocodile", set = Set.ST03, cardId = "ST03-001", leaderColors = listOf(LeaderColor.Blue))
+    object PKaido : Leader(name = "P Kaido", set = Set.ST04, cardId = "ST04-001", leaderColors = listOf(LeaderColor.Purple))
+    object PShanks : Leader(name = "P Shanks", set = Set.ST05, cardId = "ST05-001", leaderColors = listOf(LeaderColor.Purple))
+    object BSakazuki : Leader(name = "B Sakazuki", set = Set.ST06, cardId = "ST06-001", leaderColors = listOf(LeaderColor.Black))
+    object YLinlin : Leader(name = "Y Linlin", set = Set.ST07, cardId = "ST07-001", leaderColors = listOf(LeaderColor.Yellow))
+    object BLuffyST08 : Leader(name = "B LuffyST08", set = Set.ST08, cardId = "ST08-001", leaderColors = listOf(LeaderColor.Black))
+    object YYamato : Leader(name = "Y Yamato", set = Set.ST09, cardId = "ST09-001", leaderColors = listOf(LeaderColor.Yellow))
     object RPLaw : Leader(name = "RP Law", set = Set.ST10, cardId = "ST10-001", leaderColors = listOf(LeaderColor.Red, LeaderColor.Purple))
     object RPLuffy : Leader(name = "RP Luffy", set = Set.ST10, cardId = "ST10-002", leaderColors = listOf(LeaderColor.Red, LeaderColor.Purple))
     object RPKid : Leader(name = "RP Kid", set = Set.ST10, cardId = "ST10-003", leaderColors = listOf(LeaderColor.Red, LeaderColor.Purple))
@@ -204,6 +242,35 @@ val LEADERS_LIST = listOf(
     Leader.GPLuffy,
     Leader.URVivi,
     Leader.RYBonney,
+    Leader.RZoro,
+    Leader.RGLaw,
+    Leader.RGLuffy01,
+    Leader.GOden,
+    Leader.UDoflamingo,
+    Leader.UPKaido,
+    Leader.UPCrocodile,
+    Leader.PKing,
+    Leader.RNewgate,
+    Leader.RBGarp,
+    Leader.GKinemon,
+    Leader.UGSanji,
+    Leader.UIvankov,
+    Leader.PMagellan,
+    Leader.PBZephyr,
+    Leader.BSmoker,
+    Leader.RAce03,
+    Leader.GKuro,
+    Leader.GYArlong,
+    Leader.PIceberg,
+    Leader.BLucci03,
+    Leader.BYLinlin,
+    Leader.YKatakuri,
+    Leader.URVivi04,
+    Leader.GPDoflamingo,
+    Leader.GBIssho,
+    Leader.UBRebecca,
+    Leader.UYQueen,
+    Leader.PYCrocodile,
     Leader.RBSabo05,
     Leader.RYBetty,
     Leader.UGRosinante,
@@ -282,6 +349,15 @@ val LEADERS_LIST = listOf(
     Leader.RPLawP,
     Leader.UNami,
     Leader.RSanji,
+    Leader.RLuffyST01,
+    Leader.GKid,
+    Leader.UCrocodile,
+    Leader.PKaido,
+    Leader.PShanks,
+    Leader.BSakazuki,
+    Leader.YLinlin,
+    Leader.BLuffyST08,
+    Leader.YYamato,
     Leader.RPLaw,
     Leader.RPLuffy,
     Leader.RPKid,
