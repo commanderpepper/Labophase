@@ -5,6 +5,7 @@ import commanderpepper.labophase.data.RoundEntity
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.leaderByCardId
 import commanderpepper.labophase.screens.entries.models.EntrySelectionUI
+import commanderpepper.labophase.screens.entries.models.RoundEntrySelectionUI
 
 class EntryToEntrySelectionUIConverter {
     fun entryToEntrySelectionUI(entry: EntryWithRounds): EntrySelectionUI {
@@ -16,8 +17,19 @@ class EntryToEntrySelectionUIConverter {
             punkRecord = getPunkRecord(
                 leader = leaderByCardId(entry.entry.leaderCardId),
                 rounds = entry.rounds
-            )
+            ),
+            rounds = entry.rounds.map { roundToRoundEntrySelectionUI(it) }
         )
+    }
+
+    private fun roundToRoundEntrySelectionUI(roundEntity: RoundEntity): RoundEntrySelectionUI {
+        val leader = leaderByCardId(roundEntity.leaderCardId)
+
+        return RoundEntrySelectionUI(leader = leader, summary = singleLine(roundLeader = leader, roundEntity = roundEntity))
+    }
+
+    private fun singleLine(roundLeader: Leader, roundEntity: RoundEntity): String {
+        return "${roundLeader.name}, ${if (roundEntity.roundResult == "Win") "W" else "L"}, ${if (roundEntity.turnOrder == "First") "1" else "2"}"
     }
 }
 
