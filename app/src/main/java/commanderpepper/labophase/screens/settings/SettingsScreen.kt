@@ -23,6 +23,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import commanderpepper.labophase.ui.theme.LabophaseTheme
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -93,5 +95,33 @@ fun SettingsScreen(
             )
         }
         Button(onClick = { clearHistory() }) { Text("Clear Entries") }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewSettingsScreen() {
+    LabophaseTheme {
+        SettingsScreen(
+            showingAllLeaders = false,
+            showingDieRolls = false,
+            toggleLeaders = {},
+            toggleDieRoll = {},
+            clearHistory = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewSettingsScreenAllEnabled() {
+    LabophaseTheme {
+        SettingsScreen(
+            showingAllLeaders = true,
+            showingDieRolls = true,
+            toggleLeaders = {},
+            toggleDieRoll = {},
+            clearHistory = {}
+        )
     }
 }
