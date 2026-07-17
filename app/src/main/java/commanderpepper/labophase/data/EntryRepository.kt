@@ -33,7 +33,8 @@ class EntryRepositoryImpl(private val dao: EntryDao) : EntryRepository {
             roundNumber = r.roundNumber,
             leaderCardId = r.leader.cardId,
             roundResult = if (r.roundResult is RoundResult.Win) "Win" else "Loss",
-            turnOrder = if (r.turnOrder is TurnOrder.First) "First" else "Second"
+            turnOrder = if (r.turnOrder is TurnOrder.First) "First" else "Second",
+            dieRoll = r.dieRoll
         )
     }
 

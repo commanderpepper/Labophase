@@ -67,6 +67,8 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.screens.roundentry.models.RoundUI
+import commanderpepper.labophase.screens.settings.SettingsViewModel
+import commanderpepper.labophase.screens.settings.SettingsViewModelImpl
 import commanderpepper.labophase.ui.theme.LabophaseTheme
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -79,13 +81,15 @@ fun RoundEntryScreen(
     entryId: Int = -1,
     roundEntryViewModel: RoundEntryViewModel = koinViewModel<RoundEntryViewModelImpl>(
         parameters = { parametersOf(entryId) }
-    )
+    ),
+    settingsViewModel: SettingsViewModel = koinViewModel<SettingsViewModelImpl>()
 ) {
     val playerLeaderList = roundEntryViewModel.playerLeaderList.collectAsState()
     val roundLeaderList = roundEntryViewModel.roundLeaderList.collectAsState()
     val leaderSelected = roundEntryViewModel.leaderSelected.collectAsState()
     val rounds = roundEntryViewModel.rounds.collectAsState()
     val punkRecordEntry = roundEntryViewModel.punkRecordEntry.collectAsState()
+    val showingDieRoll = settingsViewModel.showingDieRoll.collectAsState()
     RoundEntryScreen(
         modifier = modifier,
         onBack = onBack,
@@ -95,12 +99,14 @@ fun RoundEntryScreen(
         roundLeaderList = roundLeaderList.value,
         rounds = rounds.value,
         punkRecordEntry = punkRecordEntry.value,
+        showingDieRoll = showingDieRoll.value,
         addNewRound = roundEntryViewModel::addNewRound,
         transformEntry = roundEntryViewModel::transformEntry,
         chooseLeader = roundEntryViewModel::chooseLeader,
         chooseRoundLeader = roundEntryViewModel::roundLeaderSelect,
         chooseRoundTurnOrder = roundEntryViewModel::roundTurnOrderSelect,
         chooseRoundResult = roundEntryViewModel::roundResultSelect,
+        chooseDieRoll = roundEntryViewModel::roundDieRollSelect,
         removeRound = roundEntryViewModel::removeRound
     )
 }
@@ -116,12 +122,14 @@ fun RoundEntryScreen(
     playerLeaderList: List<Leader>,
     roundLeaderList: List<Leader>,
     punkRecordEntry: String,
+    showingDieRoll: Boolean = false,
     addNewRound: () -> Unit,
     transformEntry: () -> Unit,
     chooseLeader: (Leader) -> Unit,
     chooseRoundLeader: (Int, Leader) -> Unit,
     chooseRoundTurnOrder: (Int, String) -> Unit,
     chooseRoundResult: (Int, String) -> Unit,
+    chooseDieRoll: (Int, String?) -> Unit = { _, _ -> },
     removeRound: (Int) -> Unit
 ) {
     Scaffold(
@@ -180,6 +188,8 @@ fun RoundEntryScreen(
                             leaderSelected = chooseRoundLeader,
                             roundResult = chooseRoundResult,
                             turnOrder = chooseRoundTurnOrder,
+                            dieRoll = chooseDieRoll,
+                            showingDieRoll = showingDieRoll,
                             removeRound = removeRound
                         )
                     }
@@ -320,6 +330,23 @@ fun TurnOrderSelection(turnOrder: String, onTurnOrderSelected: (String) -> Unit)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+fun DieRollSelection(dieRoll: String?, onDieRollSelected: (String?) -> Unit) {
+    SingleChoiceSegmentedButtonRow {
+        SegmentedButton(
+            selected = dieRoll == "Win",
+            onClick = { onDieRollSelected(if (dieRoll == "Win") null else "Win") },
+            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+        ) { Text("\uD83C\uDFB2") }
+        SegmentedButton(
+            selected = dieRoll == "Loss",
+            onClick = { onDieRollSelected(if (dieRoll == "Loss") null else "Loss") },
+            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+        ) { Text("❌") }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun RoundEntry(
     modifier: Modifier = Modifier,
     round: RoundUI,
@@ -328,6 +355,8 @@ fun RoundEntry(
     leaderSelected: (Int, Leader) -> Unit,
     roundResult: (Int, String) -> Unit,
     turnOrder: (Int, String) -> Unit,
+    dieRoll: (Int, String?) -> Unit = { _, _ -> },
+    showingDieRoll: Boolean = false,
     initiallyExpanded: Boolean = true
 ) {
     val isExpanded = rememberSaveable { mutableStateOf(initiallyExpanded) }
@@ -355,14 +384,31 @@ fun RoundEntry(
                 LeaderSelection(leaders = leaders, state = carouselState) { leader ->
                     leaderSelected(round.roundId, leader)
                 }
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
                     RoundResultSelection(round.roundResult) { result ->
                         roundResult(round.roundId, result)
                     }
                     TurnOrderSelection(round.turnOrder) { order ->
                         turnOrder(round.roundId, order)
                     }
+                    if (showingDieRoll) {
+                        DieRollSelection(dieRoll = round.dieRoll) { result ->
+                            dieRoll(round.roundId, result)
+                        }
+                    }
                 }
+//                if (showingDieRoll) {
+//                    Row(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        horizontalArrangement = Arrangement.SpaceBetween,
+//                        verticalAlignment = Alignment.CenterVertically
+//                    ) {
+//                        Text("Die Roll")
+//                        DieRollSelection(dieRoll = round.dieRoll) { result ->
+//                            dieRoll(round.roundId, result)
+//                        }
+//                    }
+//                }
             }
         }
     }
@@ -410,6 +456,7 @@ private fun PreviewRoundEntryScreen() {
             playerLeaderList = previewLeaders,
             roundLeaderList = previewLeaders,
             punkRecordEntry = previewPunkRecord,
+            showingDieRoll = true,
             addNewRound = {},
             transformEntry = {},
             chooseLeader = {},
@@ -432,6 +479,7 @@ private fun PreviewRoundEntryScreenEmpty() {
             playerLeaderList = previewLeaders,
             roundLeaderList = previewLeaders,
             punkRecordEntry = "",
+            showingDieRoll = true,
             addNewRound = {},
             transformEntry = {},
             chooseLeader = {},

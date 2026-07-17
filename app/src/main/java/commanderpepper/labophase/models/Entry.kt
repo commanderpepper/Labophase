@@ -15,10 +15,22 @@ data class Round(
     val roundNumber: Int,
     val leader: Leader = Leader.PBLuffy,
     val roundResult: RoundResult = RoundResult.Win,
-    val turnOrder: TurnOrder = TurnOrder.First
+    val turnOrder: TurnOrder = TurnOrder.First,
+    val dieRoll: String? = null
 ) {
     fun singleLine(): String {
-        return "${this.leader.name}, ${if (this.roundResult == RoundResult.Win) "W" else "L"}, ${if (this.turnOrder == TurnOrder.First) "1" else "2"}"
+        return "${this.leader.name}, ${if (this.roundResult == RoundResult.Win) "W" else "L"}, ${if (this.turnOrder == TurnOrder.First) "1" else "2"}${transformDieRoll()}"
+    }
+
+    private fun transformDieRoll(): String {
+        return if (this.dieRoll != null) {
+            if (this.dieRoll == "Win") {
+                ", \uD83C\uDFB2"
+
+            } else {
+                ", ❌"
+            }
+        } else ""
     }
 }
 

@@ -3,6 +3,9 @@ package commanderpepper.labophase.logic.converter
 import commanderpepper.labophase.data.EntryWithRounds
 import commanderpepper.labophase.data.RoundEntity
 import commanderpepper.labophase.models.Leader
+import commanderpepper.labophase.models.Round
+import commanderpepper.labophase.models.RoundResult
+import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.models.leaderByCardId
 import commanderpepper.labophase.screens.entries.models.EntrySelectionUI
 import commanderpepper.labophase.screens.entries.models.RoundEntrySelectionUI
@@ -24,12 +27,15 @@ class EntryToEntrySelectionUIConverter {
 
     private fun roundToRoundEntrySelectionUI(roundEntity: RoundEntity): RoundEntrySelectionUI {
         val leader = leaderByCardId(roundEntity.leaderCardId)
-
-        return RoundEntrySelectionUI(leader = leader, summary = singleLine(roundLeader = leader, roundEntity = roundEntity))
-    }
-
-    private fun singleLine(roundLeader: Leader, roundEntity: RoundEntity): String {
-        return "${roundLeader.name}, ${if (roundEntity.roundResult == "Win") "W" else "L"}, ${if (roundEntity.turnOrder == "First") "1" else "2"}"
+        val round = Round(
+            roundId = 0,
+            roundNumber = roundEntity.roundNumber,
+            leader = leader,
+            roundResult = if (roundEntity.roundResult == "Win") RoundResult.Win else RoundResult.Loss,
+            turnOrder = if (roundEntity.turnOrder == "First") TurnOrder.First else TurnOrder.Second,
+            dieRoll = roundEntity.dieRoll
+        )
+        return RoundEntrySelectionUI(leader = leader, summary = round.singleLine())
     }
 }
 

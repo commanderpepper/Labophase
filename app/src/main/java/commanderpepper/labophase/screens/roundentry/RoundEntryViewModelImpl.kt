@@ -56,7 +56,8 @@ class RoundEntryViewModelImpl(
                                 roundNumber = r.roundNumber,
                                 leader = leaderByCardId(r.leaderCardId),
                                 roundResult = if (r.roundResult == "Win") RoundResult.Win else RoundResult.Loss,
-                                turnOrder = if (r.turnOrder == "First") TurnOrder.First else TurnOrder.Second
+                                turnOrder = if (r.turnOrder == "First") TurnOrder.First else TurnOrder.Second,
+                                dieRoll = r.dieRoll
                             )
                         }
                         _rounds.value = loaded.associateBy { it.roundId }
@@ -125,8 +126,13 @@ class RoundEntryViewModelImpl(
         leader = leader,
         summary = singleLine(),
         roundResult = if (roundResult == RoundResult.Win) "Win" else "Loss",
-        turnOrder = if (turnOrder == TurnOrder.First) "First" else "Second"
+        turnOrder = if (turnOrder == TurnOrder.First) "First" else "Second",
+        dieRoll = dieRoll
     )
+
+    override fun roundDieRollSelect(roundId: Int, dieRoll: String?) {
+        updateRound(roundId) { it.copy(dieRoll = dieRoll) }
+    }
 
     override fun removeRound(roundId: Int) {
         _rounds.value = _rounds.value.minus(roundId)

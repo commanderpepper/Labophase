@@ -28,5 +28,7 @@ interface RoundEntryViewModel {
 
     fun roundResultSelect(roundId: Int, roundResult: String)
 
+    fun roundDieRollSelect(roundId: Int, dieRoll: String?)
+
     fun removeRound(roundId: Int)
 }

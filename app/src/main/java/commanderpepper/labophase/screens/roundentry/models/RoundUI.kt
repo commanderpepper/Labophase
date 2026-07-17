@@ -7,5 +7,6 @@ data class RoundUI(
     val leader: Leader,
     val summary: String,
     val roundResult: String,
-    val turnOrder: String
+    val turnOrder: String,
+    val dieRoll: String? = null
 )
