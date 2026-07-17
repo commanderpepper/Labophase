@@ -152,7 +152,7 @@ fun RoundEntryScreen(
         ) {
             LeaderPlayerInTournamentSelection(leaderSelected = leaderSelected, leaders = playerLeaderList, rounds = rounds, onLeaderSelected = chooseLeader, initiallyExpanded = leaderSelectExpanded)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Button(onClick = { transformEntry() }) { Text("Make a punk record entry") }
+                Button(onClick = { transformEntry() }) { Text("Save punk record entry") }
                 OutlinedButton(onClick = { addNewRound() }) { Text("New round") }
             }
             if (punkRecordEntry.isNotEmpty()) {

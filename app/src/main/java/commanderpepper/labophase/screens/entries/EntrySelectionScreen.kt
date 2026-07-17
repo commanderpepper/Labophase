@@ -66,7 +66,7 @@ fun EntrySelectionScreen(
             ExtendedFloatingActionButton(
                 onClick = newEntry,
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("New Round") }
+                text = { Text("New Entry") }
             )
         }
     ) { innerPadding ->
