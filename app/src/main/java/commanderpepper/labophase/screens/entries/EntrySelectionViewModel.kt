@@ -1,8 +1,8 @@
 package commanderpepper.labophase.screens.entries
 
-import commanderpepper.labophase.screens.entries.models.EntrySelectionUI
+import commanderpepper.labophase.screens.entries.models.EntrySelectionUIState
 import kotlinx.coroutines.flow.StateFlow
 
 interface EntrySelectionViewModel {
-    val entries: StateFlow<List<EntrySelectionUI>>
+    val entrySelectionUiState: StateFlow<EntrySelectionUIState>
 }

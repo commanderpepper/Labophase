@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -16,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,9 +49,12 @@ fun EntrySelectionScreen(
     onEntrySelect: (Int) -> Unit,
     newEntry: () -> Unit
 ) {
-    val entries = entrySelectionViewModel.entries.collectAsState()
+    val uiState = entrySelectionViewModel.entrySelectionUiState.collectAsState()
+
     EntrySelectionScreen(
-        entries = entries.value,
+        entries = uiState.value.entries,
+        isLoading = uiState.value.isLoading,
+        errorMessage = uiState.value.errorMessage,
         onEntrySelect = onEntrySelect,
         newEntry = newEntry
     )
@@ -58,6 +63,8 @@ fun EntrySelectionScreen(
 @Composable
 fun EntrySelectionScreen(
     entries: List<EntrySelectionUI>,
+    isLoading: Boolean,
+    errorMessage: String?,
     onEntrySelect: (Int) -> Unit,
     newEntry: () -> Unit
 ) {
@@ -70,15 +77,35 @@ fun EntrySelectionScreen(
             )
         }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier.padding(innerPadding),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(items = entries) { entry ->
-                EntryRow(entrySelectionUI = entry, onEntrySelect = onEntrySelect)
+        if (isLoading) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircularProgressIndicator()
+            }
+
+        } else if (errorMessage.isNullOrEmpty().not()) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(errorMessage)
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.padding(innerPadding),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(items = entries) { entry ->
+                    EntryRow(entrySelectionUI = entry, onEntrySelect = onEntrySelect)
+                }
             }
         }
+
     }
 }
 
@@ -150,6 +177,8 @@ private fun PreviewEntrySelectionScreenEmpty() {
     LabophaseTheme {
         EntrySelectionScreen(
             entries = emptyList(),
+            isLoading = false,
+            errorMessage = null,
             onEntrySelect = {},
             newEntry = {}
         )
@@ -162,6 +191,36 @@ private fun PreviewEntrySelectionScreen() {
     LabophaseTheme {
         EntrySelectionScreen(
             entries = listOf(previewEntry1, previewEntry2),
+            isLoading = false,
+            errorMessage = null,
+            onEntrySelect = {},
+            newEntry = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewEntrySelectionScreenLoading() {
+    LabophaseTheme {
+        EntrySelectionScreen(
+            entries = emptyList(),
+            isLoading = true,
+            errorMessage = null,
+            onEntrySelect = {},
+            newEntry = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewEntrySelectionScreenError() {
+    LabophaseTheme {
+        EntrySelectionScreen(
+            entries = emptyList(),
+            isLoading = false,
+            errorMessage = "Something went wrong",
             onEntrySelect = {},
             newEntry = {}
         )

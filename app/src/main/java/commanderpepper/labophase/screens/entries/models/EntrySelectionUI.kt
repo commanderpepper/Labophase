@@ -12,3 +12,9 @@ data class EntrySelectionUI(
 )
 
 data class RoundEntrySelectionUI(val leader: Leader, val summary: String)
+
+data class EntrySelectionUIState (
+    val isLoading: Boolean = true,
+    val errorMessage: String? = null,
+    val entries: List<EntrySelectionUI> = emptyList()
+)

@@ -11,13 +11,18 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -58,28 +63,35 @@ class EntrySelectionViewModelImplTest {
     private fun createViewModel() = EntrySelectionViewModelImpl(entryRepository, converter)
 
     @Test
-    fun `initial emission is empty list`() = runTest {
+    fun `initial state is loading`() = runTest {
+        // SharedFlow has no initial value, so the stateIn loading state is preserved and visible
+        every { entryRepository.getAllEntries() } returns MutableSharedFlow()
         val vm = createViewModel()
 
-        vm.entries.test {
-            assertTrue(awaitItem().isEmpty())
+        vm.entrySelectionUiState.test {
+            val state = awaitItem()
+            assertTrue(state.isLoading)
+            assertTrue(state.entries.isEmpty())
+            assertNull(state.errorMessage)
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun `emits converted entry when repository emits`() = runTest {
+    fun `emits entries when repository emits`() = runTest {
         val vm = createViewModel()
 
-        vm.entries.test {
-            awaitItem() // initial empty
+        vm.entrySelectionUiState.test {
+            awaitItem() // initial empty entries state
 
             entriesFlow.value = listOf(makeEntry(id = 1))
-            val entries = awaitItem()
+            val state = awaitItem()
 
-            assertEquals(1, entries.size)
-            assertEquals(1, entries[0].entryId)
-            assertEquals(Leader.UGLuffy, entries[0].leader)
+            assertFalse(state.isLoading)
+            assertNull(state.errorMessage)
+            assertEquals(1, state.entries.size)
+            assertEquals(1, state.entries[0].entryId)
+            assertEquals(Leader.UGLuffy, state.entries[0].leader)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -93,14 +105,14 @@ class EntrySelectionViewModelImplTest {
             makeRound(result = "Loss")
         )
 
-        vm.entries.test {
-            awaitItem() // initial empty
+        vm.entrySelectionUiState.test {
+            awaitItem() // initial empty entries state
 
             entriesFlow.value = listOf(makeEntry(rounds = rounds))
-            val entries = awaitItem()
+            val state = awaitItem()
 
-            assertEquals(2, entries[0].wins)
-            assertEquals(1, entries[0].losses)
+            assertEquals(2, state.entries[0].wins)
+            assertEquals(1, state.entries[0].losses)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -109,16 +121,16 @@ class EntrySelectionViewModelImplTest {
     fun `updated repository emission replaces previous entries`() = runTest {
         val vm = createViewModel()
 
-        vm.entries.test {
-            awaitItem() // initial empty
+        vm.entrySelectionUiState.test {
+            awaitItem() // initial empty entries state
 
             entriesFlow.value = listOf(makeEntry(id = 1))
-            awaitItem() // first emission
+            awaitItem() // first populated emission
 
             entriesFlow.value = listOf(makeEntry(id = 1), makeEntry(id = 2))
-            val updated = awaitItem()
+            val state = awaitItem()
 
-            assertEquals(2, updated.size)
+            assertEquals(2, state.entries.size)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -127,16 +139,16 @@ class EntrySelectionViewModelImplTest {
     fun `clearing entries emits empty list`() = runTest {
         val vm = createViewModel()
 
-        vm.entries.test {
-            awaitItem() // initial empty
+        vm.entrySelectionUiState.test {
+            awaitItem() // initial empty entries state
 
             entriesFlow.value = listOf(makeEntry(id = 1))
             awaitItem() // populated
 
             entriesFlow.value = emptyList()
-            val cleared = awaitItem()
+            val state = awaitItem()
 
-            assertTrue(cleared.isEmpty())
+            assertTrue(state.entries.isEmpty())
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -145,18 +157,33 @@ class EntrySelectionViewModelImplTest {
     fun `multiple entries are all converted`() = runTest {
         val vm = createViewModel()
 
-        vm.entries.test {
-            awaitItem() // initial empty
+        vm.entrySelectionUiState.test {
+            awaitItem() // initial empty entries state
 
             entriesFlow.value = listOf(
                 makeEntry(id = 1, leaderCardId = Leader.UGLuffy.cardId),
                 makeEntry(id = 2, leaderCardId = Leader.RShanks.cardId)
             )
-            val entries = awaitItem()
+            val state = awaitItem()
 
-            assertEquals(2, entries.size)
-            assertEquals(Leader.UGLuffy, entries[0].leader)
-            assertEquals(Leader.RShanks, entries[1].leader)
+            assertEquals(2, state.entries.size)
+            assertEquals(Leader.UGLuffy, state.entries[0].leader)
+            assertEquals(Leader.RShanks, state.entries[1].leader)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `error state is emitted when repository throws`() = runTest {
+        every { entryRepository.getAllEntries() } returns flow { throw RuntimeException("db error") }
+        val vm = createViewModel()
+
+        vm.entrySelectionUiState.test {
+            // loading state conflated by error state before collector processes it
+            val state = awaitItem()
+            assertNotNull(state.errorMessage)
+            assertTrue(state.entries.isEmpty())
+            assertFalse(state.isLoading)
             cancelAndIgnoreRemainingEvents()
         }
     }
