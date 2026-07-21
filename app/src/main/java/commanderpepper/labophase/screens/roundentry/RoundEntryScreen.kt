@@ -57,6 +57,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
+import commanderpepper.labophase.R
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -139,7 +141,7 @@ fun RoundEntryScreen(
                 title = { Text(leaderSelected.name) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 }
             )
@@ -179,8 +181,8 @@ fun RoundEntryScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Button(onClick = { transformEntry() }) { Text("Save punk record entry") }
-                    OutlinedButton(onClick = { addNewRound() }) { Text("New round") }
+                    Button(onClick = { transformEntry() }) { Text(stringResource(R.string.btn_save_punk_record)) }
+                    OutlinedButton(onClick = { addNewRound() }) { Text(stringResource(R.string.btn_new_round)) }
                 }
                 if (punkRecordEntry.isNotEmpty()) {
                     val punkRecordVisible = rememberSaveable { mutableStateOf(true) }
@@ -194,10 +196,10 @@ fun RoundEntryScreen(
                             .clickable { punkRecordVisible.value = !punkRecordVisible.value },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Punk Record", modifier = Modifier.weight(1f))
+                        Text(stringResource(R.string.label_punk_record), modifier = Modifier.weight(1f))
                         Icon(
                             Icons.Default.ExpandMore,
-                            contentDescription = if (punkRecordVisible.value) "Hide" else "Show",
+                            contentDescription = if (punkRecordVisible.value) stringResource(R.string.cd_hide) else stringResource(R.string.cd_show),
                             modifier = Modifier.rotate(punkRecordRotation)
                         )
                     }
@@ -303,11 +305,11 @@ fun LeaderPlayerInTournamentSelection(
         ) {
             LeaderThumbnail(leader = leaderSelected)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("W: $wins - L: $losses", modifier = Modifier.weight(1f))
+            Text(stringResource(R.string.wins_losses_format, wins, losses), modifier = Modifier.weight(1f))
             IconButton(onClick = { isExpanded.value = !isExpanded.value }) {
                 Icon(
                     Icons.Default.ExpandMore,
-                    contentDescription = if (isExpanded.value) "Collapse" else "Expand",
+                    contentDescription = if (isExpanded.value) stringResource(R.string.cd_collapse) else stringResource(R.string.cd_expand),
                     modifier = Modifier.rotate(rotation)
                 )
             }
@@ -354,12 +356,12 @@ fun RoundResultSelection(roundResult: String, onRoundSelected: (String) -> Unit)
             selected = roundResult == "Win",
             onClick = { onRoundSelected("Win") },
             shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
-        ) { Text("W") }
+        ) { Text(stringResource(R.string.round_result_win)) }
         SegmentedButton(
             selected = roundResult == "Loss",
             onClick = { onRoundSelected("Loss") },
             shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
-        ) { Text("L") }
+        ) { Text(stringResource(R.string.round_result_loss)) }
     }
 }
 
@@ -371,12 +373,12 @@ fun TurnOrderSelection(turnOrder: String, onTurnOrderSelected: (String) -> Unit)
             selected = turnOrder == "First",
             onClick = { onTurnOrderSelected("First") },
             shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
-        ) { Text("1st") }
+        ) { Text(stringResource(R.string.turn_order_first)) }
         SegmentedButton(
             selected = turnOrder == "Second",
             onClick = { onTurnOrderSelected("Second") },
             shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
-        ) { Text("2nd") }
+        ) { Text(stringResource(R.string.turn_order_second)) }
     }
 }
 
@@ -433,14 +435,14 @@ fun RoundEntry(
             IconButton(onClick = { isExpanded.value = !isExpanded.value }) {
                 Icon(
                     Icons.Default.ExpandMore,
-                    contentDescription = if (isExpanded.value) "Collapse" else "Expand",
+                    contentDescription = if (isExpanded.value) stringResource(R.string.cd_collapse) else stringResource(R.string.cd_expand),
                     modifier = Modifier.rotate(rotation)
                 )
             }
             IconButton(onClick = { removeRound(round.roundId) }) {
                 Icon(
                     Icons.Default.DeleteForever,
-                    contentDescription = "Delete"
+                    contentDescription = stringResource(R.string.action_delete)
                 )
             }
         }
@@ -483,7 +485,7 @@ fun CopyableResult(text: String) {
                 }
             }
         ) {
-            Icon(Icons.Default.ContentCopy, contentDescription = "Copy")
+            Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.cd_copy))
         }
     }
 }

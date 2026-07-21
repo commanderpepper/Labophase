@@ -38,8 +38,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import commanderpepper.labophase.R
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.screens.entries.models.EntrySelectionUI
 import commanderpepper.labophase.screens.entries.models.RoundEntrySelectionUI
@@ -80,7 +82,7 @@ fun EntrySelectionScreen(
             ExtendedFloatingActionButton(
                 onClick = newEntry,
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("New Entry") }
+                text = { Text(stringResource(R.string.fab_new_entry)) }
             )
         }
     ) { innerPadding ->
@@ -129,16 +131,16 @@ fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit, o
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             icon = { Icon(Icons.Default.Warning, contentDescription = null) },
-            title = { Text("Delete Entry") },
-            text = { Text("Are you sure you want to delete this entry? This action cannot be undone.") },
+            title = { Text(stringResource(R.string.dialog_delete_entry_title)) },
+            text = { Text(stringResource(R.string.dialog_delete_entry_body)) },
             confirmButton = {
                 TextButton(onClick = {
                     onEntryDelete(entrySelectionUI.entryId)
                     showDeleteDialog = false
-                }) { Text("Delete") }
+                }) { Text(stringResource(R.string.action_delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showDeleteDialog = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -153,12 +155,12 @@ fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit, o
                     IconButton(onClick = { punkRecordVisibility.value = !punkRecordVisibility.value }) {
                         Icon(
                             Icons.Default.ExpandMore,
-                            contentDescription = if (punkRecordVisibility.value) "Collapse" else "Expand",
+                            contentDescription = if (punkRecordVisibility.value) stringResource(R.string.cd_collapse) else stringResource(R.string.cd_expand),
                             modifier = Modifier.rotate(rotation)
                         )
                     }
                     IconButton(onClick = { showDeleteDialog = true }) {
-                        Icon(Icons.Default.DeleteForever, contentDescription = "Delete entry")
+                        Icon(Icons.Default.DeleteForever, contentDescription = stringResource(R.string.cd_delete_entry))
                     }
                 }
             }

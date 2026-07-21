@@ -1,3 +1,39 @@
 <resources>
     <string name="app_name">Labophase</string>
+
+    <!-- Shared actions -->
+    <string name="action_cancel">Cancel</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_delete">Delete</string>
+
+    <!-- Content descriptions -->
+    <string name="cd_back">Back</string>
+    <string name="cd_collapse">Collapse</string>
+    <string name="cd_expand">Expand</string>
+    <string name="cd_copy">Copy</string>
+    <string name="cd_hide">Hide</string>
+    <string name="cd_show">Show</string>
+    <string name="cd_delete_entry">Delete entry</string>
+
+    <!-- EntrySelectionScreen -->
+    <string name="fab_new_entry">New Entry</string>
+    <string name="dialog_delete_entry_title">Delete Entry</string>
+    <string name="dialog_delete_entry_body">Are you sure you want to delete this entry? This action cannot be undone.</string>
+
+    <!-- RoundEntryScreen -->
+    <string name="btn_save_punk_record">Save punk record entry</string>
+    <string name="btn_new_round">New round</string>
+    <string name="label_punk_record">Punk Record</string>
+    <string name="wins_losses_format">W: %1$d - L: %2$d</string>
+    <string name="round_result_win">W</string>
+    <string name="round_result_loss">L</string>
+    <string name="turn_order_first">1st</string>
+    <string name="turn_order_second">2nd</string>
+
+    <!-- SettingsScreen -->
+    <string name="settings_show_all_leaders">Show all leaders</string>
+    <string name="settings_show_die_rolls">Show die rolls</string>
+    <string name="btn_clear_entries">Clear Entries</string>
+    <string name="dialog_clear_history_title">Clear history</string>
+    <string name="dialog_clear_history_body">This will permanently delete all entries.</string>
 </resources>

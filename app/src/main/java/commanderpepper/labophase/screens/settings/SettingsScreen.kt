@@ -23,7 +23,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import commanderpepper.labophase.R
 import commanderpepper.labophase.ui.theme.LabophaseTheme
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -45,17 +47,17 @@ fun SettingsScreen(settingsViewModel: SettingsViewModel = koinViewModel<Settings
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("Clear history") },
-            text = { Text("This will permanently delete all entries.") },
-            icon = { Icon(Icons.Default.Warning, contentDescription = null) },  // optional
+            title = { Text(stringResource(R.string.dialog_clear_history_title)) },
+            text = { Text(stringResource(R.string.dialog_clear_history_body)) },
+            icon = { Icon(Icons.Default.Warning, contentDescription = null) },
             confirmButton = {
                 TextButton(onClick = { settingsViewModel.deleteHistory(); showDialog = false }) {
-                    Text("Confirm")
+                    Text(stringResource(R.string.action_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -77,7 +79,7 @@ fun SettingsScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Show all leaders")
+            Text(stringResource(R.string.settings_show_all_leaders))
             Switch(
                 checked = showingAllLeaders,
                 onCheckedChange = { toggleLeaders() }
@@ -88,13 +90,13 @@ fun SettingsScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Show die rolls")
+            Text(stringResource(R.string.settings_show_die_rolls))
             Switch(
                 checked = showingDieRolls,
                 onCheckedChange = { toggleDieRoll() }
             )
         }
-        Button(onClick = { clearHistory() }) { Text("Clear Entries") }
+        Button(onClick = { clearHistory() }) { Text(stringResource(R.string.btn_clear_entries)) }
     }
 }
 
