@@ -27,7 +27,7 @@ interface EntryDao {
 
     @Transaction
     @Query("SELECT * FROM entries ORDER BY id DESC")
-    fun getEntries(): List<EntryWithRounds>
+    suspend fun getEntries(): List<EntryWithRounds>
 
     @Transaction
     @Query("SELECT * FROM entries WHERE id = :id")
