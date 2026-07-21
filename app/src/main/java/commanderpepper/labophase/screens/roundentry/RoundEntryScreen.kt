@@ -45,7 +45,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.carousel.CarouselState
 import androidx.compose.material3.carousel.HorizontalCenteredHeroCarousel
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -85,8 +85,8 @@ fun RoundEntryScreen(
     ),
     settingsViewModel: SettingsViewModel = koinViewModel<SettingsViewModelImpl>()
 ) {
-    val uiState = roundEntryViewModel.uiState.collectAsState()
-    val showingDieRoll = settingsViewModel.showingDieRoll.collectAsState()
+    val uiState = roundEntryViewModel.uiState.collectAsStateWithLifecycle()
+    val showingDieRoll = settingsViewModel.showingDieRoll.collectAsStateWithLifecycle()
     RoundEntryScreen(
         modifier = modifier,
         onBack = onBack,

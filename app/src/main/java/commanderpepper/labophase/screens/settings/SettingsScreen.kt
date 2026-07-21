@@ -16,7 +16,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,8 +29,8 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun SettingsScreen(settingsViewModel: SettingsViewModel = koinViewModel<SettingsViewModelImpl>()){
-    val showingAllLeaders = settingsViewModel.showingAllLeaders.collectAsState()
-    val showingDieRolls = settingsViewModel.showingDieRoll.collectAsState()
+    val showingAllLeaders = settingsViewModel.showingAllLeaders.collectAsStateWithLifecycle()
+    val showingDieRolls = settingsViewModel.showingDieRoll.collectAsStateWithLifecycle()
     var showDialog by remember { mutableStateOf(false) }
 
     SettingsScreen(

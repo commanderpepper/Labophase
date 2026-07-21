@@ -26,7 +26,7 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -49,7 +49,7 @@ fun EntrySelectionScreen(
     onEntrySelect: (Int) -> Unit,
     newEntry: () -> Unit
 ) {
-    val uiState = entrySelectionViewModel.entrySelectionUiState.collectAsState()
+    val uiState = entrySelectionViewModel.entrySelectionUiState.collectAsStateWithLifecycle()
 
     EntrySelectionScreen(
         entries = uiState.value.entries,
