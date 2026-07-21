@@ -43,6 +43,7 @@ coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" 
 androidx-room-runtime  = { group = "androidx.room", name = "room-runtime",  version.ref = "room" }
 androidx-room-ktx      = { group = "androidx.room", name = "room-ktx",      version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler",  version.ref = "room" }
+androidx-room-testing  = { group = "androidx.room", name = "room-testing",  version.ref = "room" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
