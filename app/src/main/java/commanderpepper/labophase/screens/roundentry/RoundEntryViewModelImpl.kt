@@ -11,6 +11,7 @@ import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.models.leaderByCardId
 import commanderpepper.labophase.screens.roundentry.models.RoundEntryUIState
 import commanderpepper.labophase.screens.roundentry.models.RoundUI
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,7 +23,8 @@ import kotlinx.coroutines.withContext
 class RoundEntryViewModelImpl(
     private val leaderOrderDecider: LeaderOrderDecider,
     private val entryRepository: EntryRepository,
-    private val entryId: Int = -1
+    private val entryId: Int = -1,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : RoundEntryViewModel, ViewModel() {
 
     private var roundId: Int = 0
@@ -33,7 +35,7 @@ class RoundEntryViewModelImpl(
 
     init {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 try {
                     var loadedLeader: Leader = Leader.UGLuffy
                     if (entryId != -1) {

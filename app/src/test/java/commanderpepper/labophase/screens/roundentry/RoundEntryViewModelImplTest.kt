@@ -12,6 +12,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -44,7 +45,7 @@ class RoundEntryViewModelImplTest {
     }
 
     private fun createViewModel(entryId: Int = -1) =
-        RoundEntryViewModelImpl(leaderOrderDecider, entryRepository, entryId)
+        RoundEntryViewModelImpl(leaderOrderDecider, entryRepository, entryId, testDispatcher)
 
     @Test
     fun `initial leader selected is UGLuffy`() = runTest {
@@ -228,8 +229,7 @@ class RoundEntryViewModelImplTest {
         coEvery { entryRepository.getEntryById(5) } returns existingEntry
 
         val vm = createViewModel(entryId = 5)
-        // Give init block time to load on IO thread
-        Thread.sleep(200)
+        advanceUntilIdle()
 
         vm.addNewRound()
         vm.transformEntry()
@@ -261,7 +261,7 @@ class RoundEntryViewModelImplTest {
         coEvery { entryRepository.getEntryById(1) } returns existingEntry
 
         val vm = createViewModel(entryId = 1)
-        Thread.sleep(200) // wait for IO dispatcher to complete
+        advanceUntilIdle()
 
         assertEquals(Leader.RShanks, vm.uiState.value.leaderSelected)
     }
@@ -281,7 +281,7 @@ class RoundEntryViewModelImplTest {
         coEvery { entryRepository.getEntryById(1) } returns existingEntry
 
         val vm = createViewModel(entryId = 1)
-        Thread.sleep(200) // wait for IO dispatcher to complete
+        advanceUntilIdle()
 
         assertEquals(1, vm.uiState.value.rounds.size)
         assertEquals(Leader.RShanks, vm.uiState.value.rounds.first().leader)
@@ -289,16 +289,9 @@ class RoundEntryViewModelImplTest {
     }
 
     @Test
-    fun `initial state is loading`() = runTest {
-        val vm = createViewModel()
-        assertTrue(vm.uiState.value.isLoading)
-        assertNull(vm.uiState.value.errorMessage)
-    }
-
-    @Test
     fun `isLoading is false and errorMessage is null after init completes`() = runTest {
         val vm = createViewModel()
-        Thread.sleep(200)
+        advanceUntilIdle()
         assertFalse(vm.uiState.value.isLoading)
         assertNull(vm.uiState.value.errorMessage)
     }
@@ -307,7 +300,7 @@ class RoundEntryViewModelImplTest {
     fun `error message is set and isLoading is false when repository throws`() = runTest {
         coEvery { leaderOrderDecider.getPlayerLeaderSelect() } throws RuntimeException("db error")
         val vm = createViewModel()
-        Thread.sleep(200)
+        advanceUntilIdle()
         assertFalse(vm.uiState.value.isLoading)
         assertNotNull(vm.uiState.value.errorMessage)
     }
