@@ -4,6 +4,8 @@ import commanderpepper.labophase.data.EntryEntity
 import commanderpepper.labophase.data.EntryRepository
 import commanderpepper.labophase.data.EntryWithRounds
 import commanderpepper.labophase.data.RoundEntity
+import commanderpepper.labophase.models.RoundResult
+import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.logic.LeaderOrderDecider
 import commanderpepper.labophase.models.Leader
 import io.mockk.coEvery
@@ -274,7 +276,7 @@ class RoundEntryViewModelImplTest {
                 RoundEntity(
                     entryId = 1, roundNumber = 1,
                     leaderCardId = Leader.RShanks.cardId,
-                    roundResult = "Win", turnOrder = "First"
+                    roundResult = RoundResult.Win, turnOrder = TurnOrder.First
                 )
             )
         )

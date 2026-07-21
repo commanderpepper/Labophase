@@ -5,6 +5,8 @@ import commanderpepper.labophase.data.EntryEntity
 import commanderpepper.labophase.data.EntryRepository
 import commanderpepper.labophase.data.EntryWithRounds
 import commanderpepper.labophase.data.RoundEntity
+import commanderpepper.labophase.models.RoundResult
+import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.logic.converter.EntryToEntrySelectionUIConverter
 import commanderpepper.labophase.models.Leader
 import io.mockk.every
@@ -56,8 +58,8 @@ class EntrySelectionViewModelImplTest {
     private fun makeRound(
         entryId: Int = 1,
         leaderCardId: String = Leader.RShanks.cardId,
-        result: String = "Win",
-        order: String = "First"
+        result: RoundResult = RoundResult.Win,
+        order: TurnOrder = TurnOrder.First
     ) = RoundEntity(entryId = entryId, roundNumber = 1, leaderCardId = leaderCardId, roundResult = result, turnOrder = order)
 
     private fun createViewModel() = EntrySelectionViewModelImpl(entryRepository, converter)
@@ -100,9 +102,9 @@ class EntrySelectionViewModelImplTest {
     fun `wins and losses are converted correctly`() = runTest {
         val vm = createViewModel()
         val rounds = listOf(
-            makeRound(result = "Win"),
-            makeRound(result = "Win"),
-            makeRound(result = "Loss")
+            makeRound(result = RoundResult.Win),
+            makeRound(result = RoundResult.Win),
+            makeRound(result = RoundResult.Loss)
         )
 
         vm.entrySelectionUiState.test {

@@ -2,8 +2,6 @@ package commanderpepper.labophase.data
 
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Round
-import commanderpepper.labophase.models.RoundResult
-import commanderpepper.labophase.models.TurnOrder
 import kotlinx.coroutines.flow.Flow
 
 interface EntryRepository {
@@ -33,8 +31,8 @@ class EntryRepositoryImpl(private val dao: EntryDao) : EntryRepository {
             entryId = entryId,
             roundNumber = r.roundNumber,
             leaderCardId = r.leader.cardId,
-            roundResult = if (r.roundResult is RoundResult.Win) "Win" else "Loss",
-            turnOrder = if (r.turnOrder is TurnOrder.First) "First" else "Second",
+            roundResult = r.roundResult,
+            turnOrder = r.turnOrder,
             dieRoll = r.dieRoll
         )
     }

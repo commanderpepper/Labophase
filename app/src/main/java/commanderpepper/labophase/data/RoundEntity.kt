@@ -4,6 +4,8 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import commanderpepper.labophase.models.RoundResult
+import commanderpepper.labophase.models.TurnOrder
 
 @Entity(
     tableName = "rounds",
@@ -19,7 +21,7 @@ data class RoundEntity(
     @ColumnInfo(index = true) val entryId: Int,
     val roundNumber: Int,
     val leaderCardId: String,
-    val roundResult: String,
-    val turnOrder: String,
+    val roundResult: RoundResult,
+    val turnOrder: TurnOrder,
     val dieRoll: String? = null
 )

@@ -47,8 +47,8 @@ class RoundEntryViewModelImpl(
                                     roundId = index,
                                     roundNumber = r.roundNumber,
                                     leader = leaderByCardId(r.leaderCardId),
-                                    roundResult = if (r.roundResult == "Win") RoundResult.Win else RoundResult.Loss,
-                                    turnOrder = if (r.turnOrder == "First") TurnOrder.First else TurnOrder.Second,
+                                    roundResult = r.roundResult,
+                                    turnOrder = r.turnOrder,
                                     dieRoll = r.dieRoll
                                 )
                             }

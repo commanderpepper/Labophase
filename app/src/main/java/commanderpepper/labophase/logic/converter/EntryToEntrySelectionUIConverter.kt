@@ -31,8 +31,8 @@ class EntryToEntrySelectionUIConverter {
             roundId = 0,
             roundNumber = roundEntity.roundNumber,
             leader = leader,
-            roundResult = if (roundEntity.roundResult == "Win") RoundResult.Win else RoundResult.Loss,
-            turnOrder = if (roundEntity.turnOrder == "First") TurnOrder.First else TurnOrder.Second,
+            roundResult = roundEntity.roundResult,
+            turnOrder = roundEntity.turnOrder,
             dieRoll = roundEntity.dieRoll
         )
         return RoundEntrySelectionUI(leader = leader, summary = round.singleLine())
@@ -40,16 +40,16 @@ class EntryToEntrySelectionUIConverter {
 }
 
 fun getWins(rounds: List<RoundEntity>): Int {
-    return rounds.count { round -> round.roundResult == "Win" }
+    return rounds.count { round -> round.roundResult == RoundResult.Win }
 }
 
 fun getLosses(rounds: List<RoundEntity>): Int {
-    return rounds.count { round -> round.roundResult == "Loss" }
+    return rounds.count { round -> round.roundResult == RoundResult.Loss }
 }
 
 fun getPunkRecord(leader: Leader, rounds: List<RoundEntity>): String {
     val formatted = rounds.map { round ->
-        "${if (round.roundResult == "Win") "W" else "L"} ${leaderByCardId(round.leaderCardId).name} ${if (round.turnOrder == "First") "1st" else "2nd"}"
+        "${if (round.roundResult == RoundResult.Win) "W" else "L"} ${leaderByCardId(round.leaderCardId).name} ${if (round.turnOrder == TurnOrder.First) "1st" else "2nd"}"
     }.joinToString(separator = "\n")
     return "!PR add\n${leader.name}\n$formatted"
 }

@@ -7,6 +7,8 @@ import commanderpepper.labophase.data.RoundEntity
 import commanderpepper.labophase.data.SettingsRepository
 import commanderpepper.labophase.models.LEADERS_LIST
 import commanderpepper.labophase.models.Leader
+import commanderpepper.labophase.models.RoundResult
+import commanderpepper.labophase.models.TurnOrder
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +44,7 @@ class LeaderOrderDeciderImplTest {
         EntryWithRounds(entry = EntryEntity(leaderCardId = leaderCardId), rounds = rounds)
 
     private fun makeRound(leaderCardId: String) =
-        RoundEntity(entryId = 0, roundNumber = 1, leaderCardId = leaderCardId, roundResult = "Win", turnOrder = "First")
+        RoundEntity(entryId = 0, roundNumber = 1, leaderCardId = leaderCardId, roundResult = RoundResult.Win, turnOrder = TurnOrder.First)
 
     @Test
     fun `getPlayerLeaderSelect returns all leaders when showAll is true`() = runTest {
