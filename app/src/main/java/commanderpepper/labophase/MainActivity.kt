@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -17,13 +16,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavType
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
-import commanderpepper.labophase.navigation.Screen
+import androidx.navigation.toRoute
+import commanderpepper.labophase.navigation.EntrySelection
+import commanderpepper.labophase.navigation.RoundEntry
+import commanderpepper.labophase.navigation.Settings
 import commanderpepper.labophase.screens.entries.EntrySelectionScreen
 import commanderpepper.labophase.screens.roundentry.RoundEntryScreen
 import commanderpepper.labophase.screens.settings.SettingsScreen
@@ -37,17 +38,18 @@ class MainActivity : ComponentActivity() {
             LabophaseTheme {
                 val navController = rememberNavController()
                 val currentBackStack by navController.currentBackStackEntryAsState()
-                val currentRoute = currentBackStack?.destination?.route
-                val topLevelRoutes = listOf(Screen.EntrySelection.route, Screen.Settings.route)
+                val currentDestination = currentBackStack?.destination
+                val isTopLevel = currentDestination?.hasRoute<EntrySelection>() == true ||
+                        currentDestination?.hasRoute<Settings>() == true
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
-                        if (currentRoute in topLevelRoutes) {
+                        if (isTopLevel) {
                             NavigationBar {
                                 NavigationBarItem(
-                                    selected = currentRoute == Screen.EntrySelection.route,
+                                    selected = currentDestination.hasRoute<EntrySelection>(),
                                     onClick = {
-                                        navController.navigate(Screen.EntrySelection.route) {
+                                        navController.navigate(EntrySelection) {
                                             popUpTo(navController.graph.startDestinationId) { saveState = true }
                                             launchSingleTop = true
                                             restoreState = true
@@ -57,9 +59,9 @@ class MainActivity : ComponentActivity() {
                                     label = { Text("Entries") }
                                 )
                                 NavigationBarItem(
-                                    selected = currentRoute == Screen.Settings.route,
+                                    selected = currentDestination.hasRoute<Settings>(),
                                     onClick = {
-                                        navController.navigate(Screen.Settings.route) {
+                                        navController.navigate(Settings) {
                                             popUpTo(navController.graph.startDestinationId) { saveState = true }
                                             launchSingleTop = true
                                             restoreState = true
@@ -74,29 +76,23 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     NavHost(
                         navController = navController,
-                        startDestination = Screen.EntrySelection.route,
+                        startDestination = EntrySelection,
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        composable(Screen.EntrySelection.route) {
+                        composable<EntrySelection> {
                             EntrySelectionScreen(
-                                onEntrySelect = { entryId -> navController.navigate(Screen.RoundEntry.navigate(entryId)) },
-                                newEntry = { navController.navigate(Screen.RoundEntry.navigate()) }
+                                onEntrySelect = { entryId -> navController.navigate(RoundEntry(entryId)) },
+                                newEntry = { navController.navigate(RoundEntry()) }
                             )
                         }
-                        composable(
-                            route = Screen.RoundEntry.route,
-                            arguments = listOf(navArgument(Screen.RoundEntry.ARG) {
-                                type = NavType.IntType
-                                defaultValue = -1
-                            })
-                        ) { backStackEntry ->
-                            val entryId = backStackEntry.arguments?.getInt(Screen.RoundEntry.ARG) ?: -1
+                        composable<RoundEntry> { backStackEntry ->
+                            val route: RoundEntry = backStackEntry.toRoute()
                             RoundEntryScreen(
-                                entryId = entryId,
+                                entryId = route.entryId,
                                 onBack = { navController.navigateUp() }
                             )
                         }
-                        composable(Screen.Settings.route) {
+                        composable<Settings> {
                             SettingsScreen()
                         }
                     }

@@ -44,7 +44,7 @@ class RoundEntryViewModelImplTest {
         Dispatchers.resetMain()
     }
 
-    private fun createViewModel(entryId: Int = -1) =
+    private fun createViewModel(entryId: Int? = null) =
         RoundEntryViewModelImpl(leaderOrderDecider, entryRepository, entryId, testDispatcher)
 
     @Test
@@ -212,7 +212,7 @@ class RoundEntryViewModelImplTest {
 
     @Test
     fun `transformEntry saves new entry when entryId is -1`() = runTest {
-        val vm = createViewModel(entryId = -1)
+        val vm = createViewModel(entryId = null)
         vm.addNewRound()
 
         vm.transformEntry()

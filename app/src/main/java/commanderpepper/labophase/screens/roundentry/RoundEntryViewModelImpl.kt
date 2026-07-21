@@ -23,7 +23,7 @@ import kotlinx.coroutines.withContext
 class RoundEntryViewModelImpl(
     private val leaderOrderDecider: LeaderOrderDecider,
     private val entryRepository: EntryRepository,
-    private val entryId: Int = -1,
+    private val entryId: Int? = null,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : RoundEntryViewModel, ViewModel() {
 
@@ -38,7 +38,7 @@ class RoundEntryViewModelImpl(
             withContext(ioDispatcher) {
                 try {
                     var loadedLeader: Leader = Leader.UGLuffy
-                    if (entryId != -1) {
+                    if (entryId != null) {
                         val existing = entryRepository.getEntryById(entryId)
                         if (existing != null) {
                             loadedLeader = leaderByCardId(existing.entry.leaderCardId)
@@ -96,7 +96,7 @@ class RoundEntryViewModelImpl(
     }
 
     private suspend fun saveEntry(leader: Leader, rounds: List<Round>) {
-        if (entryId == -1) {
+        if (entryId == null) {
             entryRepository.saveEntry(leader, rounds)
         } else {
             entryRepository.updateEntry(entryId, leader, rounds)

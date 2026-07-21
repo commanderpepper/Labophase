@@ -79,7 +79,7 @@ import org.koin.core.parameter.parametersOf
 fun RoundEntryScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
-    entryId: Int = -1,
+    entryId: Int? = null,
     roundEntryViewModel: RoundEntryViewModel = koinViewModel<RoundEntryViewModelImpl>(
         parameters = { parametersOf(entryId) }
     ),
@@ -90,7 +90,7 @@ fun RoundEntryScreen(
     RoundEntryScreen(
         modifier = modifier,
         onBack = onBack,
-        leaderSelectExpanded = entryId == -1,
+        leaderSelectExpanded = entryId == null,
         leaderSelected = uiState.value.leaderSelected,
         playerLeaderList = uiState.value.playerLeaderList,
         roundLeaderList = uiState.value.roundLeaderList,

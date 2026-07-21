@@ -26,7 +26,7 @@ val appModule = module {
     single { TournamentResultInterpreter }
     single<LeaderOrderDecider> { LeaderOrderDeciderImpl(get(), get()) }
     single { EntryToEntrySelectionUIConverter() }
-    viewModel { params -> RoundEntryViewModelImpl(get(), get(), params.getOrNull() ?: -1) }
+    viewModel { params -> RoundEntryViewModelImpl(get(), get(), params.getOrNull<Int>()) }
     viewModel { EntrySelectionViewModelImpl(get(), get()) }
     viewModel { SettingsViewModelImpl(get()) }
 }
