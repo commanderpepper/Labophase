@@ -5,4 +5,5 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface EntrySelectionViewModel {
     val entrySelectionUiState: StateFlow<EntrySelectionUIState>
+    fun deleteEntry(entryId: Int)
 }

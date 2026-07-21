@@ -12,6 +12,7 @@ interface EntryRepository {
     fun getAllEntries(): Flow<List<EntryWithRounds>>
     suspend fun getEntries(): List<EntryWithRounds>
     suspend fun getEntryById(id: Int): EntryWithRounds?
+    suspend fun deleteEntry(entryId: Int)
     suspend fun deleteAllEntries()
 }
 
@@ -43,6 +44,11 @@ class EntryRepositoryImpl(private val dao: EntryDao) : EntryRepository {
     override suspend fun getEntries(): List<EntryWithRounds> = dao.getEntries()
 
     override suspend fun getEntryById(id: Int): EntryWithRounds? = dao.getEntryById(id)
+
+    override suspend fun deleteEntry(entryId: Int) {
+        dao.deleteRoundsByEntryId(entryId)
+        dao.deleteEntry(entryId)
+    }
 
     override suspend fun deleteAllEntries() = dao.deleteAllEntries()
 }

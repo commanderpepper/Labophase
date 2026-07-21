@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class EntrySelectionViewModelImpl(private val eventRepository: EntryRepository, private val entrySelectionUIConverter: EntryToEntrySelectionUIConverter) : EntrySelectionViewModel, ViewModel() {
 
@@ -20,4 +21,8 @@ class EntrySelectionViewModelImpl(private val eventRepository: EntryRepository, 
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L),
             EntrySelectionUIState(isLoading = true)
         )
+
+    override fun deleteEntry(entryId: Int) {
+        viewModelScope.launch { eventRepository.deleteEntry(entryId) }
+    }
 }

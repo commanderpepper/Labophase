@@ -16,7 +16,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -25,11 +28,13 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -56,6 +61,7 @@ fun EntrySelectionScreen(
         isLoading = uiState.value.isLoading,
         errorMessage = uiState.value.errorMessage,
         onEntrySelect = onEntrySelect,
+        onEntryDelete = entrySelectionViewModel::deleteEntry,
         newEntry = newEntry
     )
 }
@@ -66,6 +72,7 @@ fun EntrySelectionScreen(
     isLoading: Boolean,
     errorMessage: String?,
     onEntrySelect: (Int) -> Unit,
+    onEntryDelete: (Int) -> Unit,
     newEntry: () -> Unit
 ) {
     Scaffold(
@@ -101,7 +108,7 @@ fun EntrySelectionScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(items = entries) { entry ->
-                    EntryRow(entrySelectionUI = entry, onEntrySelect = onEntrySelect)
+                    EntryRow(entrySelectionUI = entry, onEntrySelect = onEntrySelect, onEntryDelete = onEntryDelete)
                 }
             }
         }
@@ -110,24 +117,49 @@ fun EntrySelectionScreen(
 }
 
 @Composable
-fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit) {
+fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit, onEntryDelete: (Int) -> Unit) {
     val punkRecordVisibility = rememberSaveable { mutableStateOf(false) }
+    var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
     val rotation by animateFloatAsState(
         targetValue = if (punkRecordVisibility.value) 180f else 0f,
         label = "expand_rotation"
     )
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            icon = { Icon(Icons.Default.Warning, contentDescription = null) },
+            title = { Text("Delete Entry") },
+            text = { Text("Are you sure you want to delete this entry? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onEntryDelete(entrySelectionUI.entryId)
+                    showDeleteDialog = false
+                }) { Text("Delete") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+
     OutlinedCard(modifier = Modifier.fillMaxWidth()) {
         ListItem(
             modifier = Modifier.clickable { onEntrySelect(entrySelectionUI.entryId) },
             leadingContent = { LeaderThumbnail(entrySelectionUI.leader) },
             headlineContent = { Text("W: ${entrySelectionUI.wins} - L: ${entrySelectionUI.losses}") },
             trailingContent = {
-                IconButton(onClick = { punkRecordVisibility.value = !punkRecordVisibility.value }) {
-                    Icon(
-                        Icons.Default.ExpandMore,
-                        contentDescription = if (punkRecordVisibility.value) "Collapse" else "Expand",
-                        modifier = Modifier.rotate(rotation)
-                    )
+                Row {
+                    IconButton(onClick = { punkRecordVisibility.value = !punkRecordVisibility.value }) {
+                        Icon(
+                            Icons.Default.ExpandMore,
+                            contentDescription = if (punkRecordVisibility.value) "Collapse" else "Expand",
+                            modifier = Modifier.rotate(rotation)
+                        )
+                    }
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(Icons.Default.DeleteForever, contentDescription = "Delete entry")
+                    }
                 }
             }
         )
@@ -180,6 +212,7 @@ private fun PreviewEntrySelectionScreenEmpty() {
             isLoading = false,
             errorMessage = null,
             onEntrySelect = {},
+            onEntryDelete = {},
             newEntry = {}
         )
     }
@@ -194,6 +227,7 @@ private fun PreviewEntrySelectionScreen() {
             isLoading = false,
             errorMessage = null,
             onEntrySelect = {},
+            onEntryDelete = {},
             newEntry = {}
         )
     }
@@ -208,6 +242,7 @@ private fun PreviewEntrySelectionScreenLoading() {
             isLoading = true,
             errorMessage = null,
             onEntrySelect = {},
+            onEntryDelete = {},
             newEntry = {}
         )
     }
@@ -222,6 +257,7 @@ private fun PreviewEntrySelectionScreenError() {
             isLoading = false,
             errorMessage = "Something went wrong",
             onEntrySelect = {},
+            onEntryDelete = {},
             newEntry = {}
         )
     }
@@ -231,6 +267,6 @@ private fun PreviewEntrySelectionScreenError() {
 @Composable
 private fun PreviewEntryRow() {
     LabophaseTheme {
-        EntryRow(entrySelectionUI = previewEntry1, onEntrySelect = {})
+        EntryRow(entrySelectionUI = previewEntry1, onEntrySelect = {}, onEntryDelete = {})
     }
 }
