@@ -9,17 +9,15 @@ import commanderpepper.labophase.models.Round
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.models.leaderByCardId
+import commanderpepper.labophase.screens.roundentry.models.RoundEntryUIState
 import commanderpepper.labophase.screens.roundentry.models.RoundUI
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 
 class RoundEntryViewModelImpl(
     private val leaderOrderDecider: LeaderOrderDecider,
@@ -28,59 +26,62 @@ class RoundEntryViewModelImpl(
 ) : RoundEntryViewModel, ViewModel() {
 
     private var roundId: Int = 0
+    private var roundsMap: Map<Int, Round> = emptyMap()
 
-    private val _leaderSelected: MutableStateFlow<Leader> = MutableStateFlow(Leader.UGLuffy)
-    override val leaderSelected: StateFlow<Leader> = _leaderSelected
-
-    private val _rounds = MutableStateFlow<Map<Int, Round>>(emptyMap())
-    override val rounds: StateFlow<List<RoundUI>> = _rounds
-        .map { map -> map.values.map { it.toRoundUI() } }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
-
-    private val _playerLeaderList: MutableStateFlow<List<Leader>> = MutableStateFlow(emptyList())
-    override val playerLeaderList: StateFlow<List<Leader>> = _playerLeaderList.asStateFlow()
-
-    private val _roundLeaderList: MutableStateFlow<List<Leader>> = MutableStateFlow(emptyList())
-    override val roundLeaderList: StateFlow<List<Leader>> = _roundLeaderList
+    private val _uiState = MutableStateFlow(RoundEntryUIState(leaderSelected = Leader.UGLuffy, isLoading = true))
+    override val uiState: StateFlow<RoundEntryUIState> = _uiState.asStateFlow()
 
     init {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
-                if (entryId != -1) {
-                    val existing = entryRepository.getEntryById(entryId)
-                    if (existing != null) {
-                        _leaderSelected.value = leaderByCardId(existing.entry.leaderCardId)
-                        val loaded = existing.rounds.mapIndexed { index, r ->
-                            Round(
-                                roundId = index,
-                                roundNumber = r.roundNumber,
-                                leader = leaderByCardId(r.leaderCardId),
-                                roundResult = if (r.roundResult == "Win") RoundResult.Win else RoundResult.Loss,
-                                turnOrder = if (r.turnOrder == "First") TurnOrder.First else TurnOrder.Second,
-                                dieRoll = r.dieRoll
-                            )
+                try {
+                    var loadedLeader: Leader = Leader.UGLuffy
+                    if (entryId != -1) {
+                        val existing = entryRepository.getEntryById(entryId)
+                        if (existing != null) {
+                            loadedLeader = leaderByCardId(existing.entry.leaderCardId)
+                            val loaded = existing.rounds.mapIndexed { index, r ->
+                                Round(
+                                    roundId = index,
+                                    roundNumber = r.roundNumber,
+                                    leader = leaderByCardId(r.leaderCardId),
+                                    roundResult = if (r.roundResult == "Win") RoundResult.Win else RoundResult.Loss,
+                                    turnOrder = if (r.turnOrder == "First") TurnOrder.First else TurnOrder.Second,
+                                    dieRoll = r.dieRoll
+                                )
+                            }
+                            roundsMap = loaded.associateBy { it.roundId }
+                            roundId = loaded.size
                         }
-                        _rounds.value = loaded.associateBy { it.roundId }
-                        roundId = loaded.size
                     }
+                    val playerList = leaderOrderDecider.getPlayerLeaderSelect()
+                    val roundList = leaderOrderDecider.getRoundLeaderSelect()
+                    _uiState.update {
+                        it.copy(
+                            leaderSelected = loadedLeader,
+                            rounds = roundsMap.values.map { r -> r.toRoundUI() },
+                            playerLeaderList = playerList,
+                            roundLeaderList = roundList,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    }
+                } catch (e: Exception) {
+                    _uiState.update { it.copy(isLoading = false, errorMessage = "Something went wrong") }
                 }
-                _playerLeaderList.value = leaderOrderDecider.getPlayerLeaderSelect()
-                _roundLeaderList.value = leaderOrderDecider.getRoundLeaderSelect()
             }
         }
     }
 
-    private val _punkRecordEntry: MutableStateFlow<String> = MutableStateFlow("")
-    override val punkRecordEntry: StateFlow<String> = _punkRecordEntry
-
     override fun addNewRound() {
         val round = Round(roundId = roundId++, roundNumber = 1)
-        _rounds.value = _rounds.value + (round.roundId to round)
+        roundsMap = roundsMap + (round.roundId to round)
+        _uiState.update { it.copy(rounds = roundsMap.values.map { r -> r.toRoundUI() }) }
     }
 
     override fun transformEntry() {
-        val leader = _leaderSelected.value
-        val rounds = _rounds.value.values.toList()
+        val leader = _uiState.value.leaderSelected
+        val rounds = roundsMap.values.toList()
         updatePunkRecord(leader, rounds)
         viewModelScope.launch { saveEntry(leader, rounds) }
     }
@@ -89,7 +90,7 @@ class RoundEntryViewModelImpl(
         val formatted = rounds.map { round ->
             "${if (round.roundResult == RoundResult.Win) "W" else "L"} ${round.leader.name} ${if (round.turnOrder == TurnOrder.First) "1st" else "2nd"}"
         }.joinToString(separator = "\n")
-        _punkRecordEntry.value = "!PR add\n${leader.name}\n$formatted"
+        _uiState.update { it.copy(punkRecordEntry = "!PR add\n${leader.name}\n$formatted") }
     }
 
     private suspend fun saveEntry(leader: Leader, rounds: List<Round>) {
@@ -101,12 +102,13 @@ class RoundEntryViewModelImpl(
     }
 
     override fun chooseLeader(leader: Leader) {
-        _leaderSelected.value = leader
+        _uiState.update { it.copy(leaderSelected = leader) }
     }
 
     private fun updateRound(roundId: Int, update: (Round) -> Round) {
-        val roundToUpdate = _rounds.value[roundId] ?: return
-        _rounds.value = _rounds.value + (roundId to update(roundToUpdate))
+        val roundToUpdate = roundsMap[roundId] ?: return
+        roundsMap = roundsMap + (roundId to update(roundToUpdate))
+        _uiState.update { it.copy(rounds = roundsMap.values.map { r -> r.toRoundUI() }) }
     }
 
     override fun roundLeaderSelect(roundId: Int, leader: Leader) {
@@ -121,6 +123,15 @@ class RoundEntryViewModelImpl(
         updateRound(roundId) { it.copy(roundResult = if (roundResult == "Win") RoundResult.Win else RoundResult.Loss) }
     }
 
+    override fun roundDieRollSelect(roundId: Int, dieRoll: String?) {
+        updateRound(roundId) { it.copy(dieRoll = dieRoll) }
+    }
+
+    override fun removeRound(roundId: Int) {
+        roundsMap = roundsMap.minus(roundId)
+        _uiState.update { it.copy(rounds = roundsMap.values.map { r -> r.toRoundUI() }) }
+    }
+
     private fun Round.toRoundUI() = RoundUI(
         roundId = roundId,
         leader = leader,
@@ -129,12 +140,4 @@ class RoundEntryViewModelImpl(
         turnOrder = if (turnOrder == TurnOrder.First) "First" else "Second",
         dieRoll = dieRoll
     )
-
-    override fun roundDieRollSelect(roundId: Int, dieRoll: String?) {
-        updateRound(roundId) { it.copy(dieRoll = dieRoll) }
-    }
-
-    override fun removeRound(roundId: Int) {
-        _rounds.value = _rounds.value.minus(roundId)
-    }
 }

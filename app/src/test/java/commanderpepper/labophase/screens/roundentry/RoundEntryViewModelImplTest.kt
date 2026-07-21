@@ -17,6 +17,9 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -46,19 +49,19 @@ class RoundEntryViewModelImplTest {
     @Test
     fun `initial leader selected is UGLuffy`() = runTest {
         val vm = createViewModel()
-        assertEquals(Leader.UGLuffy, vm.leaderSelected.value)
+        assertEquals(Leader.UGLuffy, vm.uiState.value.leaderSelected)
     }
 
     @Test
     fun `initial rounds list is empty`() = runTest {
         val vm = createViewModel()
-        assertTrue(vm.rounds.value.isEmpty())
+        assertTrue(vm.uiState.value.rounds.isEmpty())
     }
 
     @Test
     fun `initial punk record is empty`() = runTest {
         val vm = createViewModel()
-        assertTrue(vm.punkRecordEntry.value.isEmpty())
+        assertTrue(vm.uiState.value.punkRecordEntry.isEmpty())
     }
 
     @Test
@@ -67,7 +70,7 @@ class RoundEntryViewModelImplTest {
 
         vm.addNewRound()
 
-        assertEquals(1, vm.rounds.value.size)
+        assertEquals(1, vm.uiState.value.rounds.size)
     }
 
     @Test
@@ -77,7 +80,7 @@ class RoundEntryViewModelImplTest {
         vm.addNewRound()
         vm.addNewRound()
 
-        val rounds = vm.rounds.value
+        val rounds = vm.uiState.value.rounds
         assertEquals(2, rounds.size)
         assertEquals(2, rounds.map { it.roundId }.toSet().size)
     }
@@ -88,7 +91,7 @@ class RoundEntryViewModelImplTest {
 
         vm.addNewRound()
 
-        val round = vm.rounds.value.first()
+        val round = vm.uiState.value.rounds.first()
         assertEquals("Win", round.roundResult)
         assertEquals("First", round.turnOrder)
     }
@@ -99,66 +102,66 @@ class RoundEntryViewModelImplTest {
 
         vm.chooseLeader(Leader.RShanks)
 
-        assertEquals(Leader.RShanks, vm.leaderSelected.value)
+        assertEquals(Leader.RShanks, vm.uiState.value.leaderSelected)
     }
 
     @Test
     fun `roundLeaderSelect updates the correct round leader`() = runTest {
         val vm = createViewModel()
         vm.addNewRound()
-        val roundId = vm.rounds.value.first().roundId
+        val roundId = vm.uiState.value.rounds.first().roundId
 
         vm.roundLeaderSelect(roundId, Leader.RShanks)
 
-        assertEquals(Leader.RShanks, vm.rounds.value.first().leader)
+        assertEquals(Leader.RShanks, vm.uiState.value.rounds.first().leader)
     }
 
     @Test
     fun `roundResultSelect Win updates round result to Win`() = runTest {
         val vm = createViewModel()
         vm.addNewRound()
-        val roundId = vm.rounds.value.first().roundId
+        val roundId = vm.uiState.value.rounds.first().roundId
 
         vm.roundResultSelect(roundId, "Win")
 
-        assertEquals("Win", vm.rounds.value.first().roundResult)
+        assertEquals("Win", vm.uiState.value.rounds.first().roundResult)
     }
 
     @Test
     fun `roundResultSelect Loss updates round result to Loss`() = runTest {
         val vm = createViewModel()
         vm.addNewRound()
-        val roundId = vm.rounds.value.first().roundId
+        val roundId = vm.uiState.value.rounds.first().roundId
 
         vm.roundResultSelect(roundId, "Loss")
 
-        assertEquals("Loss", vm.rounds.value.first().roundResult)
-        assertTrue(vm.rounds.value.first().summary.contains("L"))
+        assertEquals("Loss", vm.uiState.value.rounds.first().roundResult)
+        assertTrue(vm.uiState.value.rounds.first().summary.contains("L"))
     }
 
     @Test
     fun `roundTurnOrderSelect Second updates turn order to Second`() = runTest {
         val vm = createViewModel()
         vm.addNewRound()
-        val roundId = vm.rounds.value.first().roundId
+        val roundId = vm.uiState.value.rounds.first().roundId
 
         vm.roundTurnOrderSelect(roundId, "Second")
 
-        assertEquals("Second", vm.rounds.value.first().turnOrder)
-        assertTrue(vm.rounds.value.first().summary.contains("2"))
+        assertEquals("Second", vm.uiState.value.rounds.first().turnOrder)
+        assertTrue(vm.uiState.value.rounds.first().summary.contains("2"))
     }
 
     @Test
     fun `roundTurnOrderSelect First updates turn order to First`() = runTest {
         val vm = createViewModel()
         vm.addNewRound()
-        val roundId = vm.rounds.value.first().roundId
+        val roundId = vm.uiState.value.rounds.first().roundId
         vm.roundTurnOrderSelect(roundId, "Second") // set to Second first
 
         vm.roundTurnOrderSelect(roundId, "First")
 
-        assertEquals("First", vm.rounds.value.first().turnOrder)
-        assertTrue(vm.rounds.value.first().summary.contains("1"))
+        assertEquals("First", vm.uiState.value.rounds.first().turnOrder)
+        assertTrue(vm.uiState.value.rounds.first().summary.contains("1"))
     }
 
     @Test
@@ -166,12 +169,12 @@ class RoundEntryViewModelImplTest {
         val vm = createViewModel()
         vm.addNewRound()
         vm.addNewRound()
-        val roundIdToRemove = vm.rounds.value.first().roundId
+        val roundIdToRemove = vm.uiState.value.rounds.first().roundId
 
         vm.removeRound(roundIdToRemove)
 
-        assertEquals(1, vm.rounds.value.size)
-        assertTrue(vm.rounds.value.none { it.roundId == roundIdToRemove })
+        assertEquals(1, vm.uiState.value.rounds.size)
+        assertTrue(vm.uiState.value.rounds.none { it.roundId == roundIdToRemove })
     }
 
     @Test
@@ -181,7 +184,7 @@ class RoundEntryViewModelImplTest {
 
         vm.removeRound(999)
 
-        assertEquals(1, vm.rounds.value.size)
+        assertEquals(1, vm.uiState.value.rounds.size)
     }
 
     @Test
@@ -191,7 +194,7 @@ class RoundEntryViewModelImplTest {
 
         vm.transformEntry()
 
-        assertTrue(vm.punkRecordEntry.value.startsWith("!PR add"))
+        assertTrue(vm.uiState.value.punkRecordEntry.startsWith("!PR add"))
     }
 
     @Test
@@ -202,7 +205,7 @@ class RoundEntryViewModelImplTest {
 
         vm.transformEntry()
 
-        val lines = vm.punkRecordEntry.value.lines()
+        val lines = vm.uiState.value.punkRecordEntry.lines()
         assertEquals(Leader.RShanks.name, lines[1])
     }
 
@@ -238,12 +241,12 @@ class RoundEntryViewModelImplTest {
     fun `round summary reflects leader name and result`() = runTest {
         val vm = createViewModel()
         vm.addNewRound()
-        val roundId = vm.rounds.value.first().roundId
+        val roundId = vm.uiState.value.rounds.first().roundId
         vm.roundLeaderSelect(roundId, Leader.RShanks)
         vm.roundResultSelect(roundId, "Win")
         vm.roundTurnOrderSelect(roundId, "First")
 
-        val summary = vm.rounds.value.first().summary
+        val summary = vm.uiState.value.rounds.first().summary
         assertTrue(summary.contains(Leader.RShanks.name))
         assertTrue(summary.contains("W"))
         assertTrue(summary.contains("1"))
@@ -260,7 +263,7 @@ class RoundEntryViewModelImplTest {
         val vm = createViewModel(entryId = 1)
         Thread.sleep(200) // wait for IO dispatcher to complete
 
-        assertEquals(Leader.RShanks, vm.leaderSelected.value)
+        assertEquals(Leader.RShanks, vm.uiState.value.leaderSelected)
     }
 
     @Test
@@ -280,8 +283,32 @@ class RoundEntryViewModelImplTest {
         val vm = createViewModel(entryId = 1)
         Thread.sleep(200) // wait for IO dispatcher to complete
 
-        assertEquals(1, vm.rounds.value.size)
-        assertEquals(Leader.RShanks, vm.rounds.value.first().leader)
-        assertEquals("Win", vm.rounds.value.first().roundResult)
+        assertEquals(1, vm.uiState.value.rounds.size)
+        assertEquals(Leader.RShanks, vm.uiState.value.rounds.first().leader)
+        assertEquals("Win", vm.uiState.value.rounds.first().roundResult)
+    }
+
+    @Test
+    fun `initial state is loading`() = runTest {
+        val vm = createViewModel()
+        assertTrue(vm.uiState.value.isLoading)
+        assertNull(vm.uiState.value.errorMessage)
+    }
+
+    @Test
+    fun `isLoading is false and errorMessage is null after init completes`() = runTest {
+        val vm = createViewModel()
+        Thread.sleep(200)
+        assertFalse(vm.uiState.value.isLoading)
+        assertNull(vm.uiState.value.errorMessage)
+    }
+
+    @Test
+    fun `error message is set and isLoading is false when repository throws`() = runTest {
+        coEvery { leaderOrderDecider.getPlayerLeaderSelect() } throws RuntimeException("db error")
+        val vm = createViewModel()
+        Thread.sleep(200)
+        assertFalse(vm.uiState.value.isLoading)
+        assertNotNull(vm.uiState.value.errorMessage)
     }
 }

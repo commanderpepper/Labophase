@@ -1,20 +1,12 @@
 package commanderpepper.labophase.screens.roundentry
 
 import commanderpepper.labophase.models.Leader
-import commanderpepper.labophase.screens.roundentry.models.RoundUI
+import commanderpepper.labophase.screens.roundentry.models.RoundEntryUIState
 import kotlinx.coroutines.flow.StateFlow
 
 interface RoundEntryViewModel {
 
-    val leaderSelected: StateFlow<Leader>
-
-    val rounds: StateFlow<List<RoundUI>>
-
-    val playerLeaderList: StateFlow<List<Leader>>
-
-    val roundLeaderList: StateFlow<List<Leader>>
-
-    val punkRecordEntry: StateFlow<String>
+    val uiState: StateFlow<RoundEntryUIState>
 
     fun addNewRound()
 

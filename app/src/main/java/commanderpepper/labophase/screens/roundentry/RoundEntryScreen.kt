@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -84,22 +85,20 @@ fun RoundEntryScreen(
     ),
     settingsViewModel: SettingsViewModel = koinViewModel<SettingsViewModelImpl>()
 ) {
-    val playerLeaderList = roundEntryViewModel.playerLeaderList.collectAsState()
-    val roundLeaderList = roundEntryViewModel.roundLeaderList.collectAsState()
-    val leaderSelected = roundEntryViewModel.leaderSelected.collectAsState()
-    val rounds = roundEntryViewModel.rounds.collectAsState()
-    val punkRecordEntry = roundEntryViewModel.punkRecordEntry.collectAsState()
+    val uiState = roundEntryViewModel.uiState.collectAsState()
     val showingDieRoll = settingsViewModel.showingDieRoll.collectAsState()
     RoundEntryScreen(
         modifier = modifier,
         onBack = onBack,
         leaderSelectExpanded = entryId == -1,
-        leaderSelected = leaderSelected.value,
-        playerLeaderList = playerLeaderList.value,
-        roundLeaderList = roundLeaderList.value,
-        rounds = rounds.value,
-        punkRecordEntry = punkRecordEntry.value,
+        leaderSelected = uiState.value.leaderSelected,
+        playerLeaderList = uiState.value.playerLeaderList,
+        roundLeaderList = uiState.value.roundLeaderList,
+        rounds = uiState.value.rounds,
+        punkRecordEntry = uiState.value.punkRecordEntry,
         showingDieRoll = showingDieRoll.value,
+        isLoading = uiState.value.isLoading,
+        errorMessage = uiState.value.errorMessage,
         addNewRound = roundEntryViewModel::addNewRound,
         transformEntry = roundEntryViewModel::transformEntry,
         chooseLeader = roundEntryViewModel::chooseLeader,
@@ -123,6 +122,8 @@ fun RoundEntryScreen(
     roundLeaderList: List<Leader>,
     punkRecordEntry: String,
     showingDieRoll: Boolean = false,
+    isLoading: Boolean,
+    errorMessage: String?,
     addNewRound: () -> Unit,
     transformEntry: () -> Unit,
     chooseLeader: (Leader) -> Unit,
@@ -144,54 +145,81 @@ fun RoundEntryScreen(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = modifier
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp)
-                .fillMaxSize()
-        ) {
-            LeaderPlayerInTournamentSelection(leaderSelected = leaderSelected, leaders = playerLeaderList, rounds = rounds, onLeaderSelected = chooseLeader, initiallyExpanded = leaderSelectExpanded)
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Button(onClick = { transformEntry() }) { Text("Save punk record entry") }
-                OutlinedButton(onClick = { addNewRound() }) { Text("New round") }
-            }
-            if (punkRecordEntry.isNotEmpty()) {
-                val punkRecordVisible = rememberSaveable { mutableStateOf(true) }
-                val punkRecordRotation by animateFloatAsState(
-                    targetValue = if (punkRecordVisible.value) 180f else 0f,
-                    label = "punk_record_rotation"
+        if (isLoading) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) { CircularProgressIndicator() }
+        } else if (errorMessage.isNullOrEmpty().not()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) { Text(errorMessage) }
+        } else {
+            Column(
+                modifier = modifier
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp)
+                    .fillMaxSize()
+            ) {
+                LeaderPlayerInTournamentSelection(
+                    leaderSelected = leaderSelected,
+                    leaders = playerLeaderList,
+                    rounds = rounds,
+                    onLeaderSelected = chooseLeader,
+                    initiallyExpanded = leaderSelectExpanded
                 )
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { punkRecordVisible.value = !punkRecordVisible.value },
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Punk Record", modifier = Modifier.weight(1f))
-                    Icon(
-                        Icons.Default.ExpandMore,
-                        contentDescription = if (punkRecordVisible.value) "Hide" else "Show",
-                        modifier = Modifier.rotate(punkRecordRotation)
+                    Button(onClick = { transformEntry() }) { Text("Save punk record entry") }
+                    OutlinedButton(onClick = { addNewRound() }) { Text("New round") }
+                }
+                if (punkRecordEntry.isNotEmpty()) {
+                    val punkRecordVisible = rememberSaveable { mutableStateOf(true) }
+                    val punkRecordRotation by animateFloatAsState(
+                        targetValue = if (punkRecordVisible.value) 180f else 0f,
+                        label = "punk_record_rotation"
                     )
-                }
-                AnimatedVisibility(visible = punkRecordVisible.value) {
-                    CopyableResult(punkRecordEntry)
-                }
-            }
-            if (rounds.isNotEmpty()) {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(rounds) { round ->
-                        RoundEntry(
-                            round = round,
-                            leaders = roundLeaderList,
-                            initiallyExpanded = leaderSelectExpanded,
-                            leaderSelected = chooseRoundLeader,
-                            roundResult = chooseRoundResult,
-                            turnOrder = chooseRoundTurnOrder,
-                            dieRoll = chooseDieRoll,
-                            showingDieRoll = showingDieRoll,
-                            removeRound = removeRound
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { punkRecordVisible.value = !punkRecordVisible.value },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Punk Record", modifier = Modifier.weight(1f))
+                        Icon(
+                            Icons.Default.ExpandMore,
+                            contentDescription = if (punkRecordVisible.value) "Hide" else "Show",
+                            modifier = Modifier.rotate(punkRecordRotation)
                         )
+                    }
+                    AnimatedVisibility(visible = punkRecordVisible.value) {
+                        CopyableResult(punkRecordEntry)
+                    }
+                }
+                if (rounds.isNotEmpty()) {
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(rounds) { round ->
+                            RoundEntry(
+                                round = round,
+                                leaders = roundLeaderList,
+                                initiallyExpanded = leaderSelectExpanded,
+                                leaderSelected = chooseRoundLeader,
+                                roundResult = chooseRoundResult,
+                                turnOrder = chooseRoundTurnOrder,
+                                dieRoll = chooseDieRoll,
+                                showingDieRoll = showingDieRoll,
+                                removeRound = removeRound
+                            )
+                        }
                     }
                 }
             }
@@ -248,9 +276,18 @@ fun LeaderThumbnail(leader: Leader) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LeaderPlayerInTournamentSelection(leaderSelected: Leader, leaders: List<Leader>, rounds: List<RoundUI>, onLeaderSelected: (Leader) -> Unit, initiallyExpanded: Boolean = true) {
+fun LeaderPlayerInTournamentSelection(
+    leaderSelected: Leader,
+    leaders: List<Leader>,
+    rounds: List<RoundUI>,
+    onLeaderSelected: (Leader) -> Unit,
+    initiallyExpanded: Boolean = true
+) {
     val isExpanded = rememberSaveable { mutableStateOf(initiallyExpanded) }
-    val carouselState = rememberSaveable(leaders.size, saver = CarouselState.Saver) { CarouselState { leaders.count() } }
+    val carouselState = rememberSaveable(
+        leaders.size,
+        saver = CarouselState.Saver
+    ) { CarouselState { leaders.count() } }
     val rotation by animateFloatAsState(
         targetValue = if (isExpanded.value) 180f else 0f,
         label = "leader_expand_rotation"
@@ -258,7 +295,12 @@ fun LeaderPlayerInTournamentSelection(leaderSelected: Leader, leaders: List<Lead
     val wins = rounds.count { it.roundResult == "Win" }
     val losses = rounds.count { it.roundResult == "Loss" }
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(modifier = Modifier.fillMaxWidth().clickable(onClick = { isExpanded.value = !isExpanded.value }), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = { isExpanded.value = !isExpanded.value }),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             LeaderThumbnail(leader = leaderSelected)
             Spacer(modifier = Modifier.width(8.dp))
             Text("W: $wins - L: $losses", modifier = Modifier.weight(1f))
@@ -271,18 +313,28 @@ fun LeaderPlayerInTournamentSelection(leaderSelected: Leader, leaders: List<Lead
             }
         }
         AnimatedVisibility(visible = isExpanded.value) {
-            LeaderSelection(leaders = leaders, state = carouselState, onLeaderSelected = onLeaderSelected)
+            LeaderSelection(
+                leaders = leaders,
+                state = carouselState,
+                onLeaderSelected = onLeaderSelected
+            )
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LeaderSelection(leaders: List<Leader>, state: CarouselState, onLeaderSelected: (Leader) -> Unit) {
-    HorizontalCenteredHeroCarousel(state = state,
+fun LeaderSelection(
+    leaders: List<Leader>,
+    state: CarouselState,
+    onLeaderSelected: (Leader) -> Unit
+) {
+    HorizontalCenteredHeroCarousel(
+        state = state,
         maxItemWidth = 128.dp,
         itemSpacing = 8.dp,
-        contentPadding = PaddingValues(horizontal = 16.dp)) { index ->
+        contentPadding = PaddingValues(horizontal = 16.dp)
+    ) { index ->
         val leader = leaders[index]
         ElevatedCard(modifier = Modifier.maskClip(shape = RoundedCornerShape(corner = CornerSize(2.dp)))) {
             AsyncImage(
@@ -360,13 +412,21 @@ fun RoundEntry(
     initiallyExpanded: Boolean = true
 ) {
     val isExpanded = rememberSaveable { mutableStateOf(initiallyExpanded) }
-    val carouselState = rememberSaveable(leaders.size, saver = CarouselState.Saver) { CarouselState { leaders.count() } }
+    val carouselState = rememberSaveable(
+        leaders.size,
+        saver = CarouselState.Saver
+    ) { CarouselState { leaders.count() } }
     val rotation by animateFloatAsState(
         targetValue = if (isExpanded.value) 180f else 0f,
         label = "round_expand_rotation"
     )
     Column(modifier.padding(vertical = 4.dp)) {
-        Row(modifier = Modifier.fillMaxWidth().clickable(onClick = { isExpanded.value = !isExpanded.value }), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = { isExpanded.value = !isExpanded.value }),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             LeaderThumbnail(leader = round.leader)
             Spacer(modifier = Modifier.width(8.dp))
             Text(round.summary, modifier = Modifier.weight(1f))
@@ -377,7 +437,12 @@ fun RoundEntry(
                     modifier = Modifier.rotate(rotation)
                 )
             }
-            IconButton(onClick = { removeRound(round.roundId) }) { Icon(Icons.Default.DeleteForever, contentDescription = "Delete") }
+            IconButton(onClick = { removeRound(round.roundId) }) {
+                Icon(
+                    Icons.Default.DeleteForever,
+                    contentDescription = "Delete"
+                )
+            }
         }
         AnimatedVisibility(visible = isExpanded.value) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -436,8 +501,20 @@ fun CopyableResult(text: String) {
 }
 
 private val previewLeaders = listOf(Leader.PBLuffy, Leader.RShanks, Leader.GZoro)
-private val previewRound1 = RoundUI(roundId = 1, leader = Leader.PBLuffy, summary = "PB Luffy, W, 1", roundResult = "Win", turnOrder = "First")
-private val previewRound2 = RoundUI(roundId = 2, leader = Leader.RShanks, summary = "R Shanks, L, 2", roundResult = "Loss", turnOrder = "Second")
+private val previewRound1 = RoundUI(
+    roundId = 1,
+    leader = Leader.PBLuffy,
+    summary = "PB Luffy, W, 1",
+    roundResult = "Win",
+    turnOrder = "First"
+)
+private val previewRound2 = RoundUI(
+    roundId = 2,
+    leader = Leader.RShanks,
+    summary = "R Shanks, L, 2",
+    roundResult = "Loss",
+    turnOrder = "Second"
+)
 private val previewPunkRecord = "!PR add\n" +
         "UG Luffy\n" +
         "W G Bonney 2nd\n" +
@@ -457,6 +534,8 @@ private fun PreviewRoundEntryScreen() {
             roundLeaderList = previewLeaders,
             punkRecordEntry = previewPunkRecord,
             showingDieRoll = true,
+            isLoading = false,
+            errorMessage = null,
             addNewRound = {},
             transformEntry = {},
             chooseLeader = {},
@@ -480,6 +559,56 @@ private fun PreviewRoundEntryScreenEmpty() {
             roundLeaderList = previewLeaders,
             punkRecordEntry = "",
             showingDieRoll = true,
+            isLoading = false,
+            errorMessage = null,
+            addNewRound = {},
+            transformEntry = {},
+            chooseLeader = {},
+            chooseRoundLeader = { _, _ -> },
+            chooseRoundTurnOrder = { _, _ -> },
+            chooseRoundResult = { _, _ -> },
+            removeRound = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewRoundEntryScreenLoading() {
+    LabophaseTheme {
+        RoundEntryScreen(
+            onBack = {},
+            leaderSelected = Leader.PBLuffy,
+            rounds = emptyList(),
+            playerLeaderList = emptyList(),
+            roundLeaderList = emptyList(),
+            punkRecordEntry = "",
+            isLoading = true,
+            errorMessage = null,
+            addNewRound = {},
+            transformEntry = {},
+            chooseLeader = {},
+            chooseRoundLeader = { _, _ -> },
+            chooseRoundTurnOrder = { _, _ -> },
+            chooseRoundResult = { _, _ -> },
+            removeRound = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewRoundEntryScreenError() {
+    LabophaseTheme {
+        RoundEntryScreen(
+            onBack = {},
+            leaderSelected = Leader.PBLuffy,
+            rounds = emptyList(),
+            playerLeaderList = emptyList(),
+            roundLeaderList = emptyList(),
+            punkRecordEntry = "",
+            isLoading = false,
+            errorMessage = "Something went wrong",
             addNewRound = {},
             transformEntry = {},
             chooseLeader = {},
