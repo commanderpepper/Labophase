@@ -462,18 +462,6 @@ fun RoundEntry(
                         }
                     }
                 }
-//                if (showingDieRoll) {
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        horizontalArrangement = Arrangement.SpaceBetween,
-//                        verticalAlignment = Alignment.CenterVertically
-//                    ) {
-//                        Text("Die Roll")
-//                        DieRollSelection(dieRoll = round.dieRoll) { result ->
-//                            dieRoll(round.roundId, result)
-//                        }
-//                    }
-//                }
             }
         }
     }
