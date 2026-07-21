@@ -385,4 +385,4 @@ val LEADERS_LIST = listOf(
     Leader.RGLuffyAce
 )
 
-fun leaderByCardId(cardId: String): Leader = LEADERS_LIST.first { it.cardId == cardId }
+fun leaderByCardId(cardId: String): Leader = LEADERS_LIST.firstOrNull() { it.cardId == cardId } ?: Leader.PLuffy
