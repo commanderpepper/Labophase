@@ -1,0 +1,273 @@
+<title>Privacy Policy — Labophase</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+:root {
+  --bg:      #EEF1F7;
+  --bg-card: #E0E8F2;
+  --fg:      #0D1526;
+  --muted:   #4D5D72;
+  --accent:  #B91C3A;
+  --border:  #C2CEDF;
+  --link:    #1A4D90;
+  --serif:   Georgia, 'Times New Roman', serif;
+  --sans:    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:      #090E18;
+    --bg-card: #101B2D;
+    --fg:      #D6E2F0;
+    --muted:   #7A8FAD;
+    --accent:  #E8304A;
+    --border:  #1A2A40;
+    --link:    #6AAFF7;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:      #090E18;
+  --bg-card: #101B2D;
+  --fg:      #D6E2F0;
+  --muted:   #7A8FAD;
+  --accent:  #E8304A;
+  --border:  #1A2A40;
+  --link:    #6AAFF7;
+}
+:root[data-theme="light"] {
+  --bg:      #EEF1F7;
+  --bg-card: #E0E8F2;
+  --fg:      #0D1526;
+  --muted:   #4D5D72;
+  --accent:  #B91C3A;
+  --border:  #C2CEDF;
+  --link:    #1A4D90;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 3.5rem 1.5rem 5rem;
+}
+
+/* ── Header ── */
+.site-header {
+  margin-bottom: 2.75rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.app-name {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+  margin-bottom: 0.5rem;
+}
+
+.site-header h1 {
+  font-family: var(--serif);
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
+  font-weight: normal;
+  line-height: 1.2;
+  text-wrap: balance;
+  margin-bottom: 0.75rem;
+}
+
+.meta {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+/* ── TL;DR ── */
+.tldr {
+  background: var(--bg-card);
+  border-left: 3px solid var(--accent);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.tldr-label {
+  display: block;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  margin-bottom: 0.45rem;
+}
+
+.tldr p {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--fg);
+}
+
+/* ── Policy sections ── */
+.policy-section {
+  padding-bottom: 2.5rem;
+  margin-bottom: 2.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.policy-section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.eyebrow {
+  display: block;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  margin-bottom: 0.4rem;
+}
+
+.policy-section h2 {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  font-weight: normal;
+  line-height: 1.3;
+  text-wrap: balance;
+  margin-bottom: 0.9rem;
+}
+
+.policy-section p {
+  font-size: 0.9375rem;
+  color: var(--fg);
+  line-height: 1.75;
+  margin-bottom: 0.75rem;
+}
+
+.policy-section p:last-child { margin-bottom: 0; }
+
+.policy-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.policy-section li {
+  font-size: 0.9375rem;
+  color: var(--fg);
+  padding-left: 1.2rem;
+  position: relative;
+  line-height: 1.6;
+}
+
+.policy-section li::before {
+  content: "\2013";
+  position: absolute;
+  left: 0;
+  color: var(--muted);
+}
+
+/* ── Links ── */
+a {
+  color: var(--link);
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+}
+a:hover { opacity: 0.7; }
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ── Footer ── */
+.site-footer {
+  margin-top: 3.5rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+</style>
+
+<div class="page">
+  <header class="site-header">
+    <div class="app-name">Labophase</div>
+    <h1>Privacy Policy</h1>
+    <p class="meta">Effective July 22, 2026</p>
+  </header>
+
+  <main>
+    <div class="tldr">
+      <span class="tldr-label">The short version</span>
+      <p>Labophase does not collect, store, or transmit any personal information. All data you enter stays on your device.</p>
+    </div>
+
+    <section class="policy-section">
+      <span class="eyebrow">Overview</span>
+      <h2>About This Policy</h2>
+      <p>Labophase ("the app") is a tournament-tracking tool for the One Piece Card Game. This privacy policy describes our data practices — which are, simply put, that we handle none of your personal information.</p>
+    </section>
+
+    <section class="policy-section">
+      <span class="eyebrow">Data Collection</span>
+      <h2>Information We Do Not Collect</h2>
+      <p>Labophase does not collect, request, or transmit:</p>
+      <ul>
+        <li>Names, email addresses, or any personal identifiers</li>
+        <li>Device identifiers or advertising IDs</li>
+        <li>Location data</li>
+        <li>Usage analytics or crash reports</li>
+        <li>Financial or payment information</li>
+      </ul>
+      <p>No account is required to use the app.</p>
+    </section>
+
+    <section class="policy-section">
+      <span class="eyebrow">Local Storage</span>
+      <h2>Data Stored on Your Device</h2>
+      <p>Tournament entries, round results, and leader selections you record in Labophase are stored locally on your device using Android's built-in database (SQLite). This data never leaves your device and is not accessible to us or any third party.</p>
+    </section>
+
+    <section class="policy-section">
+      <span class="eyebrow">Third Parties</span>
+      <h2>Third-Party Services</h2>
+      <p>Labophase does not integrate any third-party analytics, advertising, or data-sharing services.</p>
+    </section>
+
+    <section class="policy-section">
+      <span class="eyebrow">Children</span>
+      <h2>Children's Privacy</h2>
+      <p>Labophase does not knowingly collect data from anyone, including children under 13. Because the app collects no personal data at all, it presents no privacy risk to users of any age.</p>
+    </section>
+
+    <section class="policy-section">
+      <span class="eyebrow">Updates</span>
+      <h2>Changes to This Policy</h2>
+      <p>If this policy changes, the updated version will be published at this URL with a revised effective date. Continued use of the app after any changes constitutes acceptance of the updated policy.</p>
+    </section>
+
+    <section class="policy-section">
+      <span class="eyebrow">Contact</span>
+      <h2>Questions</h2>
+      <p>If you have any questions about this privacy policy, please contact us at <a href="mailto:commanderpepperdev@gmail.com">commanderpepperdev@gmail.com</a>.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    Labophase &middot; Effective July 22, 2026
+  </footer>
+</div>
