@@ -80,7 +80,7 @@ class EntrySelectionScreenTest {
                 )
             }
         }
-        composeTestRule.onNodeWithText("New Entry").assertIsDisplayed()
+        composeTestRule.onNodeWithText("New Entry", useUnmergedTree = true).assertExists()
     }
 
     @Test

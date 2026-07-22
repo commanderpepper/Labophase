@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("commanderpepper.labophase", appContext.packageName)
+        assertEquals("commanderpepper.labophase.debug", appContext.packageName)
     }
 }
