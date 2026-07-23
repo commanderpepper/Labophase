@@ -123,10 +123,6 @@ fun SettingsScreen(
         }
         Button(onClick = { clearHistory() }) { Text(stringResource(R.string.btn_clear_entries)) }
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        TextButton(onClick = { uriHandler.openUri(privacyPolicyUrl) }) {
-            Text(stringResource(R.string.settings_privacy_policy))
-        }
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         Text(
             text = stringResource(R.string.settings_about_title),
             style = MaterialTheme.typography.titleSmall,
@@ -135,12 +131,28 @@ fun SettingsScreen(
         Text(
             text = stringResource(R.string.settings_about_body),
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 4.dp)
+        )
+        val punkRecordsGithubUrl = stringResource(R.string.url_punk_records_github)
+        Text(
+            text = stringResource(R.string.settings_about_punk_records),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .clickable { uriHandler.openUri(punkRecordsGithubUrl) }
+                .padding(bottom = 4.dp)
         )
         Text(
             text = stringResource(R.string.settings_about_disclaimer),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        Text(
+            text = stringResource(R.string.settings_privacy_policy),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.clickable { uriHandler.openUri(privacyPolicyUrl) }
         )
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         Row(
