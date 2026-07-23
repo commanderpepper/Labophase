@@ -40,4 +40,5 @@
     <string name="url_privacy_policy">https://commanderpepper.github.io/Labophase/privacy-policy.html</string>
     <string name="settings_about_title">About</string>
     <string name="settings_about_body">Labophase is an app to save tournament records and make result texts for Punk Records. Punk Records is a Discord bot that saves tournament results in the Oregon OPTCG Discord.</string>
+    <string name="settings_about_disclaimer">Labophase is an unofficial fan-made app and is not affiliated with, sponsored by, or endorsed by Bandai, Eiichirō Oda, Shueisha, or Toei Animation. One Piece and all related content are © Eiichirō Oda/Shueisha, Toei Animation.</string>
 </resources>

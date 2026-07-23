@@ -114,7 +114,13 @@ fun SettingsScreen(
         )
         Text(
             text = stringResource(R.string.settings_about_body),
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Text(
+            text = stringResource(R.string.settings_about_disclaimer),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
