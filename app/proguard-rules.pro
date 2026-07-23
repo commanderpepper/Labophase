@@ -15,3 +15,7 @@
 # ── Koin ──────────────────────────────────────────────────────────────────────
 # Koin 4.x resolves dependencies through reified inline functions whose type
 # references are baked in at compile time — no extra keep rules needed.
+
+# ── AboutLibraries ────────────────────────────────────────────────────────────
+# Prevent R8 resource shrinking from stripping the generated license JSON file.
+-keep class com.mikepenz.aboutlibraries.** { *; }
