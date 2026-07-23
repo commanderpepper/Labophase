@@ -208,7 +208,7 @@ fun RoundEntryScreen(
                     }
                 }
                 if (rounds.isNotEmpty()) {
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(rounds) { round ->
                             RoundEntry(
                                 round = round,
