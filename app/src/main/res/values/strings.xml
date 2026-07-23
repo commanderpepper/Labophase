@@ -36,4 +36,8 @@
     <string name="btn_clear_entries">Clear Entries</string>
     <string name="dialog_clear_history_title">Clear history</string>
     <string name="dialog_clear_history_body">This will permanently delete all entries.</string>
+    <string name="settings_privacy_policy">Privacy Policy</string>
+    <string name="url_privacy_policy">https://commanderpepper.github.io/Labophase/privacy-policy.html</string>
+    <string name="settings_about_title">About</string>
+    <string name="settings_about_body">Labophase is an app to save tournament records and make result texts for Punk Records. Punk Records is a Discord bot that saves tournament results in the Oregon OPTCG Discord.</string>
 </resources>
