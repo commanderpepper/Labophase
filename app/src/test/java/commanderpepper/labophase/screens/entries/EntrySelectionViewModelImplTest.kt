@@ -1,10 +1,10 @@
 package commanderpepper.labophase.screens.entries
 
 import app.cash.turbine.test
-import commanderpepper.labophase.data.EntryEntity
+import commanderpepper.labophase.data.entity.EntryEntity
 import commanderpepper.labophase.data.EntryRepository
 import commanderpepper.labophase.data.EntryWithRounds
-import commanderpepper.labophase.data.RoundEntity
+import commanderpepper.labophase.data.entity.RoundEntity
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.logic.converter.EntryToEntrySelectionUIConverter

@@ -1,9 +1,9 @@
 package commanderpepper.labophase.logic
 
-import commanderpepper.labophase.data.EntryEntity
+import commanderpepper.labophase.data.entity.EntryEntity
 import commanderpepper.labophase.data.EntryRepository
 import commanderpepper.labophase.data.EntryWithRounds
-import commanderpepper.labophase.data.RoundEntity
+import commanderpepper.labophase.data.entity.RoundEntity
 import commanderpepper.labophase.data.SettingsRepository
 import commanderpepper.labophase.models.LEADERS_LIST
 import commanderpepper.labophase.models.Leader

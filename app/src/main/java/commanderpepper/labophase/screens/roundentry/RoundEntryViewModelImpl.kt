@@ -8,7 +8,9 @@ import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Round
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
+import commanderpepper.labophase.models.Meta
 import commanderpepper.labophase.models.leaderByCardId
+import java.time.LocalDate
 import commanderpepper.labophase.screens.roundentry.models.RoundEntryUIState
 import commanderpepper.labophase.screens.roundentry.models.RoundUI
 import kotlinx.coroutines.CoroutineDispatcher
@@ -38,10 +40,18 @@ class RoundEntryViewModelImpl(
             withContext(ioDispatcher) {
                 try {
                     var loadedLeader: Leader = Leader.UGLuffy
+                    var loadedTitle: String? = null
+                    var loadedLocationId: Int? = null
+                    var loadedMetaId: Int = Meta.OP16.id
+                    var loadedDate: String = LocalDate.now().toString()
                     if (entryId != null) {
                         val existing = entryRepository.getEntryById(entryId)
                         if (existing != null) {
                             loadedLeader = leaderByCardId(existing.entry.leaderCardId)
+                            loadedTitle = existing.entry.title
+                            loadedLocationId = existing.entry.locationId
+                            loadedMetaId = existing.entry.metaId ?: Meta.OP16.id
+                            loadedDate = existing.entry.date ?: LocalDate.now().toString()
                             val loaded = existing.rounds.mapIndexed { index, r ->
                                 Round(
                                     roundId = index,
@@ -64,6 +74,10 @@ class RoundEntryViewModelImpl(
                             rounds = roundsMap.values.map { r -> r.toRoundUI() },
                             playerLeaderList = playerList,
                             roundLeaderList = roundList,
+                            title = loadedTitle,
+                            locationId = loadedLocationId,
+                            metaId = loadedMetaId,
+                            date = loadedDate,
                             isLoading = false,
                             errorMessage = null
                         )
@@ -96,10 +110,26 @@ class RoundEntryViewModelImpl(
     }
 
     private suspend fun saveEntry(leader: Leader, rounds: List<Round>) {
+        val state = _uiState.value
         if (entryId == null) {
-            entryRepository.saveEntry(leader, rounds)
+            entryRepository.saveEntry(
+                leader = leader,
+                rounds = rounds,
+                title = state.title,
+                locationId = state.locationId,
+                metaId = state.metaId,
+                date = state.date
+            )
         } else {
-            entryRepository.updateEntry(entryId, leader, rounds)
+            entryRepository.updateEntry(
+                entryId = entryId,
+                leader = leader,
+                rounds = rounds,
+                title = state.title,
+                locationId = state.locationId,
+                metaId = state.metaId,
+                date = state.date
+            )
         }
     }
 
@@ -132,6 +162,22 @@ class RoundEntryViewModelImpl(
     override fun removeRound(roundId: Int) {
         roundsMap = roundsMap.minus(roundId)
         _uiState.update { it.copy(rounds = roundsMap.values.map { r -> r.toRoundUI() }) }
+    }
+
+    override fun setTitle(title: String?) {
+        _uiState.update { it.copy(title = title) }
+    }
+
+    override fun setLocationId(locationId: Int?) {
+        _uiState.update { it.copy(locationId = locationId) }
+    }
+
+    override fun setMetaId(metaId: Int?) {
+        _uiState.update { it.copy(metaId = metaId) }
+    }
+
+    override fun setDate(date: String?) {
+        _uiState.update { it.copy(date = date) }
     }
 
     private fun Round.toRoundUI() = RoundUI(

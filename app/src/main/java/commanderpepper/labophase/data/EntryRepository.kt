@@ -1,12 +1,29 @@
 package commanderpepper.labophase.data
 
+import commanderpepper.labophase.data.entity.EntryEntity
+import commanderpepper.labophase.data.entity.RoundEntity
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Round
 import kotlinx.coroutines.flow.Flow
 
 interface EntryRepository {
-    suspend fun saveEntry(leader: Leader, rounds: List<Round>)
-    suspend fun updateEntry(entryId: Int, leader: Leader, rounds: List<Round>)
+    suspend fun saveEntry(
+        leader: Leader,
+        rounds: List<Round>,
+        title: String? = null,
+        locationId: Int? = null,
+        metaId: Int,
+        date: String
+    )
+    suspend fun updateEntry(
+        entryId: Int,
+        leader: Leader,
+        rounds: List<Round>,
+        title: String? = null,
+        locationId: Int? = null,
+        metaId: Int,
+        date: String
+    )
     fun getAllEntries(): Flow<List<EntryWithRounds>>
     suspend fun getEntries(): List<EntryWithRounds>
     suspend fun getEntryById(id: Int): EntryWithRounds?
@@ -15,13 +32,45 @@ interface EntryRepository {
 }
 
 class EntryRepositoryImpl(private val dao: EntryDao) : EntryRepository {
-    override suspend fun saveEntry(leader: Leader, rounds: List<Round>) {
-        val entryId = dao.insertEntry(EntryEntity(leaderCardId = leader.cardId)).toInt()
+    override suspend fun saveEntry(
+        leader: Leader,
+        rounds: List<Round>,
+        title: String?,
+        locationId: Int?,
+        metaId: Int,
+        date: String
+    ) {
+        val entryId = dao.insertEntry(
+            EntryEntity(
+                leaderCardId = leader.cardId,
+                title = title,
+                locationId = locationId,
+                metaId = metaId,
+                date = date
+            )
+        ).toInt()
         dao.insertRounds(rounds.toRoundEntities(entryId))
     }
 
-    override suspend fun updateEntry(entryId: Int, leader: Leader, rounds: List<Round>) {
-        dao.updateEntry(EntryEntity(id = entryId, leaderCardId = leader.cardId))
+    override suspend fun updateEntry(
+        entryId: Int,
+        leader: Leader,
+        rounds: List<Round>,
+        title: String?,
+        locationId: Int?,
+        metaId: Int,
+        date: String
+    ) {
+        dao.updateEntry(
+            EntryEntity(
+                id = entryId,
+                leaderCardId = leader.cardId,
+                title = title,
+                locationId = locationId,
+                metaId = metaId,
+                date = date
+            )
+        )
         dao.deleteRoundsByEntryId(entryId)
         dao.insertRounds(rounds.toRoundEntities(entryId))
     }

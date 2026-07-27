@@ -5,6 +5,8 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import commanderpepper.labophase.data.entity.EntryEntity
+import commanderpepper.labophase.data.entity.RoundEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

@@ -1,4 +1,4 @@
-package commanderpepper.labophase.data
+package commanderpepper.labophase.data.entity
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

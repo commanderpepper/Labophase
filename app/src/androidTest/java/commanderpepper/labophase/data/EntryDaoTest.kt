@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import commanderpepper.labophase.data.entity.EntryEntity
+import commanderpepper.labophase.data.entity.RoundEntity
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
 import kotlinx.coroutines.flow.first

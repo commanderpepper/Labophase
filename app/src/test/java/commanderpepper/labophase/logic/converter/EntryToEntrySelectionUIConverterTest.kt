@@ -1,8 +1,8 @@
 package commanderpepper.labophase.logic.converter
 
-import commanderpepper.labophase.data.EntryEntity
+import commanderpepper.labophase.data.entity.EntryEntity
 import commanderpepper.labophase.data.EntryWithRounds
-import commanderpepper.labophase.data.RoundEntity
+import commanderpepper.labophase.data.entity.RoundEntity
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder

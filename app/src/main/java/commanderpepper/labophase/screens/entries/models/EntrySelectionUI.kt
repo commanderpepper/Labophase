@@ -8,7 +8,11 @@ data class EntrySelectionUI(
     val wins: Int,
     val losses: Int,
     val punkRecord: String,
-    val rounds: List<RoundEntrySelectionUI>
+    val rounds: List<RoundEntrySelectionUI>,
+    val title: String? = null,
+    val locationId: Int? = null,
+    val metaId: Int? = null,
+    val date: String? = null
 )
 
 data class RoundEntrySelectionUI(val leader: Leader, val summary: String)

@@ -1,7 +1,7 @@
 package commanderpepper.labophase.logic.converter
 
 import commanderpepper.labophase.data.EntryWithRounds
-import commanderpepper.labophase.data.RoundEntity
+import commanderpepper.labophase.data.entity.RoundEntity
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Round
 import commanderpepper.labophase.models.RoundResult
@@ -21,7 +21,11 @@ class EntryToEntrySelectionUIConverter {
                 leader = leaderByCardId(entry.entry.leaderCardId),
                 rounds = entry.rounds
             ),
-            rounds = entry.rounds.map { roundToRoundEntrySelectionUI(it) }
+            rounds = entry.rounds.map { roundToRoundEntrySelectionUI(it) },
+            title = entry.entry.title,
+            locationId = entry.entry.locationId,
+            metaId = entry.entry.metaId,
+            date = entry.entry.date
         )
     }
 
