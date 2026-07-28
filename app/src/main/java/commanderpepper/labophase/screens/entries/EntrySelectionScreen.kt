@@ -33,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -43,6 +44,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import commanderpepper.labophase.R
 import commanderpepper.labophase.models.Leader
+import commanderpepper.labophase.models.locationById
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import commanderpepper.labophase.screens.entries.models.EntrySelectionUI
 import commanderpepper.labophase.screens.entries.models.RoundEntrySelectionUI
 import commanderpepper.labophase.screens.roundentry.CopyableResult
@@ -120,6 +124,18 @@ fun EntrySelectionScreen(
 
 @Composable
 fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit, onEntryDelete: (Int) -> Unit) {
+    val formattedDate = remember(entrySelectionUI.date) {
+        entrySelectionUI.date?.let {
+            runCatching { LocalDate.parse(it).format(DateTimeFormatter.ofPattern("MMM d, yyyy")) }
+                .getOrDefault(it)
+        }
+    }
+    val entryLabel = buildString {
+        append(entrySelectionUI.title ?: entrySelectionUI.leader.name)
+        entrySelectionUI.locationId?.let { locationById(it) }?.let { append(" at ${it.abbreviation}") }
+        formattedDate?.let { append(" on $it") }
+    }
+    val displayText = "$entryLabel • W: ${entrySelectionUI.wins} - L: ${entrySelectionUI.losses}"
     val punkRecordVisibility = rememberSaveable { mutableStateOf(false) }
     var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
     val rotation by animateFloatAsState(
@@ -149,7 +165,7 @@ fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit, o
         ListItem(
             modifier = Modifier.clickable { onEntrySelect(entrySelectionUI.entryId) },
             leadingContent = { LeaderThumbnail(entrySelectionUI.leader) },
-            headlineContent = { Text("W: ${entrySelectionUI.wins} - L: ${entrySelectionUI.losses}") },
+            headlineContent = { Text(displayText) },
             trailingContent = {
                 Row {
                     IconButton(onClick = { punkRecordVisibility.value = !punkRecordVisibility.value }) {

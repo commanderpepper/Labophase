@@ -213,6 +213,9 @@ fun RoundEntryScreen(
                     rounds = rounds,
                     onLeaderSelected = chooseLeader,
                     initiallyExpanded = leaderSelectExpanded,
+                    title = title,
+                    date = date,
+                    locationId = locationId,
                     expandedContent = {
                         EntryTitleField(title = title, onTitleChanged = onTitleChanged)
                         EntryDateField(date = date, onDateChanged = onDateChanged)
@@ -340,6 +343,9 @@ fun LeaderPlayerInTournamentSelection(
     rounds: List<RoundUI>,
     onLeaderSelected: (Leader) -> Unit,
     initiallyExpanded: Boolean = true,
+    title: String? = null,
+    date: String = LocalDate.now().toString(),
+    locationId: Int? = null,
     expandedContent: @Composable () -> Unit = {}
 ) {
     val isExpanded = rememberSaveable { mutableStateOf(initiallyExpanded) }
@@ -353,6 +359,16 @@ fun LeaderPlayerInTournamentSelection(
     )
     val wins = rounds.count { it.roundResult == "Win" }
     val losses = rounds.count { it.roundResult == "Loss" }
+    val formattedDate = remember(date) {
+        runCatching { LocalDate.parse(date).format(DateTimeFormatter.ofPattern("MMM d, yyyy")) }
+            .getOrDefault(date)
+    }
+    val entryLabel = buildString {
+        append(title ?: leaderSelected.name)
+        locationId?.let { locationById(it) }?.let { append(" at ${it.abbreviation}") }
+        append(" on $formattedDate")
+    }
+    val displayText = "$entryLabel • W: $wins - L: $losses"
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -362,7 +378,7 @@ fun LeaderPlayerInTournamentSelection(
         ) {
             LeaderThumbnail(leader = leaderSelected)
             Spacer(modifier = Modifier.width(8.dp))
-            Text(stringResource(R.string.wins_losses_format, wins, losses), modifier = Modifier.weight(1f))
+            Text(displayText, modifier = Modifier.weight(1f))
             IconButton(onClick = { isExpanded.value = !isExpanded.value }) {
                 Icon(
                     Icons.Default.ExpandMore,
