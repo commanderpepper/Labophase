@@ -10,3 +10,6 @@ data class RoundEntry(val entryId: Int? = null)
 
 @Serializable
 object Settings
+
+@Serializable
+object Stats

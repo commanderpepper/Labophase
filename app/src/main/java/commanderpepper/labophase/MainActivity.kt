@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -25,9 +26,11 @@ import androidx.navigation.toRoute
 import commanderpepper.labophase.navigation.EntrySelection
 import commanderpepper.labophase.navigation.RoundEntry
 import commanderpepper.labophase.navigation.Settings
+import commanderpepper.labophase.navigation.Stats
 import commanderpepper.labophase.screens.entries.EntrySelectionScreen
 import commanderpepper.labophase.screens.roundentry.RoundEntryScreen
 import commanderpepper.labophase.screens.settings.SettingsScreen
+import commanderpepper.labophase.screens.stats.StatsScreen
 import commanderpepper.labophase.ui.theme.LabophaseTheme
 
 class MainActivity : ComponentActivity() {
@@ -40,6 +43,7 @@ class MainActivity : ComponentActivity() {
                 val currentBackStack by navController.currentBackStackEntryAsState()
                 val currentDestination = currentBackStack?.destination
                 val isTopLevel = currentDestination?.hasRoute<EntrySelection>() == true ||
+                        currentDestination?.hasRoute<Stats>() == true ||
                         currentDestination?.hasRoute<Settings>() == true
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
@@ -57,6 +61,18 @@ class MainActivity : ComponentActivity() {
                                     },
                                     icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
                                     label = { Text("Entries") }
+                                )
+                                NavigationBarItem(
+                                    selected = currentDestination.hasRoute<Stats>(),
+                                    onClick = {
+                                        navController.navigate(Stats) {
+                                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                            launchSingleTop = true
+                                            restoreState = true
+                                        }
+                                    },
+                                    icon = { Icon(Icons.Default.BarChart, contentDescription = null) },
+                                    label = { Text("Stats") }
                                 )
                                 NavigationBarItem(
                                     selected = currentDestination.hasRoute<Settings>(),
@@ -91,6 +107,9 @@ class MainActivity : ComponentActivity() {
                                 entryId = route.entryId,
                                 onBack = { navController.navigateUp() }
                             )
+                        }
+                        composable<Stats> {
+                            StatsScreen()
                         }
                         composable<Settings> {
                             SettingsScreen()

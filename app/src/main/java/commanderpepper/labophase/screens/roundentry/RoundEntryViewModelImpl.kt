@@ -172,11 +172,11 @@ class RoundEntryViewModelImpl(
         _uiState.update { it.copy(locationId = locationId) }
     }
 
-    override fun setMetaId(metaId: Int?) {
+    override fun setMetaId(metaId: Int) {
         _uiState.update { it.copy(metaId = metaId) }
     }
 
-    override fun setDate(date: String?) {
+    override fun setDate(date: String) {
         _uiState.update { it.copy(date = date) }
     }
 

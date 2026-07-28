@@ -12,6 +12,7 @@ import commanderpepper.labophase.logic.converter.EntryToEntrySelectionUIConverte
 import commanderpepper.labophase.screens.entries.EntrySelectionViewModelImpl
 import commanderpepper.labophase.screens.roundentry.RoundEntryViewModelImpl
 import commanderpepper.labophase.screens.settings.SettingsViewModelImpl
+import commanderpepper.labophase.screens.stats.StatsViewModelImpl
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -26,4 +27,5 @@ val appModule = module {
     viewModel { params -> RoundEntryViewModelImpl(get(), get(), params.getOrNull<Int>()) }
     viewModel { EntrySelectionViewModelImpl(get(), get()) }
     viewModel { SettingsViewModelImpl(get()) }
+    viewModel { StatsViewModelImpl(get()) }
 }

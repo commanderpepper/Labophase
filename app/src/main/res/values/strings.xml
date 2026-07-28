@@ -25,6 +25,20 @@
     <string name="btn_new_round">New round</string>
     <string name="label_punk_record">Punk Record</string>
     <string name="wins_losses_format">W: %1$d - L: %2$d</string>
+    <string name="wins_losses_pct_format">W: %1$d - L: %2$d (%3$d%%)</string>
+    <string name="label_meta">Meta</string>
+    <string name="label_location">Location</string>
+    <string name="label_none">None</string>
+
+    <!-- StatsScreen -->
+    <string name="stats_title">Stats</string>
+    <string name="stats_all_leaders">All Leaders</string>
+    <string name="stats_all_metas">All Metas</string>
+    <string name="stats_all_locations">All Locations</string>
+    <string name="stats_label_leader">Leader</string>
+    <string name="stats_leaders_against">Leaders Played Against</string>
+    <string name="stats_going_first">1st: W: %1$d - L: %2$d (%3$d%%)</string>
+    <string name="stats_going_second">2nd: W: %1$d - L: %2$d (%3$d%%)</string>
     <string name="round_result_win">W</string>
     <string name="round_result_loss">L</string>
     <string name="turn_order_first">1st</string>

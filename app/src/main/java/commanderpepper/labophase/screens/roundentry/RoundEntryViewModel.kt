@@ -28,7 +28,7 @@ interface RoundEntryViewModel {
 
     fun setLocationId(locationId: Int?)
 
-    fun setMetaId(metaId: Int?)
+    fun setMetaId(metaId: Int)
 
-    fun setDate(date: String?)
+    fun setDate(date: String)
 }
