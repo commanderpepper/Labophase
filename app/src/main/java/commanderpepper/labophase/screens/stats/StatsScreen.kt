@@ -30,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -37,11 +38,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import commanderpepper.labophase.R
 import commanderpepper.labophase.models.Leader
+import commanderpepper.labophase.models.LeaderColor
 import commanderpepper.labophase.models.Location
 import commanderpepper.labophase.models.LOCATIONS_LIST
 import commanderpepper.labophase.models.METAS_LIST
 import commanderpepper.labophase.models.Meta
 import commanderpepper.labophase.screens.roundentry.LeaderThumbnail
+import commanderpepper.labophase.screens.roundentry.animatedBorder
 import commanderpepper.labophase.screens.stats.models.LeaderSelectedOption
 import commanderpepper.labophase.screens.stats.models.LocationOption
 import commanderpepper.labophase.screens.stats.models.MetaOption
@@ -172,14 +175,25 @@ private fun StatsHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Left: leader card or "All" placeholder
-        ElevatedCard(modifier = Modifier.weight(0.4f)) {
-            if (!isAllLeaders) {
+        if (!isAllLeaders) {
+            val borderColors = if (leaderInfo.leader.leaderColors.size == 1) {
+                listOf(leaderInfo.leader.leaderColors.first().color, Color.White, leaderInfo.leader.leaderColors.first().color)
+            } else {
+                leaderInfo.leader.leaderColors.map { it.color }
+            }
+            ElevatedCard(modifier = Modifier.weight(0.4f).animatedBorder(colors = borderColors)) {
                 AsyncImage(
                     modifier = Modifier.fillMaxWidth(),
                     model = "file:///android_asset/leader_images/${leaderInfo.leader.cardId}.webp",
                     contentDescription = leaderInfo.leader.name
                 )
-            } else {
+            }
+        } else {
+            val allColors = listOf(
+                LeaderColor.Red.color, LeaderColor.Blue.color, LeaderColor.Green.color,
+                LeaderColor.Yellow.color, LeaderColor.Purple.color, LeaderColor.Black.color
+            )
+            ElevatedCard(modifier = Modifier.weight(0.4f).animatedBorder(colors = allColors)) {
                 AsyncImage(
                     modifier = Modifier.fillMaxWidth(),
                     model = "file:///android_asset/leader_images/rainbow_luffy.webp",

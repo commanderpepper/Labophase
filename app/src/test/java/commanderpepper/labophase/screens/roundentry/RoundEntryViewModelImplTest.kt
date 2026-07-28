@@ -219,7 +219,7 @@ class RoundEntryViewModelImplTest {
 
         vm.transformEntry()
 
-        coVerify { entryRepository.saveEntry(any(), any()) }
+        coVerify { entryRepository.saveEntry(any(), any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -236,7 +236,7 @@ class RoundEntryViewModelImplTest {
         vm.addNewRound()
         vm.transformEntry()
 
-        coVerify { entryRepository.updateEntry(5, any(), any()) }
+        coVerify { entryRepository.updateEntry(5, any(), any(), any(), any(), any(), any()) }
     }
 
     @Test
