@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import commanderpepper.labophase.models.Leader
+import commanderpepper.labophase.models.Location
 import commanderpepper.labophase.screens.roundentry.models.RoundUI
 import commanderpepper.labophase.ui.theme.LabophaseTheme
 import org.junit.Rule
@@ -30,7 +31,10 @@ class RoundEntryScreenTest {
 
     private fun setIdleContent(
         rounds: List<RoundUI> = emptyList(),
-        punkRecordEntry: String = ""
+        punkRecordEntry: String = "",
+        title: String? = null,
+        date: String = "2026-07-30",
+        locationId: Int? = null
     ) {
         composeTestRule.setContent {
             LabophaseTheme {
@@ -43,6 +47,9 @@ class RoundEntryScreenTest {
                     punkRecordEntry = punkRecordEntry,
                     isLoading = false,
                     errorMessage = null,
+                    title = title,
+                    date = date,
+                    locationId = locationId,
                     addNewRound = {},
                     transformEntry = {},
                     chooseLeader = {},
@@ -54,6 +61,8 @@ class RoundEntryScreenTest {
             }
         }
     }
+
+    // region — Loading / Error
 
     @Test
     fun loadingState_showsProgressIndicator() {
@@ -107,6 +116,10 @@ class RoundEntryScreenTest {
         composeTestRule.onNodeWithText("Something went wrong").assertIsDisplayed()
     }
 
+    // endregion
+
+    // region — Buttons / Navigation
+
     @Test
     fun idleState_showsSavePunkRecordAndNewRoundButtons() {
         setIdleContent()
@@ -120,9 +133,55 @@ class RoundEntryScreenTest {
         composeTestRule.onNodeWithContentDescription("Back").assertIsDisplayed()
     }
 
+    // endregion
+
+    // region — Row label
+
+    @Test
+    fun rowLabel_noTitle_showsLeaderName() {
+        setIdleContent()
+        composeTestRule.onNodeWithText("UG Luffy on Jul 30, 2026 • W: 0 - L: 0").assertIsDisplayed()
+    }
+
+    @Test
+    fun rowLabel_withTitle_showsTitle() {
+        setIdleContent(title = "Seattle Regional")
+        composeTestRule.onNodeWithText("Seattle Regional on Jul 30, 2026 • W: 0 - L: 0").assertIsDisplayed()
+    }
+
+    @Test
+    fun rowLabel_withLocation_showsLocationAbbreviation() {
+        setIdleContent(locationId = Location.ChronosGamesAndGifts.id)
+        composeTestRule.onNodeWithText("UG Luffy at Chronos on Jul 30, 2026 • W: 0 - L: 0").assertIsDisplayed()
+    }
+
+    @Test
+    fun rowLabel_withTitleAndLocation_showsFullLabel() {
+        setIdleContent(title = "Seattle Regional", locationId = Location.ChronosGamesAndGifts.id)
+        composeTestRule.onNodeWithText("Seattle Regional at Chronos on Jul 30, 2026 • W: 0 - L: 0").assertIsDisplayed()
+    }
+
+    @Test
+    fun rowLabel_showsFormattedDate() {
+        setIdleContent(date = "2026-07-30")
+        composeTestRule.onNodeWithText("UG Luffy on Jul 30, 2026 • W: 0 - L: 0").assertIsDisplayed()
+    }
+
+    @Test
+    fun rowLabel_showsWinsAndLosses() {
+        setIdleContent(rounds = listOf(sampleRound))
+        composeTestRule.onNodeWithText("UG Luffy on Jul 30, 2026 • W: 1 - L: 0").assertIsDisplayed()
+    }
+
+    // endregion
+
+    // region — Punk Record
+
     @Test
     fun punkRecordHeader_visibleWhenPunkRecordEntryIsNonEmpty() {
         setIdleContent(punkRecordEntry = "!PR add\nUG Luffy\nW R Shanks 1st")
         composeTestRule.onNodeWithText("Punk Record").assertIsDisplayed()
     }
+
+    // endregion
 }
