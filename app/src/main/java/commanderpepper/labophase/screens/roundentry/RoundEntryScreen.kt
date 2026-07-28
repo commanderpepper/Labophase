@@ -104,6 +104,7 @@ fun RoundEntryScreen(
     onBack: () -> Unit = {},
     entryId: Int? = null,
     roundEntryViewModel: RoundEntryViewModel = koinViewModel<RoundEntryViewModelImpl>(
+        key = "round_entry_$entryId",
         parameters = { parametersOf(entryId) }
     ),
     settingsViewModel: SettingsViewModel = koinViewModel<SettingsViewModelImpl>()
@@ -201,87 +202,90 @@ fun RoundEntryScreen(
                 verticalArrangement = Arrangement.Center
             ) { Text(errorMessage) }
         } else {
-            Column(
+            LazyColumn(
                 modifier = modifier
                     .padding(innerPadding)
-                    .padding(horizontal = 16.dp)
-                    .fillMaxSize()
+                    .fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                LeaderPlayerInTournamentSelection(
-                    leaderSelected = leaderSelected,
-                    leaders = playerLeaderList,
-                    rounds = rounds,
-                    onLeaderSelected = chooseLeader,
-                    initiallyExpanded = leaderSelectExpanded,
-                    title = title,
-                    date = date,
-                    locationId = locationId,
-                    expandedContent = {
-                        EntryTitleField(title = title, onTitleChanged = onTitleChanged)
-                        EntryDateField(date = date, onDateChanged = onDateChanged)
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            EntryMetaDropdown(
-                                modifier = Modifier.weight(1f),
-                                metaId = metaId,
-                                onMetaSelected = onMetaSelected
-                            )
-                            EntryLocationDropdown(
-                                modifier = Modifier.weight(1f),
-                                locationId = locationId,
-                                onLocationSelected = onLocationSelected
-                            )
+                item {
+                    LeaderPlayerInTournamentSelection(
+                        leaderSelected = leaderSelected,
+                        leaders = playerLeaderList,
+                        rounds = rounds,
+                        onLeaderSelected = chooseLeader,
+                        initiallyExpanded = leaderSelectExpanded,
+                        title = title,
+                        date = date,
+                        locationId = locationId,
+                        expandedContent = {
+                            EntryTitleField(title = title, onTitleChanged = onTitleChanged)
+                            EntryDateField(date = date, onDateChanged = onDateChanged)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                EntryMetaDropdown(
+                                    modifier = Modifier.weight(1f),
+                                    metaId = metaId,
+                                    onMetaSelected = onMetaSelected
+                                )
+                                EntryLocationDropdown(
+                                    modifier = Modifier.weight(1f),
+                                    locationId = locationId,
+                                    onLocationSelected = onLocationSelected
+                                )
+                            }
                         }
+                    )
+                }
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Button(onClick = { transformEntry() }) { Text(stringResource(R.string.btn_save_punk_record)) }
+                        OutlinedButton(onClick = { addNewRound() }) { Text(stringResource(R.string.btn_new_round)) }
                     }
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Button(onClick = { transformEntry() }) { Text(stringResource(R.string.btn_save_punk_record)) }
-                    OutlinedButton(onClick = { addNewRound() }) { Text(stringResource(R.string.btn_new_round)) }
                 }
                 if (punkRecordEntry.isNotEmpty()) {
-                    val punkRecordVisible = rememberSaveable { mutableStateOf(true) }
-                    val punkRecordRotation by animateFloatAsState(
-                        targetValue = if (punkRecordVisible.value) 180f else 0f,
-                        label = "punk_record_rotation"
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { punkRecordVisible.value = !punkRecordVisible.value },
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(stringResource(R.string.label_punk_record), modifier = Modifier.weight(1f))
-                        Icon(
-                            Icons.Default.ExpandMore,
-                            contentDescription = if (punkRecordVisible.value) stringResource(R.string.cd_hide) else stringResource(R.string.cd_show),
-                            modifier = Modifier.rotate(punkRecordRotation)
+                    item {
+                        val punkRecordVisible = rememberSaveable { mutableStateOf(true) }
+                        val punkRecordRotation by animateFloatAsState(
+                            targetValue = if (punkRecordVisible.value) 180f else 0f,
+                            label = "punk_record_rotation"
                         )
-                    }
-                    AnimatedVisibility(visible = punkRecordVisible.value) {
-                        CopyableResult(punkRecordEntry)
-                    }
-                }
-                if (rounds.isNotEmpty()) {
-                    LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(rounds) { round ->
-                            RoundEntry(
-                                round = round,
-                                leaders = roundLeaderList,
-                                initiallyExpanded = leaderSelectExpanded,
-                                leaderSelected = chooseRoundLeader,
-                                roundResult = chooseRoundResult,
-                                turnOrder = chooseRoundTurnOrder,
-                                dieRoll = chooseDieRoll,
-                                showingDieRoll = showingDieRoll,
-                                removeRound = removeRound
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { punkRecordVisible.value = !punkRecordVisible.value },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(stringResource(R.string.label_punk_record), modifier = Modifier.weight(1f))
+                            Icon(
+                                Icons.Default.ExpandMore,
+                                contentDescription = if (punkRecordVisible.value) stringResource(R.string.cd_hide) else stringResource(R.string.cd_show),
+                                modifier = Modifier.rotate(punkRecordRotation)
                             )
                         }
+                        AnimatedVisibility(visible = punkRecordVisible.value) {
+                            CopyableResult(punkRecordEntry)
+                        }
                     }
+                }
+                items(rounds) { round ->
+                    RoundEntry(
+                        round = round,
+                        leaders = roundLeaderList,
+                        initiallyExpanded = leaderSelectExpanded,
+                        leaderSelected = chooseRoundLeader,
+                        roundResult = chooseRoundResult,
+                        turnOrder = chooseRoundTurnOrder,
+                        dieRoll = chooseDieRoll,
+                        showingDieRoll = showingDieRoll,
+                        removeRound = removeRound
+                    )
                 }
             }
         }
@@ -316,7 +320,6 @@ fun Modifier.animatedBorder(
             drawContent()
         }
         .padding(borderWidth)
-        .clip(shape)
 }
 
 @Composable

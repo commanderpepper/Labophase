@@ -1,19 +1,24 @@
 package commanderpepper.labophase.screens.stats
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -23,6 +28,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.window.core.layout.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -69,7 +78,7 @@ fun StatsScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun StatsScreen(
     statsUIState: StatsUIState,
@@ -80,6 +89,8 @@ fun StatsScreen(
     onLocationSelected: (Location) -> Unit,
     onAllLocationsSelected: () -> Unit
 ) {
+    val isExpandedWidth = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass != WindowWidthSizeClass.COMPACT
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(title = { Text(stringResource(R.string.stats_title)) })
@@ -97,6 +108,36 @@ fun StatsScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) { Text(statsUIState.errorMessage) }
+        } else if (isExpandedWidth) {
+            Row(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .weight(2f)
+                        .fillMaxHeight()
+                        .padding(innerPadding)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    StatsHeader(
+                        statsUIState = statsUIState,
+                        onLeaderSelected = onLeaderSelected,
+                        onAllLeadersSelected = onAllLeadersSelected,
+                        onMetaSelected = onMetaSelected,
+                        onAllMetasSelected = onAllMetasSelected,
+                        onLocationSelected = onLocationSelected,
+                        onAllLocationsSelected = onAllLocationsSelected
+                    )
+                }
+                VerticalDivider(modifier = Modifier.padding(vertical = 16.dp))
+                OpponentsPane(
+                    opponents = statsUIState.leadersPlayerAgainst,
+                    modifier = Modifier
+                        .weight(3f)
+                        .fillMaxHeight()
+                        .padding(innerPadding)
+                )
+            }
         } else {
             LazyColumn(
                 modifier = Modifier
@@ -181,7 +222,11 @@ private fun StatsHeader(
             } else {
                 leaderInfo.leader.leaderColors.map { it.color }
             }
-            ElevatedCard(modifier = Modifier.weight(0.4f).animatedBorder(colors = borderColors)) {
+            Box(modifier = Modifier
+                .weight(0.4f)
+                .animatedBorder(colors = borderColors)
+                .background(MaterialTheme.colorScheme.surface)
+            ) {
                 AsyncImage(
                     modifier = Modifier.fillMaxWidth(),
                     model = "file:///android_asset/leader_images/${leaderInfo.leader.cardId}.webp",
@@ -193,7 +238,11 @@ private fun StatsHeader(
                 LeaderColor.Red.color, LeaderColor.Blue.color, LeaderColor.Green.color,
                 LeaderColor.Yellow.color, LeaderColor.Purple.color, LeaderColor.Black.color
             )
-            ElevatedCard(modifier = Modifier.weight(0.4f).animatedBorder(colors = allColors)) {
+            Box(modifier = Modifier
+                .weight(0.4f)
+                .animatedBorder(colors = allColors)
+                .background(MaterialTheme.colorScheme.surface)
+            ) {
                 AsyncImage(
                     modifier = Modifier.fillMaxWidth(),
                     model = "file:///android_asset/leader_images/rainbow_luffy.webp",
@@ -378,6 +427,24 @@ private fun LocationFilterDropdown(
 }
 
 @Composable
+private fun OpponentsPane(opponents: List<StatLeaderInfo>, modifier: Modifier = Modifier) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        item {
+            Text(
+                text = stringResource(R.string.stats_leaders_against),
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+        }
+        items(opponents) { OpponentRow(it) }
+    }
+}
+
+@Composable
 private fun OpponentRow(opponent: StatLeaderInfo) {
     Row(
         modifier = Modifier
@@ -458,6 +525,56 @@ private fun PreviewStatsScreenAllLeaders() {
             statsUIState = StatsUIState(
                 leaderSelected = LeaderSelectedOption.All,
                 metaSelected = MetaOption.SpecificMeta(Meta.OP16),
+                locationSelected = LocationOption.All,
+                leadersPlayed = listOf(Leader.PBLuffy, Leader.RShanks, Leader.GZoro),
+                leadersPlayerAgainst = previewOpponents,
+                isLoading = false
+            ),
+            onLeaderSelected = {},
+            onAllLeadersSelected = {},
+            onMetaSelected = {},
+            onAllMetasSelected = {},
+            onLocationSelected = {},
+            onAllLocationsSelected = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 840, heightDp = 600)
+@Composable
+private fun PreviewStatsScreenTabletLeaderSelected() {
+    LabophaseTheme {
+        StatsScreen(
+            statsUIState = StatsUIState(
+                leaderSelected = LeaderSelectedOption.LeaderSelected(
+                    StatLeaderInfo(Leader.PBLuffy, wins = 3, losses = 1, percentage = "75%",
+                        firstWins = 2, firstLosses = 0, firstPercentage = "100%",
+                        secondWins = 1, secondLosses = 1, secondPercentage = "50%")
+                ),
+                metaSelected = MetaOption.All,
+                locationSelected = LocationOption.All,
+                leadersPlayed = listOf(Leader.PBLuffy, Leader.RShanks, Leader.GZoro),
+                leadersPlayerAgainst = previewOpponents,
+                isLoading = false
+            ),
+            onLeaderSelected = {},
+            onAllLeadersSelected = {},
+            onMetaSelected = {},
+            onAllMetasSelected = {},
+            onLocationSelected = {},
+            onAllLocationsSelected = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 840, heightDp = 600)
+@Composable
+private fun PreviewStatsScreenTabletAllLeaders() {
+    LabophaseTheme {
+        StatsScreen(
+            statsUIState = StatsUIState(
+                leaderSelected = LeaderSelectedOption.All,
+                metaSelected = MetaOption.All,
                 locationSelected = LocationOption.All,
                 leadersPlayed = listOf(Leader.PBLuffy, Leader.RShanks, Leader.GZoro),
                 leadersPlayerAgainst = previewOpponents,

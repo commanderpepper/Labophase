@@ -5,16 +5,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.navigationsuite.ExperimentalMaterial3AdaptiveNavigationSuiteApi
+import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -34,6 +32,7 @@ import commanderpepper.labophase.screens.stats.StatsScreen
 import commanderpepper.labophase.ui.theme.LabophaseTheme
 
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3AdaptiveNavigationSuiteApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -42,58 +41,51 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val currentBackStack by navController.currentBackStackEntryAsState()
                 val currentDestination = currentBackStack?.destination
-                val isTopLevel = currentDestination?.hasRoute<EntrySelection>() == true ||
-                        currentDestination?.hasRoute<Stats>() == true ||
-                        currentDestination?.hasRoute<Settings>() == true
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    bottomBar = {
-                        if (isTopLevel) {
-                            NavigationBar {
-                                NavigationBarItem(
-                                    selected = currentDestination.hasRoute<EntrySelection>(),
-                                    onClick = {
-                                        navController.navigate(EntrySelection) {
-                                            popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                            launchSingleTop = true
-                                            restoreState = true
-                                        }
-                                    },
-                                    icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
-                                    label = { Text("Entries") }
-                                )
-                                NavigationBarItem(
-                                    selected = currentDestination.hasRoute<Stats>(),
-                                    onClick = {
-                                        navController.navigate(Stats) {
-                                            popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                            launchSingleTop = true
-                                            restoreState = true
-                                        }
-                                    },
-                                    icon = { Icon(Icons.Default.BarChart, contentDescription = null) },
-                                    label = { Text("Stats") }
-                                )
-                                NavigationBarItem(
-                                    selected = currentDestination.hasRoute<Settings>(),
-                                    onClick = {
-                                        navController.navigate(Settings) {
-                                            popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                            launchSingleTop = true
-                                            restoreState = true
-                                        }
-                                    },
-                                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-                                    label = { Text("Settings") }
-                                )
+
+                NavigationSuiteScaffold(
+                    navigationSuiteItems = {
+                        item(
+                            icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
+                            label = { Text("Entries") },
+                            selected = currentDestination?.hasRoute<EntrySelection>() == true,
+                            onClick = {
+                                navController.navigate(EntrySelection) {
+                                    popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                             }
-                        }
+                        )
+                        item(
+                            icon = { Icon(Icons.Default.BarChart, contentDescription = null) },
+                            label = { Text("Stats") },
+                            selected = currentDestination?.hasRoute<Stats>() == true,
+                            onClick = {
+                                navController.navigate(Stats) {
+                                    popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        )
+                        item(
+                            icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                            label = { Text("Settings") },
+                            selected = currentDestination?.hasRoute<Settings>() == true,
+                            onClick = {
+                                navController.navigate(Settings) {
+                                    popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        )
                     }
-                ) { innerPadding ->
+                ) {
                     NavHost(
                         navController = navController,
                         startDestination = EntrySelection,
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.fillMaxSize()
                     ) {
                         composable<EntrySelection> {
                             EntrySelectionScreen(

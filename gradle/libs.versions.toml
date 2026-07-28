@@ -53,6 +53,10 @@ mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 aboutlibraries-core = { group = "com.mikepenz", name = "aboutlibraries-core", version.ref = "aboutlibraries" }
 aboutlibraries-compose-m3 = { group = "com.mikepenz", name = "aboutlibraries-compose-m3", version.ref = "aboutlibraries" }
+androidx-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite" }
+androidx-material3-adaptive                  = { module = "androidx.compose.material3.adaptive:adaptive" }
+androidx-material3-adaptive-layout           = { module = "androidx.compose.material3.adaptive:adaptive-layout" }
+androidx-material3-adaptive-navigation       = { module = "androidx.compose.material3.adaptive:adaptive-navigation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
