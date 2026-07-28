@@ -347,7 +347,7 @@ private fun LocationFilterDropdown(
     var expanded by remember { mutableStateOf(false) }
     val displayName = when (locationSelected) {
         is LocationOption.All -> stringResource(R.string.stats_all_locations)
-        is LocationOption.SpecificLocation -> locationSelected.location.name
+        is LocationOption.SpecificLocation -> locationSelected.location.abbreviation
     }
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
         OutlinedTextField(

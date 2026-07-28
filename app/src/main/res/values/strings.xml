@@ -26,6 +26,8 @@
     <string name="label_punk_record">Punk Record</string>
     <string name="wins_losses_format">W: %1$d - L: %2$d</string>
     <string name="wins_losses_pct_format">W: %1$d - L: %2$d (%3$d%%)</string>
+    <string name="label_title">Title</string>
+    <string name="label_date">Date</string>
     <string name="label_meta">Meta</string>
     <string name="label_location">Location</string>
     <string name="label_none">None</string>

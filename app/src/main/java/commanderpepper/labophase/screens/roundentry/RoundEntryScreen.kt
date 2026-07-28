@@ -26,18 +26,28 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -49,6 +59,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -69,6 +80,16 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import commanderpepper.labophase.models.Leader
+import commanderpepper.labophase.models.LOCATIONS_LIST
+import commanderpepper.labophase.models.METAS_LIST
+import commanderpepper.labophase.models.Meta
+import commanderpepper.labophase.models.locationById
+import commanderpepper.labophase.models.metaById
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import commanderpepper.labophase.screens.roundentry.models.RoundUI
 import commanderpepper.labophase.screens.settings.SettingsViewModel
 import commanderpepper.labophase.screens.settings.SettingsViewModelImpl
@@ -101,6 +122,10 @@ fun RoundEntryScreen(
         showingDieRoll = showingDieRoll.value,
         isLoading = uiState.value.isLoading,
         errorMessage = uiState.value.errorMessage,
+        title = uiState.value.title,
+        date = uiState.value.date,
+        metaId = uiState.value.metaId,
+        locationId = uiState.value.locationId,
         addNewRound = roundEntryViewModel::addNewRound,
         transformEntry = roundEntryViewModel::transformEntry,
         chooseLeader = roundEntryViewModel::chooseLeader,
@@ -108,7 +133,11 @@ fun RoundEntryScreen(
         chooseRoundTurnOrder = roundEntryViewModel::roundTurnOrderSelect,
         chooseRoundResult = roundEntryViewModel::roundResultSelect,
         chooseDieRoll = roundEntryViewModel::roundDieRollSelect,
-        removeRound = roundEntryViewModel::removeRound
+        removeRound = roundEntryViewModel::removeRound,
+        onTitleChanged = roundEntryViewModel::setTitle,
+        onDateChanged = roundEntryViewModel::setDate,
+        onMetaSelected = roundEntryViewModel::setMetaId,
+        onLocationSelected = roundEntryViewModel::setLocationId
     )
 }
 
@@ -126,6 +155,10 @@ fun RoundEntryScreen(
     showingDieRoll: Boolean = false,
     isLoading: Boolean,
     errorMessage: String?,
+    title: String? = null,
+    date: String = LocalDate.now().toString(),
+    metaId: Int = Meta.OP16.id,
+    locationId: Int? = null,
     addNewRound: () -> Unit,
     transformEntry: () -> Unit,
     chooseLeader: (Leader) -> Unit,
@@ -133,7 +166,11 @@ fun RoundEntryScreen(
     chooseRoundTurnOrder: (Int, String) -> Unit,
     chooseRoundResult: (Int, String) -> Unit,
     chooseDieRoll: (Int, String?) -> Unit = { _, _ -> },
-    removeRound: (Int) -> Unit
+    removeRound: (Int) -> Unit,
+    onTitleChanged: (String?) -> Unit = {},
+    onDateChanged: (String) -> Unit = {},
+    onMetaSelected: (Int) -> Unit = {},
+    onLocationSelected: (Int?) -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -175,7 +212,26 @@ fun RoundEntryScreen(
                     leaders = playerLeaderList,
                     rounds = rounds,
                     onLeaderSelected = chooseLeader,
-                    initiallyExpanded = leaderSelectExpanded
+                    initiallyExpanded = leaderSelectExpanded,
+                    expandedContent = {
+                        EntryTitleField(title = title, onTitleChanged = onTitleChanged)
+                        EntryDateField(date = date, onDateChanged = onDateChanged)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            EntryMetaDropdown(
+                                modifier = Modifier.weight(1f),
+                                metaId = metaId,
+                                onMetaSelected = onMetaSelected
+                            )
+                            EntryLocationDropdown(
+                                modifier = Modifier.weight(1f),
+                                locationId = locationId,
+                                onLocationSelected = onLocationSelected
+                            )
+                        }
+                    }
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -283,7 +339,8 @@ fun LeaderPlayerInTournamentSelection(
     leaders: List<Leader>,
     rounds: List<RoundUI>,
     onLeaderSelected: (Leader) -> Unit,
-    initiallyExpanded: Boolean = true
+    initiallyExpanded: Boolean = true,
+    expandedContent: @Composable () -> Unit = {}
 ) {
     val isExpanded = rememberSaveable { mutableStateOf(initiallyExpanded) }
     val carouselState = rememberSaveable(
@@ -315,11 +372,14 @@ fun LeaderPlayerInTournamentSelection(
             }
         }
         AnimatedVisibility(visible = isExpanded.value) {
-            LeaderSelection(
-                leaders = leaders,
-                state = carouselState,
-                onLeaderSelected = onLeaderSelected
-            )
+            Column {
+                LeaderSelection(
+                    leaders = leaders,
+                    state = carouselState,
+                    onLeaderSelected = onLeaderSelected
+                )
+                expandedContent()
+            }
         }
     }
 }
@@ -486,6 +546,136 @@ fun CopyableResult(text: String) {
             }
         ) {
             Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.cd_copy))
+        }
+    }
+}
+
+@Composable
+private fun EntryTitleField(title: String?, onTitleChanged: (String?) -> Unit) {
+    OutlinedTextField(
+        value = title ?: "",
+        onValueChange = { onTitleChanged(it.ifBlank { null }) },
+        label = { Text(stringResource(R.string.label_title)) },
+        singleLine = true,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EntryDateField(date: String, onDateChanged: (String) -> Unit) {
+    var showDialog by remember { mutableStateOf(false) }
+    val parsedDate = remember(date) { runCatching { LocalDate.parse(date) }.getOrNull() }
+    val displayDate = parsedDate?.format(DateTimeFormatter.ofPattern("MMM dd, yyyy")) ?: date
+
+    OutlinedTextField(
+        value = displayDate,
+        onValueChange = {},
+        readOnly = true,
+        label = { Text(stringResource(R.string.label_date)) },
+        trailingIcon = {
+            IconButton(onClick = { showDialog = true }) {
+                Icon(Icons.Default.DateRange, contentDescription = stringResource(R.string.label_date))
+            }
+        },
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    if (showDialog) {
+        val initialMillis = parsedDate
+            ?.atStartOfDay(ZoneOffset.UTC)
+            ?.toInstant()
+            ?.toEpochMilli()
+        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
+        DatePickerDialog(
+            onDismissRequest = { showDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val selected = Instant.ofEpochMilli(millis)
+                            .atOffset(ZoneOffset.UTC)
+                            .toLocalDate()
+                        onDateChanged(selected.toString())
+                    }
+                    showDialog = false
+                }) { Text(stringResource(android.R.string.ok)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EntryMetaDropdown(
+    modifier: Modifier = Modifier,
+    metaId: Int,
+    onMetaSelected: (Int) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val currentMeta = metaById(metaId)
+    ExposedDropdownMenuBox(modifier = modifier, expanded = expanded, onExpandedChange = { expanded = it }) {
+        OutlinedTextField(
+            value = currentMeta?.name ?: "",
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(R.string.label_meta)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth()
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            METAS_LIST.forEach { meta ->
+                DropdownMenuItem(
+                    text = { Text(meta.name) },
+                    onClick = { onMetaSelected(meta.id); expanded = false },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EntryLocationDropdown(
+    modifier: Modifier = Modifier,
+    locationId: Int?,
+    onLocationSelected: (Int?) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val currentLocation = locationId?.let { locationById(it) }
+    ExposedDropdownMenuBox(modifier = modifier, expanded = expanded, onExpandedChange = { expanded = it }) {
+        OutlinedTextField(
+            value = currentLocation?.abbreviation ?: stringResource(R.string.label_none),
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(R.string.label_location)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth()
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.label_none)) },
+                onClick = { onLocationSelected(null); expanded = false },
+                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+            )
+            LOCATIONS_LIST.forEach { location ->
+                DropdownMenuItem(
+                    text = { Text(location.name) },
+                    onClick = { onLocationSelected(location.id); expanded = false },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                )
+            }
         }
     }
 }
