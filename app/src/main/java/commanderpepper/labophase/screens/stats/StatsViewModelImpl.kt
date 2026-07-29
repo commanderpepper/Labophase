@@ -15,11 +15,13 @@ import commanderpepper.labophase.screens.stats.models.LocationOption
 import commanderpepper.labophase.screens.stats.models.MetaOption
 import commanderpepper.labophase.screens.stats.models.StatLeaderInfo
 import commanderpepper.labophase.screens.stats.models.StatsUIState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class StatsViewModelImpl(
     private val entryRepository: EntryRepository
@@ -50,7 +52,7 @@ class StatsViewModelImpl(
                     _selectedMeta,
                     _selectedLocation
                 ) { entries, leader, meta, location ->
-                    computeStats(entries, leader, meta, location)
+                    withContext(Dispatchers.Default) { computeStats(entries, leader, meta, location) }
                 }.collect { newState ->
                     _statsUIState.value = newState
                 }
@@ -145,9 +147,9 @@ class StatsViewModelImpl(
         )
     }
 
-    private fun pct(wins: Int, losses: Int): String {
+    private fun pct(wins: Int, losses: Int): Int? {
         val total = wins + losses
-        return if (total > 0) "${wins * 100 / total}%" else "N/A"
+        return if (total > 0) wins * 100 / total else null
     }
 
     override fun allLeadersSelected() { _selectedLeader.value = null }

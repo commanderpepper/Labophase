@@ -9,6 +9,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Location
+import commanderpepper.labophase.models.RoundResult
+import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.screens.roundentry.models.RoundUI
 import commanderpepper.labophase.ui.theme.LabophaseTheme
 import org.junit.Rule
@@ -25,8 +27,8 @@ class RoundEntryScreenTest {
         roundId = 1,
         leader = Leader.RShanks,
         summary = "R Shanks, W, 1",
-        roundResult = "Win",
-        turnOrder = "First"
+        roundResult = RoundResult.Win,
+        turnOrder = TurnOrder.First
     )
 
     private fun setIdleContent(

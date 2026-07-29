@@ -32,6 +32,11 @@
     <string name="label_location">Location</string>
     <string name="label_none">None</string>
 
+    <!-- Navigation labels -->
+    <string name="nav_entries">Entries</string>
+    <string name="nav_stats">Stats</string>
+    <string name="nav_settings">Settings</string>
+
     <!-- StatsScreen -->
     <string name="stats_title">Stats</string>
     <string name="stats_all_leaders">All Leaders</string>
@@ -41,6 +46,8 @@
     <string name="stats_leaders_against">Leaders Played Against</string>
     <string name="stats_going_first">1st: W: %1$d - L: %2$d (%3$d%%)</string>
     <string name="stats_going_second">2nd: W: %1$d - L: %2$d (%3$d%%)</string>
+    <string name="stats_going_first_no_pct">1st: W: %1$d - L: %2$d</string>
+    <string name="stats_going_second_no_pct">2nd: W: %1$d - L: %2$d</string>
     <string name="round_result_win">W</string>
     <string name="round_result_loss">L</string>
     <string name="turn_order_first">1st</string>

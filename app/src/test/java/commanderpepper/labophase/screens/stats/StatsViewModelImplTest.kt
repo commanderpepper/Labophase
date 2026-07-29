@@ -166,7 +166,7 @@ class StatsViewModelImplTest {
             )
             val state = awaitItem()
 
-            assertEquals("66%", state.leadersPlayerAgainst.single().percentage)
+            assertEquals(66, state.leadersPlayerAgainst.single().percentage)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -190,7 +190,7 @@ class StatsViewModelImplTest {
             val opponent = state.leadersPlayerAgainst.single()
             assertEquals(1, opponent.firstWins)
             assertEquals(1, opponent.firstLosses)
-            assertEquals("50%", opponent.firstPercentage)
+            assertEquals(50, opponent.firstPercentage)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -214,13 +214,13 @@ class StatsViewModelImplTest {
             val opponent = state.leadersPlayerAgainst.single()
             assertEquals(1, opponent.secondWins)
             assertEquals(1, opponent.secondLosses)
-            assertEquals("50%", opponent.secondPercentage)
+            assertEquals(50, opponent.secondPercentage)
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun `turn order percentage is N_A when no rounds played in that turn order`() = runTest {
+    fun `turn order percentage is null when no rounds played in that turn order`() = runTest {
         val vm = createViewModel()
 
         vm.statsUIState.test {
@@ -234,8 +234,8 @@ class StatsViewModelImplTest {
             val state = awaitItem()
 
             val opponent = state.leadersPlayerAgainst.single()
-            assertEquals("100%", opponent.firstPercentage)
-            assertEquals("N/A", opponent.secondPercentage)
+            assertEquals(100, opponent.firstPercentage)
+            assertNull(opponent.secondPercentage)
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -314,7 +314,7 @@ class StatsViewModelImplTest {
             assertEquals(Leader.UGLuffy, leaderState.leader.leader)
             assertEquals(2, leaderState.leader.wins)
             assertEquals(1, leaderState.leader.losses)
-            assertEquals("66%", leaderState.leader.percentage)
+            assertEquals(66, leaderState.leader.percentage)
             cancelAndIgnoreRemainingEvents()
         }
     }

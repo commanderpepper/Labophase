@@ -14,7 +14,7 @@ interface EntryRepository {
         locationId: Int? = null,
         metaId: Int,
         date: String
-    )
+    ): Int
     suspend fun updateEntry(
         entryId: Int,
         leader: Leader,
@@ -39,7 +39,7 @@ class EntryRepositoryImpl(private val dao: EntryDao) : EntryRepository {
         locationId: Int?,
         metaId: Int,
         date: String
-    ) {
+    ): Int {
         val entryId = dao.insertEntry(
             EntryEntity(
                 leaderCardId = leader.cardId,
@@ -50,6 +50,7 @@ class EntryRepositoryImpl(private val dao: EntryDao) : EntryRepository {
             )
         ).toInt()
         dao.insertRounds(rounds.toRoundEntities(entryId))
+        return entryId
     }
 
     override suspend fun updateEntry(

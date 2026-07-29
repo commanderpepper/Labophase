@@ -8,6 +8,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -86,6 +88,8 @@ import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.LOCATIONS_LIST
 import commanderpepper.labophase.models.METAS_LIST
 import commanderpepper.labophase.models.Meta
+import commanderpepper.labophase.models.RoundResult
+import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.models.locationById
 import commanderpepper.labophase.models.metaById
 import java.time.Instant
@@ -167,8 +171,8 @@ fun RoundEntryScreen(
     transformEntry: () -> Unit,
     chooseLeader: (Leader) -> Unit,
     chooseRoundLeader: (Int, Leader) -> Unit,
-    chooseRoundTurnOrder: (Int, String) -> Unit,
-    chooseRoundResult: (Int, String) -> Unit,
+    chooseRoundTurnOrder: (Int, TurnOrder) -> Unit,
+    chooseRoundResult: (Int, RoundResult) -> Unit,
     chooseDieRoll: (Int, String?) -> Unit = { _, _ -> },
     removeRound: (Int) -> Unit,
     onTitleChanged: (String?) -> Unit = {},
@@ -188,6 +192,7 @@ fun RoundEntryScreen(
             )
         }
     ) { innerPadding ->
+        WithSharedBorderAngle {
         if (isLoading) {
             Column(
                 modifier = Modifier
@@ -277,7 +282,7 @@ fun RoundEntryScreen(
                         }
                     }
                 }
-                items(rounds) { round ->
+                items(rounds, key = { it.roundId }) { round ->
                     RoundEntry(
                         round = round,
                         leaders = roundLeaderList,
@@ -292,6 +297,25 @@ fun RoundEntryScreen(
                 }
             }
         }
+        } // WithSharedBorderAngle
+    }
+}
+
+val LocalBorderAngle = compositionLocalOf { 0f }
+
+@Composable
+fun WithSharedBorderAngle(content: @Composable () -> Unit) {
+    val infiniteTransition = rememberInfiniteTransition(label = "border")
+    val angle by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2500, easing = LinearEasing)
+        ),
+        label = "shared_border_angle"
+    )
+    CompositionLocalProvider(LocalBorderAngle provides angle) {
+        content()
     }
 }
 
@@ -299,18 +323,9 @@ fun RoundEntryScreen(
 fun Modifier.animatedBorder(
     colors: List<Color>,
     shape: Shape = CardDefaults.elevatedShape,
-    borderWidth: Dp = 2.dp,
-    durationMs: Int = 2500
+    borderWidth: Dp = 2.dp
 ): Modifier {
-    val infiniteTransition = rememberInfiniteTransition(label = "border")
-    val angle by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = durationMs, easing = LinearEasing)
-        ),
-        label = "angle"
-    )
+    val angle = LocalBorderAngle.current
     return this
         .clip(shape)
         .drawWithContent {
@@ -363,8 +378,8 @@ fun LeaderPlayerInTournamentSelection(
         targetValue = if (isExpanded.value) 180f else 0f,
         label = "leader_expand_rotation"
     )
-    val wins = rounds.count { it.roundResult == "Win" }
-    val losses = rounds.count { it.roundResult == "Loss" }
+    val wins = rounds.count { it.roundResult == RoundResult.Win }
+    val losses = rounds.count { it.roundResult == RoundResult.Loss }
     val formattedDate = remember(date) {
         runCatching { LocalDate.parse(date).format(DateTimeFormatter.ofPattern("MMM d, yyyy")) }
             .getOrDefault(date)
@@ -432,16 +447,16 @@ fun LeaderSelection(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RoundResultSelection(roundResult: String, onRoundSelected: (String) -> Unit) {
+fun RoundResultSelection(roundResult: RoundResult, onRoundSelected: (RoundResult) -> Unit) {
     SingleChoiceSegmentedButtonRow {
         SegmentedButton(
-            selected = roundResult == "Win",
-            onClick = { onRoundSelected("Win") },
+            selected = roundResult == RoundResult.Win,
+            onClick = { onRoundSelected(RoundResult.Win) },
             shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
         ) { Text(stringResource(R.string.round_result_win)) }
         SegmentedButton(
-            selected = roundResult == "Loss",
-            onClick = { onRoundSelected("Loss") },
+            selected = roundResult == RoundResult.Loss,
+            onClick = { onRoundSelected(RoundResult.Loss) },
             shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
         ) { Text(stringResource(R.string.round_result_loss)) }
     }
@@ -449,16 +464,16 @@ fun RoundResultSelection(roundResult: String, onRoundSelected: (String) -> Unit)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TurnOrderSelection(turnOrder: String, onTurnOrderSelected: (String) -> Unit) {
+fun TurnOrderSelection(turnOrder: TurnOrder, onTurnOrderSelected: (TurnOrder) -> Unit) {
     SingleChoiceSegmentedButtonRow {
         SegmentedButton(
-            selected = turnOrder == "First",
-            onClick = { onTurnOrderSelected("First") },
+            selected = turnOrder == TurnOrder.First,
+            onClick = { onTurnOrderSelected(TurnOrder.First) },
             shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
         ) { Text(stringResource(R.string.turn_order_first)) }
         SegmentedButton(
-            selected = turnOrder == "Second",
-            onClick = { onTurnOrderSelected("Second") },
+            selected = turnOrder == TurnOrder.Second,
+            onClick = { onTurnOrderSelected(TurnOrder.Second) },
             shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
         ) { Text(stringResource(R.string.turn_order_second)) }
     }
@@ -489,8 +504,8 @@ fun RoundEntry(
     leaders: List<Leader>,
     removeRound: (Int) -> Unit,
     leaderSelected: (Int, Leader) -> Unit,
-    roundResult: (Int, String) -> Unit,
-    turnOrder: (Int, String) -> Unit,
+    roundResult: (Int, RoundResult) -> Unit,
+    turnOrder: (Int, TurnOrder) -> Unit,
     dieRoll: (Int, String?) -> Unit = { _, _ -> },
     showingDieRoll: Boolean = false,
     initiallyExpanded: Boolean = true
@@ -707,15 +722,15 @@ private val previewRound1 = RoundUI(
     roundId = 1,
     leader = Leader.PBLuffy,
     summary = "PB Luffy, W, 1",
-    roundResult = "Win",
-    turnOrder = "First"
+    roundResult = RoundResult.Win,
+    turnOrder = TurnOrder.First
 )
 private val previewRound2 = RoundUI(
     roundId = 2,
     leader = Leader.RShanks,
     summary = "R Shanks, L, 2",
-    roundResult = "Loss",
-    turnOrder = "Second"
+    roundResult = RoundResult.Loss,
+    turnOrder = TurnOrder.Second
 )
 private val previewPunkRecord = "!PR add\n" +
         "UG Luffy\n" +
@@ -864,7 +879,7 @@ private fun PreviewRoundEntry() {
 @Composable
 private fun PreviewRoundResultSelection() {
     LabophaseTheme {
-        RoundResultSelection(roundResult = "Win", onRoundSelected = {})
+        RoundResultSelection(roundResult = RoundResult.Win, onRoundSelected = {})
     }
 }
 
@@ -872,7 +887,7 @@ private fun PreviewRoundResultSelection() {
 @Composable
 private fun PreviewTurnOrderSelection() {
     LabophaseTheme {
-        TurnOrderSelection(turnOrder = "First", onTurnOrderSelected = {})
+        TurnOrderSelection(turnOrder = TurnOrder.First, onTurnOrderSelected = {})
     }
 }
 

@@ -31,6 +31,8 @@ class RoundEntryViewModelImpl(
 
     private var roundId: Int = 0
     private var roundsMap: Map<Int, Round> = emptyMap()
+    @Volatile private var isSaving = false
+    private var savedEntryId: Int? = null
 
     private val _uiState = MutableStateFlow(RoundEntryUIState(leaderSelected = Leader.UGLuffy, isLoading = true))
     override val uiState: StateFlow<RoundEntryUIState> = _uiState.asStateFlow()
@@ -96,10 +98,15 @@ class RoundEntryViewModelImpl(
     }
 
     override fun transformEntry() {
+        if (isSaving) return
+        isSaving = true
         val leader = _uiState.value.leaderSelected
         val rounds = roundsMap.values.toList()
         updatePunkRecord(leader, rounds)
-        viewModelScope.launch { saveEntry(leader, rounds) }
+        viewModelScope.launch {
+            saveEntry(leader, rounds)
+            isSaving = false
+        }
     }
 
     private fun updatePunkRecord(leader: Leader, rounds: List<Round>) {
@@ -111,8 +118,9 @@ class RoundEntryViewModelImpl(
 
     private suspend fun saveEntry(leader: Leader, rounds: List<Round>) {
         val state = _uiState.value
-        if (entryId == null) {
-            entryRepository.saveEntry(
+        val effectiveEntryId = entryId ?: savedEntryId
+        if (effectiveEntryId == null) {
+            savedEntryId = entryRepository.saveEntry(
                 leader = leader,
                 rounds = rounds,
                 title = state.title,
@@ -122,7 +130,7 @@ class RoundEntryViewModelImpl(
             )
         } else {
             entryRepository.updateEntry(
-                entryId = entryId,
+                entryId = effectiveEntryId,
                 leader = leader,
                 rounds = rounds,
                 title = state.title,
@@ -147,12 +155,12 @@ class RoundEntryViewModelImpl(
         updateRound(roundId) { it.copy(leader = leader) }
     }
 
-    override fun roundTurnOrderSelect(roundId: Int, turnOrder: String) {
-        updateRound(roundId) { it.copy(turnOrder = if (turnOrder == "First") TurnOrder.First else TurnOrder.Second) }
+    override fun roundTurnOrderSelect(roundId: Int, turnOrder: TurnOrder) {
+        updateRound(roundId) { it.copy(turnOrder = turnOrder) }
     }
 
-    override fun roundResultSelect(roundId: Int, roundResult: String) {
-        updateRound(roundId) { it.copy(roundResult = if (roundResult == "Win") RoundResult.Win else RoundResult.Loss) }
+    override fun roundResultSelect(roundId: Int, roundResult: RoundResult) {
+        updateRound(roundId) { it.copy(roundResult = roundResult) }
     }
 
     override fun roundDieRollSelect(roundId: Int, dieRoll: String?) {
@@ -184,8 +192,8 @@ class RoundEntryViewModelImpl(
         roundId = roundId,
         leader = leader,
         summary = singleLine(),
-        roundResult = if (roundResult == RoundResult.Win) "Win" else "Loss",
-        turnOrder = if (turnOrder == TurnOrder.First) "First" else "Second",
+        roundResult = roundResult,
+        turnOrder = turnOrder,
         dieRoll = dieRoll
     )
 }

@@ -33,11 +33,11 @@ data class StatLeaderInfo(
     val leader: Leader,
     val wins: Int,
     val losses: Int,
-    val percentage: String,
+    val percentage: Int?,
     val firstWins: Int = 0,
     val firstLosses: Int = 0,
-    val firstPercentage: String = "N/A",
+    val firstPercentage: Int? = null,
     val secondWins: Int = 0,
     val secondLosses: Int = 0,
-    val secondPercentage: String = "N/A"
+    val secondPercentage: Int? = null
 )

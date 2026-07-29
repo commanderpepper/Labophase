@@ -95,8 +95,8 @@ class RoundEntryViewModelImplTest {
         vm.addNewRound()
 
         val round = vm.uiState.value.rounds.first()
-        assertEquals("Win", round.roundResult)
-        assertEquals("First", round.turnOrder)
+        assertEquals(RoundResult.Win, round.roundResult)
+        assertEquals(TurnOrder.First, round.turnOrder)
     }
 
     @Test
@@ -125,9 +125,9 @@ class RoundEntryViewModelImplTest {
         vm.addNewRound()
         val roundId = vm.uiState.value.rounds.first().roundId
 
-        vm.roundResultSelect(roundId, "Win")
+        vm.roundResultSelect(roundId, RoundResult.Win)
 
-        assertEquals("Win", vm.uiState.value.rounds.first().roundResult)
+        assertEquals(RoundResult.Win, vm.uiState.value.rounds.first().roundResult)
     }
 
     @Test
@@ -136,9 +136,9 @@ class RoundEntryViewModelImplTest {
         vm.addNewRound()
         val roundId = vm.uiState.value.rounds.first().roundId
 
-        vm.roundResultSelect(roundId, "Loss")
+        vm.roundResultSelect(roundId, RoundResult.Loss)
 
-        assertEquals("Loss", vm.uiState.value.rounds.first().roundResult)
+        assertEquals(RoundResult.Loss, vm.uiState.value.rounds.first().roundResult)
         assertTrue(vm.uiState.value.rounds.first().summary.contains("L"))
     }
 
@@ -148,9 +148,9 @@ class RoundEntryViewModelImplTest {
         vm.addNewRound()
         val roundId = vm.uiState.value.rounds.first().roundId
 
-        vm.roundTurnOrderSelect(roundId, "Second")
+        vm.roundTurnOrderSelect(roundId, TurnOrder.Second)
 
-        assertEquals("Second", vm.uiState.value.rounds.first().turnOrder)
+        assertEquals(TurnOrder.Second, vm.uiState.value.rounds.first().turnOrder)
         assertTrue(vm.uiState.value.rounds.first().summary.contains("2"))
     }
 
@@ -159,11 +159,11 @@ class RoundEntryViewModelImplTest {
         val vm = createViewModel()
         vm.addNewRound()
         val roundId = vm.uiState.value.rounds.first().roundId
-        vm.roundTurnOrderSelect(roundId, "Second") // set to Second first
+        vm.roundTurnOrderSelect(roundId, TurnOrder.Second) // set to Second first
 
-        vm.roundTurnOrderSelect(roundId, "First")
+        vm.roundTurnOrderSelect(roundId, TurnOrder.First)
 
-        assertEquals("First", vm.uiState.value.rounds.first().turnOrder)
+        assertEquals(TurnOrder.First, vm.uiState.value.rounds.first().turnOrder)
         assertTrue(vm.uiState.value.rounds.first().summary.contains("1"))
     }
 
@@ -240,13 +240,29 @@ class RoundEntryViewModelImplTest {
     }
 
     @Test
+    fun `transformEntry called twice on new entry creates once then updates`() = runTest {
+        val savedId = 42
+        coEvery { entryRepository.saveEntry(any(), any(), any(), any(), any(), any()) } returns savedId
+        val vm = createViewModel(entryId = null)
+        vm.addNewRound()
+
+        vm.transformEntry()
+        advanceUntilIdle()
+        vm.transformEntry()
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { entryRepository.saveEntry(any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 1) { entryRepository.updateEntry(savedId, any(), any(), any(), any(), any(), any()) }
+    }
+
+    @Test
     fun `round summary reflects leader name and result`() = runTest {
         val vm = createViewModel()
         vm.addNewRound()
         val roundId = vm.uiState.value.rounds.first().roundId
         vm.roundLeaderSelect(roundId, Leader.RShanks)
-        vm.roundResultSelect(roundId, "Win")
-        vm.roundTurnOrderSelect(roundId, "First")
+        vm.roundResultSelect(roundId, RoundResult.Win)
+        vm.roundTurnOrderSelect(roundId, TurnOrder.First)
 
         val summary = vm.uiState.value.rounds.first().summary
         assertTrue(summary.contains(Leader.RShanks.name))
@@ -287,7 +303,7 @@ class RoundEntryViewModelImplTest {
 
         assertEquals(1, vm.uiState.value.rounds.size)
         assertEquals(Leader.RShanks, vm.uiState.value.rounds.first().leader)
-        assertEquals("Win", vm.uiState.value.rounds.first().roundResult)
+        assertEquals(RoundResult.Win, vm.uiState.value.rounds.first().roundResult)
     }
 
     @Test

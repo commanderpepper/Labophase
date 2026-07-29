@@ -58,6 +58,7 @@ import commanderpepper.labophase.screens.entries.models.RoundEntrySelectionUI
 import commanderpepper.labophase.screens.roundentry.CopyableResult
 import commanderpepper.labophase.screens.roundentry.LeaderThumbnail
 import commanderpepper.labophase.screens.roundentry.RoundEntryScreen
+import commanderpepper.labophase.screens.roundentry.WithSharedBorderAngle
 import commanderpepper.labophase.ui.theme.LabophaseTheme
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -96,7 +97,7 @@ fun EntrySelectionScreen(
 
     if (isExpandedWidth) {
         // null = nothing selected, -1 = new entry, positive Int = existing entry ID
-        var selectedEntryId by remember { mutableStateOf<Int?>(null) }
+        var selectedEntryId by rememberSaveable { mutableStateOf<Int?>(null) }
 
         Row(modifier = Modifier.fillMaxSize()) {
             Box(
@@ -169,9 +170,10 @@ private fun EntryListContent(
             )
         }
     ) { innerPadding ->
+        WithSharedBorderAngle {
         if (isLoading) {
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -179,7 +181,7 @@ private fun EntryListContent(
             }
         } else if (errorMessage.isNullOrEmpty().not()) {
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().padding(innerPadding),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -198,6 +200,7 @@ private fun EntryListContent(
                 }
             }
         }
+        } // WithSharedBorderAngle
     }
 }
 

@@ -29,23 +29,23 @@ class StatsScreenTest {
 
     private val sampleLeaderInfo = StatLeaderInfo(
         leader = Leader.UGLuffy,
-        wins = 3, losses = 1, percentage = "75%",
-        firstWins = 2, firstLosses = 0, firstPercentage = "100%",
-        secondWins = 1, secondLosses = 1, secondPercentage = "50%"
+        wins = 3, losses = 1, percentage = 75,
+        firstWins = 2, firstLosses = 0, firstPercentage = 100,
+        secondWins = 1, secondLosses = 1, secondPercentage = 50
     )
 
     // Two opponents so the aggregate header values differ from individual row values
     private val opponentShanks = StatLeaderInfo(
         leader = Leader.RShanks,
-        wins = 2, losses = 1, percentage = "66%",
-        firstWins = 2, firstLosses = 0, firstPercentage = "100%",
-        secondWins = 0, secondLosses = 1, secondPercentage = "0%"
+        wins = 2, losses = 1, percentage = 66,
+        firstWins = 2, firstLosses = 0, firstPercentage = 100,
+        secondWins = 0, secondLosses = 1, secondPercentage = 0
     )
     private val opponentLuffy = StatLeaderInfo(
         leader = Leader.PBLuffy,
-        wins = 1, losses = 2, percentage = "33%",
-        firstWins = 0, firstLosses = 1, firstPercentage = "0%",
-        secondWins = 1, secondLosses = 1, secondPercentage = "50%"
+        wins = 1, losses = 2, percentage = 33,
+        firstWins = 0, firstLosses = 1, firstPercentage = 0,
+        secondWins = 1, secondLosses = 1, secondPercentage = 50
     )
 
     private fun setContent(

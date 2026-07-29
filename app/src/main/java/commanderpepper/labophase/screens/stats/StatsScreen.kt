@@ -53,6 +53,7 @@ import commanderpepper.labophase.models.LOCATIONS_LIST
 import commanderpepper.labophase.models.METAS_LIST
 import commanderpepper.labophase.models.Meta
 import commanderpepper.labophase.screens.roundentry.LeaderThumbnail
+import commanderpepper.labophase.screens.roundentry.WithSharedBorderAngle
 import commanderpepper.labophase.screens.roundentry.animatedBorder
 import commanderpepper.labophase.screens.stats.models.LeaderSelectedOption
 import commanderpepper.labophase.screens.stats.models.LocationOption
@@ -96,6 +97,7 @@ fun StatsScreen(
             CenterAlignedTopAppBar(title = { Text(stringResource(R.string.stats_title)) })
         }
     ) { innerPadding ->
+        WithSharedBorderAngle {
         if (statsUIState.isLoading) {
             Column(
                 modifier = Modifier.fillMaxSize().padding(innerPadding),
@@ -170,6 +172,7 @@ fun StatsScreen(
                 }
             }
         }
+        } // WithSharedBorderAngle
     }
 }
 
@@ -198,13 +201,13 @@ private fun StatsHeader(
                 leader = Leader.UGLuffy,
                 wins = wins,
                 losses = losses,
-                percentage = if (total > 0) "${wins * 100 / total}%" else "N/A",
+                percentage = if (total > 0) wins * 100 / total else null,
                 firstWins = fw,
                 firstLosses = fl,
-                firstPercentage = if (fw + fl > 0) "${fw * 100 / (fw + fl)}%" else "N/A",
+                firstPercentage = if (fw + fl > 0) fw * 100 / (fw + fl) else null,
                 secondWins = sw,
                 secondLosses = sl,
-                secondPercentage = if (sw + sl > 0) "${sw * 100 / (sw + sl)}%" else "N/A"
+                secondPercentage = if (sw + sl > 0) sw * 100 / (sw + sl) else null
             )
         }
     }
@@ -257,31 +260,25 @@ private fun StatsHeader(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = stringResource(
-                    R.string.wins_losses_pct_format,
-                    leaderInfo.wins,
-                    leaderInfo.losses,
-                    leaderInfo.percentage.dropLast(1).toIntOrNull() ?: 0
-                ),
+                text = when (val pct = leaderInfo.percentage) {
+                    null -> stringResource(R.string.wins_losses_format, leaderInfo.wins, leaderInfo.losses)
+                    else -> stringResource(R.string.wins_losses_pct_format, leaderInfo.wins, leaderInfo.losses, pct)
+                },
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = stringResource(
-                    R.string.stats_going_first,
-                    leaderInfo.firstWins,
-                    leaderInfo.firstLosses,
-                    leaderInfo.firstPercentage.dropLast(1).toIntOrNull() ?: 0
-                ),
+                text = when (val pct = leaderInfo.firstPercentage) {
+                    null -> stringResource(R.string.stats_going_first_no_pct, leaderInfo.firstWins, leaderInfo.firstLosses)
+                    else -> stringResource(R.string.stats_going_first, leaderInfo.firstWins, leaderInfo.firstLosses, pct)
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = stringResource(
-                    R.string.stats_going_second,
-                    leaderInfo.secondWins,
-                    leaderInfo.secondLosses,
-                    leaderInfo.secondPercentage.dropLast(1).toIntOrNull() ?: 0
-                ),
+                text = when (val pct = leaderInfo.secondPercentage) {
+                    null -> stringResource(R.string.stats_going_second_no_pct, leaderInfo.secondWins, leaderInfo.secondLosses)
+                    else -> stringResource(R.string.stats_going_second, leaderInfo.secondWins, leaderInfo.secondLosses, pct)
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -457,20 +454,26 @@ private fun OpponentRow(opponent: StatLeaderInfo) {
         Column(modifier = Modifier.weight(1f)) {
             Text(text = opponent.leader.name, style = MaterialTheme.typography.bodyMedium)
             Text(
-                text = stringResource(R.string.wins_losses_pct_format, opponent.wins, opponent.losses,
-                    opponent.percentage.dropLast(1).toIntOrNull() ?: 0),
+                text = when (val pct = opponent.percentage) {
+                    null -> stringResource(R.string.wins_losses_format, opponent.wins, opponent.losses)
+                    else -> stringResource(R.string.wins_losses_pct_format, opponent.wins, opponent.losses, pct)
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = stringResource(R.string.stats_going_first, opponent.firstWins, opponent.firstLosses,
-                    opponent.firstPercentage.dropLast(1).toIntOrNull() ?: 0),
+                text = when (val pct = opponent.firstPercentage) {
+                    null -> stringResource(R.string.stats_going_first_no_pct, opponent.firstWins, opponent.firstLosses)
+                    else -> stringResource(R.string.stats_going_first, opponent.firstWins, opponent.firstLosses, pct)
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = stringResource(R.string.stats_going_second, opponent.secondWins, opponent.secondLosses,
-                    opponent.secondPercentage.dropLast(1).toIntOrNull() ?: 0),
+                text = when (val pct = opponent.secondPercentage) {
+                    null -> stringResource(R.string.stats_going_second_no_pct, opponent.secondWins, opponent.secondLosses)
+                    else -> stringResource(R.string.stats_going_second, opponent.secondWins, opponent.secondLosses, pct)
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -479,15 +482,15 @@ private fun OpponentRow(opponent: StatLeaderInfo) {
 }
 
 private val previewOpponents = listOf(
-    StatLeaderInfo(Leader.RShanks, wins = 2, losses = 0, percentage = "100%",
-        firstWins = 1, firstLosses = 0, firstPercentage = "100%",
-        secondWins = 1, secondLosses = 0, secondPercentage = "100%"),
-    StatLeaderInfo(Leader.GZoro, wins = 1, losses = 1, percentage = "50%",
-        firstWins = 0, firstLosses = 1, firstPercentage = "0%",
-        secondWins = 1, secondLosses = 0, secondPercentage = "100%"),
-    StatLeaderInfo(Leader.PBLuffy, wins = 0, losses = 1, percentage = "0%",
-        firstWins = 0, firstLosses = 1, firstPercentage = "0%",
-        secondWins = 0, secondLosses = 0, secondPercentage = "N/A")
+    StatLeaderInfo(Leader.RShanks, wins = 2, losses = 0, percentage = 100,
+        firstWins = 1, firstLosses = 0, firstPercentage = 100,
+        secondWins = 1, secondLosses = 0, secondPercentage = 100),
+    StatLeaderInfo(Leader.GZoro, wins = 1, losses = 1, percentage = 50,
+        firstWins = 0, firstLosses = 1, firstPercentage = 0,
+        secondWins = 1, secondLosses = 0, secondPercentage = 100),
+    StatLeaderInfo(Leader.PBLuffy, wins = 0, losses = 1, percentage = 0,
+        firstWins = 0, firstLosses = 1, firstPercentage = 0,
+        secondWins = 0, secondLosses = 0, secondPercentage = null)
 )
 
 @Preview(showBackground = true)
@@ -497,9 +500,9 @@ private fun PreviewStatsScreenLeaderSelected() {
         StatsScreen(
             statsUIState = StatsUIState(
                 leaderSelected = LeaderSelectedOption.LeaderSelected(
-                    StatLeaderInfo(Leader.PBLuffy, wins = 3, losses = 1, percentage = "75%",
-                        firstWins = 2, firstLosses = 0, firstPercentage = "100%",
-                        secondWins = 1, secondLosses = 1, secondPercentage = "50%")
+                    StatLeaderInfo(Leader.PBLuffy, wins = 3, losses = 1, percentage = 75,
+                        firstWins = 2, firstLosses = 0, firstPercentage = 100,
+                        secondWins = 1, secondLosses = 1, secondPercentage = 50)
                 ),
                 metaSelected = MetaOption.All,
                 locationSelected = LocationOption.All,
@@ -547,9 +550,9 @@ private fun PreviewStatsScreenTabletLeaderSelected() {
         StatsScreen(
             statsUIState = StatsUIState(
                 leaderSelected = LeaderSelectedOption.LeaderSelected(
-                    StatLeaderInfo(Leader.PBLuffy, wins = 3, losses = 1, percentage = "75%",
-                        firstWins = 2, firstLosses = 0, firstPercentage = "100%",
-                        secondWins = 1, secondLosses = 1, secondPercentage = "50%")
+                    StatLeaderInfo(Leader.PBLuffy, wins = 3, losses = 1, percentage = 75,
+                        firstWins = 2, firstLosses = 0, firstPercentage = 100,
+                        secondWins = 1, secondLosses = 1, secondPercentage = 50)
                 ),
                 metaSelected = MetaOption.All,
                 locationSelected = LocationOption.All,

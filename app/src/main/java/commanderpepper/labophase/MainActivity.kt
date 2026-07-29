@@ -11,6 +11,8 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.stringResource
+import commanderpepper.labophase.R
 import androidx.compose.material3.adaptive.navigationsuite.ExperimentalMaterial3AdaptiveNavigationSuiteApi
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.getValue
@@ -46,7 +48,7 @@ class MainActivity : ComponentActivity() {
                     navigationSuiteItems = {
                         item(
                             icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
-                            label = { Text("Entries") },
+                            label = { Text(stringResource(R.string.nav_entries)) },
                             selected = currentDestination?.hasRoute<EntrySelection>() == true,
                             onClick = {
                                 navController.navigate(EntrySelection) {
@@ -58,7 +60,7 @@ class MainActivity : ComponentActivity() {
                         )
                         item(
                             icon = { Icon(Icons.Default.BarChart, contentDescription = null) },
-                            label = { Text("Stats") },
+                            label = { Text(stringResource(R.string.nav_stats)) },
                             selected = currentDestination?.hasRoute<Stats>() == true,
                             onClick = {
                                 navController.navigate(Stats) {
@@ -70,7 +72,7 @@ class MainActivity : ComponentActivity() {
                         )
                         item(
                             icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-                            label = { Text("Settings") },
+                            label = { Text(stringResource(R.string.nav_settings)) },
                             selected = currentDestination?.hasRoute<Settings>() == true,
                             onClick = {
                                 navController.navigate(Settings) {
