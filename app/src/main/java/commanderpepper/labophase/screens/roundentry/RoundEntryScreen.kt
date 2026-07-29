@@ -10,6 +10,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -43,6 +45,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -366,30 +369,30 @@ fun LeaderPlayerInTournamentSelection(
         runCatching { LocalDate.parse(date).format(DateTimeFormatter.ofPattern("MMM d, yyyy")) }
             .getOrDefault(date)
     }
-    val entryLabel = buildString {
-        append(title ?: leaderSelected.name)
-        locationId?.let { locationById(it) }?.let { append(" at ${it.abbreviation}") }
-        append(" on $formattedDate")
+    val nameLabel = title ?: leaderSelected.name
+    val contextLabel = buildString {
+        locationId?.let { locationById(it) }?.let { append(it.abbreviation) }
+        if (isNotEmpty()) append(" on $formattedDate") else append("on $formattedDate")
     }
-    val displayText = "$entryLabel • W: $wins - L: $losses"
     Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = { isExpanded.value = !isExpanded.value }),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            LeaderThumbnail(leader = leaderSelected)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(displayText, modifier = Modifier.weight(1f))
-            IconButton(onClick = { isExpanded.value = !isExpanded.value }) {
+        ListItem(
+            modifier = Modifier.clickable { isExpanded.value = !isExpanded.value },
+            leadingContent = {
+                Box(modifier = Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
+                    LeaderThumbnail(leader = leaderSelected)
+                }
+            },
+            overlineContent = { Text(contextLabel) },
+            headlineContent = { Text(nameLabel) },
+            supportingContent = { Text("W: $wins - L: $losses") },
+            trailingContent = {
                 Icon(
                     Icons.Default.ExpandMore,
                     contentDescription = if (isExpanded.value) stringResource(R.string.cd_collapse) else stringResource(R.string.cd_expand),
                     modifier = Modifier.rotate(rotation)
                 )
             }
-        }
+        )
         AnimatedVisibility(visible = isExpanded.value) {
             Column {
                 LeaderSelection(

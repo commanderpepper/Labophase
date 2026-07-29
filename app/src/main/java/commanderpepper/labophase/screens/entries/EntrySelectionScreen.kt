@@ -209,12 +209,11 @@ fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit, o
                 .getOrDefault(it)
         }
     }
-    val entryLabel = buildString {
-        append(entrySelectionUI.title ?: entrySelectionUI.leader.name)
-        entrySelectionUI.locationId?.let { locationById(it) }?.let { append(" at ${it.abbreviation}") }
-        formattedDate?.let { append(" on $it") }
-    }
-    val displayText = entryLabel
+    val nameLabel = entrySelectionUI.title ?: entrySelectionUI.leader.name
+    val contextLabel = buildString {
+        entrySelectionUI.locationId?.let { locationById(it) }?.let { append(it.abbreviation) }
+        formattedDate?.let { if (isNotEmpty()) append(" on $it") else append("on $it") }
+    }.takeIf { it.isNotEmpty() }
     val punkRecordVisibility = rememberSaveable { mutableStateOf(false) }
     var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
     val rotation by animateFloatAsState(
@@ -243,8 +242,13 @@ fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit, o
     OutlinedCard(modifier = Modifier.fillMaxWidth()) {
         ListItem(
             modifier = Modifier.clickable { onEntrySelect(entrySelectionUI.entryId) },
-            leadingContent = { LeaderThumbnail(entrySelectionUI.leader) },
-            headlineContent = { Text(displayText) },
+            leadingContent = {
+                Box(modifier = Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
+                    LeaderThumbnail(entrySelectionUI.leader)
+                }
+            },
+            overlineContent = contextLabel?.let { { Text(it) } },
+            headlineContent = { Text(nameLabel) },
             supportingContent = { Text("W: ${entrySelectionUI.wins} - L: ${entrySelectionUI.losses}") },
             trailingContent = {
                 Row {

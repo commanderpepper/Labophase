@@ -138,39 +138,47 @@ class RoundEntryScreenTest {
     // region — Row label
 
     @Test
-    fun rowLabel_noTitle_showsLeaderName() {
+    fun rowLabel_noTitle_showsLeaderNameInHeadline() {
         setIdleContent()
-        composeTestRule.onNodeWithText("UG Luffy on Jul 30, 2026 • W: 0 - L: 0").assertIsDisplayed()
+        composeTestRule.onNodeWithText("UG Luffy").assertIsDisplayed()
+        composeTestRule.onNodeWithText("on Jul 30, 2026").assertIsDisplayed()
+        composeTestRule.onNodeWithText("W: 0 - L: 0").assertIsDisplayed()
     }
 
     @Test
-    fun rowLabel_withTitle_showsTitle() {
+    fun rowLabel_withTitle_showsTitleInHeadline() {
         setIdleContent(title = "Seattle Regional")
-        composeTestRule.onNodeWithText("Seattle Regional on Jul 30, 2026 • W: 0 - L: 0").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Seattle Regional").assertIsDisplayed()
+        composeTestRule.onNodeWithText("on Jul 30, 2026").assertIsDisplayed()
+        composeTestRule.onNodeWithText("W: 0 - L: 0").assertIsDisplayed()
     }
 
     @Test
-    fun rowLabel_withLocation_showsLocationAbbreviation() {
+    fun rowLabel_withLocation_showsLocationInOverline() {
         setIdleContent(locationId = Location.ChronosGamesAndGifts.id)
-        composeTestRule.onNodeWithText("UG Luffy at Chronos on Jul 30, 2026 • W: 0 - L: 0").assertIsDisplayed()
+        composeTestRule.onNodeWithText("UG Luffy").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Chronos on Jul 30, 2026").assertIsDisplayed()
+        composeTestRule.onNodeWithText("W: 0 - L: 0").assertIsDisplayed()
     }
 
     @Test
-    fun rowLabel_withTitleAndLocation_showsFullLabel() {
+    fun rowLabel_withTitleAndLocation_showsTitleInHeadlineAndLocationInOverline() {
         setIdleContent(title = "Seattle Regional", locationId = Location.ChronosGamesAndGifts.id)
-        composeTestRule.onNodeWithText("Seattle Regional at Chronos on Jul 30, 2026 • W: 0 - L: 0").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Seattle Regional").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Chronos on Jul 30, 2026").assertIsDisplayed()
+        composeTestRule.onNodeWithText("W: 0 - L: 0").assertIsDisplayed()
     }
 
     @Test
     fun rowLabel_showsFormattedDate() {
         setIdleContent(date = "2026-07-30")
-        composeTestRule.onNodeWithText("UG Luffy on Jul 30, 2026 • W: 0 - L: 0").assertIsDisplayed()
+        composeTestRule.onNodeWithText("on Jul 30, 2026").assertIsDisplayed()
     }
 
     @Test
     fun rowLabel_showsWinsAndLosses() {
         setIdleContent(rounds = listOf(sampleRound))
-        composeTestRule.onNodeWithText("UG Luffy on Jul 30, 2026 • W: 1 - L: 0").assertIsDisplayed()
+        composeTestRule.onNodeWithText("W: 1 - L: 0").assertIsDisplayed()
     }
 
     // endregion

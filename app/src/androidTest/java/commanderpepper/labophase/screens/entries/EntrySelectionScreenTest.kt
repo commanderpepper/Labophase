@@ -113,33 +113,43 @@ class EntrySelectionScreenTest {
     // region — Entry row label
 
     @Test
-    fun entryDisplayed_noTitle_showsLeaderNameAndDate() {
+    fun entryDisplayed_noTitle_showsLeaderNameInHeadline() {
         setContent(listOf(sampleEntry))
-        composeTestRule.onNodeWithText("UG Luffy on Jul 30, 2026 • W: 2 - L: 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("UG Luffy").assertIsDisplayed()
+        composeTestRule.onNodeWithText("on Jul 30, 2026").assertIsDisplayed()
+        composeTestRule.onNodeWithText("W: 2 - L: 1").assertIsDisplayed()
     }
 
     @Test
-    fun entryDisplayed_withTitle_showsTitle() {
+    fun entryDisplayed_withTitle_showsTitleInHeadline() {
         setContent(listOf(sampleEntryWithTitle))
-        composeTestRule.onNodeWithText("Seattle Regional on Jul 30, 2026 • W: 2 - L: 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Seattle Regional").assertIsDisplayed()
+        composeTestRule.onNodeWithText("on Jul 30, 2026").assertIsDisplayed()
+        composeTestRule.onNodeWithText("W: 2 - L: 1").assertIsDisplayed()
     }
 
     @Test
-    fun entryDisplayed_withLocation_showsLocationAbbreviation() {
+    fun entryDisplayed_withLocation_showsLocationInOverline() {
         setContent(listOf(sampleEntryWithLocation))
-        composeTestRule.onNodeWithText("UG Luffy at Chronos on Jul 30, 2026 • W: 2 - L: 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("UG Luffy").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Chronos on Jul 30, 2026").assertIsDisplayed()
+        composeTestRule.onNodeWithText("W: 2 - L: 1").assertIsDisplayed()
     }
 
     @Test
-    fun entryDisplayed_withTitleAndLocation_showsFullLabel() {
+    fun entryDisplayed_withTitleAndLocation_showsTitleInHeadlineAndContextInOverline() {
         setContent(listOf(sampleEntryFull))
-        composeTestRule.onNodeWithText("Seattle Regional at Chronos on Jul 30, 2026 • W: 2 - L: 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Seattle Regional").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Chronos on Jul 30, 2026").assertIsDisplayed()
+        composeTestRule.onNodeWithText("W: 2 - L: 1").assertIsDisplayed()
     }
 
     @Test
-    fun entryDisplayed_noDate_omitsDateFromLabel() {
+    fun entryDisplayed_noDate_omitsDateFromOverline() {
         setContent(listOf(sampleEntry.copy(date = null)))
-        composeTestRule.onNodeWithText("UG Luffy • W: 2 - L: 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("UG Luffy").assertIsDisplayed()
+        composeTestRule.onNodeWithText("W: 2 - L: 1").assertIsDisplayed()
+        composeTestRule.onNodeWithText("on", substring = true).assertDoesNotExist()
     }
 
     // endregion
