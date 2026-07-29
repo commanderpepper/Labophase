@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -44,7 +45,7 @@ import commanderpepper.labophase.ui.theme.LabophaseTheme
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun SettingsScreen(settingsViewModel: SettingsViewModel = koinViewModel<SettingsViewModelImpl>()){
+fun SettingsScreen(settingsViewModel: SettingsViewModel = koinViewModel<SettingsViewModelImpl>()) {
     val showingAllLeaders = settingsViewModel.showingAllLeaders.collectAsStateWithLifecycle()
     val showingDieRolls = settingsViewModel.showingDieRoll.collectAsStateWithLifecycle()
     var showDialog by remember { mutableStateOf(false) }
@@ -86,97 +87,101 @@ fun SettingsScreen(
     toggleLeaders: () -> Unit,
     toggleDieRoll: () -> Unit,
     clearHistory: () -> Unit
-){
+) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val privacyPolicyUrl = stringResource(R.string.url_privacy_policy)
     var librariesExpanded by remember { mutableStateOf(false) }
-    val libraries = remember { runCatching { Libs.Builder().withContext(context).build() }.getOrNull() }
+    val libraries =
+        remember { runCatching { Libs.Builder().withContext(context).build() }.getOrNull() }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(stringResource(R.string.settings_show_all_leaders))
-            Switch(
-                checked = showingAllLeaders,
-                onCheckedChange = { toggleLeaders() }
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(stringResource(R.string.settings_show_die_rolls))
-            Switch(
-                checked = showingDieRolls,
-                onCheckedChange = { toggleDieRoll() }
-            )
-        }
-        Button(onClick = { clearHistory() }) { Text(stringResource(R.string.btn_clear_entries)) }
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        Text(
-            text = stringResource(R.string.settings_about_title),
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier.padding(bottom = 4.dp)
-        )
-        Text(
-            text = stringResource(R.string.settings_about_body),
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(bottom = 4.dp)
-        )
-        val punkRecordsGithubUrl = stringResource(R.string.url_punk_records_github)
-        Text(
-            text = stringResource(R.string.settings_about_punk_records),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
+    Scaffold { innerPadding ->
+        Column(
             modifier = Modifier
-                .clickable { uriHandler.openUri(punkRecordsGithubUrl) }
-                .padding(bottom = 4.dp)
-        )
-        Text(
-            text = stringResource(R.string.settings_about_disclaimer),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        Text(
-            text = stringResource(R.string.settings_privacy_policy),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.clickable { uriHandler.openUri(privacyPolicyUrl) }
-        )
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { librariesExpanded = !librariesExpanded }
-                .padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(stringResource(R.string.settings_show_all_leaders))
+                Switch(
+                    checked = showingAllLeaders,
+                    onCheckedChange = { toggleLeaders() }
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(stringResource(R.string.settings_show_die_rolls))
+                Switch(
+                    checked = showingDieRolls,
+                    onCheckedChange = { toggleDieRoll() }
+                )
+            }
+            Button(onClick = { clearHistory() }) { Text(stringResource(R.string.btn_clear_entries)) }
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             Text(
-                text = stringResource(R.string.settings_libraries_title),
-                style = MaterialTheme.typography.titleSmall
+                text = stringResource(R.string.settings_about_title),
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(bottom = 4.dp)
             )
-            Icon(
-                imageVector = if (librariesExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                contentDescription = stringResource(if (librariesExpanded) R.string.cd_collapse else R.string.cd_expand)
+            Text(
+                text = stringResource(R.string.settings_about_body),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 4.dp)
             )
-        }
-        AnimatedVisibility(visible = librariesExpanded) {
-            Column {
-                OptcgApiLibraryItem()
-                libraries?.libraries?.sortedBy { it.name }?.forEach { library ->
-                    LibraryItem(library)
+            val punkRecordsGithubUrl = stringResource(R.string.url_punk_records_github)
+            Text(
+                text = stringResource(R.string.settings_about_punk_records),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .clickable { uriHandler.openUri(punkRecordsGithubUrl) }
+                    .padding(bottom = 4.dp)
+            )
+            Text(
+                text = stringResource(R.string.settings_about_disclaimer),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Text(
+                text = stringResource(R.string.settings_privacy_policy),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.clickable { uriHandler.openUri(privacyPolicyUrl) }
+            )
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { librariesExpanded = !librariesExpanded }
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.settings_libraries_title),
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Icon(
+                    imageVector = if (librariesExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = stringResource(if (librariesExpanded) R.string.cd_collapse else R.string.cd_expand)
+                )
+            }
+            AnimatedVisibility(visible = librariesExpanded) {
+                Column {
+                    OptcgApiLibraryItem()
+                    libraries?.libraries?.sortedBy { it.name }?.forEach { library ->
+                        LibraryItem(library)
+                    }
                 }
             }
         }
