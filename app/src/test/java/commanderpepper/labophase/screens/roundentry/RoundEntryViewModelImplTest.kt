@@ -50,9 +50,9 @@ class RoundEntryViewModelImplTest {
         RoundEntryViewModelImpl(leaderOrderDecider, entryRepository, entryId, testDispatcher)
 
     @Test
-    fun `initial leader selected is UGLuffy`() = runTest {
+    fun `initial leader selected is PKatakuri`() = runTest {
         val vm = createViewModel()
-        assertEquals(Leader.UGLuffy, vm.uiState.value.leaderSelected)
+        assertEquals(Leader.PKatakuri, vm.uiState.value.leaderSelected)
     }
 
     @Test

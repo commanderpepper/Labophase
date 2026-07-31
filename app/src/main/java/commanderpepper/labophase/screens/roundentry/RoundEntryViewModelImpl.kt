@@ -34,17 +34,17 @@ class RoundEntryViewModelImpl(
     @Volatile private var isSaving = false
     private var savedEntryId: Int? = null
 
-    private val _uiState = MutableStateFlow(RoundEntryUIState(leaderSelected = Leader.UGLuffy, isLoading = true))
+    private val _uiState = MutableStateFlow(RoundEntryUIState(leaderSelected = Leader.PKatakuri, isLoading = true))
     override val uiState: StateFlow<RoundEntryUIState> = _uiState.asStateFlow()
 
     init {
         viewModelScope.launch {
             withContext(ioDispatcher) {
                 try {
-                    var loadedLeader: Leader = Leader.UGLuffy
+                    var loadedLeader: Leader = Leader.PKatakuri
                     var loadedTitle: String? = null
                     var loadedLocationId: Int? = null
-                    var loadedMetaId: Int = Meta.OP16.id
+                    var loadedMetaId: Int = Meta.OP16WithST.id
                     var loadedDate: String = LocalDate.now().toString()
                     if (entryId != null) {
                         val existing = entryRepository.getEntryById(entryId)

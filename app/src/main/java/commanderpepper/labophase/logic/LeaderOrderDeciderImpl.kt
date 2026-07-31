@@ -33,6 +33,6 @@ class LeaderOrderDeciderImpl(private val entryRepository: EntryRepository, priva
     private fun sortedByCount(leaders: List<Leader>, countByCardId: Map<String, Int>): List<Leader> =
         leaders.sortedWith(
             compareByDescending<Leader> { countByCardId[it.cardId] ?: 0 }
-                .thenByDescending { it.set.number }
+                .thenByDescending { it.latestSet.number }
         )
 }

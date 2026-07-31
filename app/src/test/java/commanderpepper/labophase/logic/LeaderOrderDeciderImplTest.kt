@@ -137,8 +137,24 @@ class LeaderOrderDeciderImplTest {
 
         val result = decider.getPlayerLeaderSelect()
 
-        val setNumbers = result.map { it.set.number }
+        val setNumbers = result.map { it.latestSet.number }
         assertEquals(setNumbers.sortedDescending(), setNumbers)
+    }
+
+    @Test
+    fun `multi-set leader is ranked by latest set not original set`() = runTest {
+        coEvery { settingsRepository.isShowingAllLeaders() } returns true
+        coEvery { entryRepository.getEntries() } returns emptyList()
+
+        val result = decider.getPlayerLeaderSelect()
+
+        // PKatakuri: original OP11 (35), latestSet ST34 (56)
+        // GZoro:     original OP12 (42), latestSet ST32 (54)
+        // Sorted by latestSet  → PKatakuri (56) before GZoro (54) ✓
+        // Sorted by first set  → GZoro (42) before PKatakuri (35) ✗
+        val katakuriIndex = result.indexOf(Leader.PKatakuri)
+        val zoroIndex = result.indexOf(Leader.GZoro)
+        assertTrue(katakuriIndex < zoroIndex)
     }
 
     @Test
