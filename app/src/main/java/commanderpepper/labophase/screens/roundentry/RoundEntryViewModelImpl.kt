@@ -4,12 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import commanderpepper.labophase.data.EntryRepository
 import commanderpepper.labophase.logic.LeaderOrderDecider
+import commanderpepper.labophase.logic.PunkRecordCreator
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Round
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.models.Meta
 import commanderpepper.labophase.models.leaderByCardId
+import commanderpepper.labophase.models.locationById
 import java.time.LocalDate
 import commanderpepper.labophase.screens.roundentry.models.RoundEntryUIState
 import commanderpepper.labophase.screens.roundentry.models.RoundUI
@@ -25,6 +27,7 @@ import kotlinx.coroutines.withContext
 class RoundEntryViewModelImpl(
     private val leaderOrderDecider: LeaderOrderDecider,
     private val entryRepository: EntryRepository,
+    private val punkRecordCreator: PunkRecordCreator,
     private val entryId: Int? = null,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : RoundEntryViewModel, ViewModel() {
@@ -102,18 +105,12 @@ class RoundEntryViewModelImpl(
         isSaving = true
         val leader = _uiState.value.leaderSelected
         val rounds = roundsMap.values.toList()
-        updatePunkRecord(leader, rounds)
+        val prLocation = locationById(_uiState.value.locationId)?.punkRecordAbbreviation ?: "other"
+        _uiState.update { it.copy(punkRecordEntry = punkRecordCreator.createForRoundEntry(prLocation, leader, rounds)) }
         viewModelScope.launch {
             saveEntry(leader, rounds)
             isSaving = false
         }
-    }
-
-    private fun updatePunkRecord(leader: Leader, rounds: List<Round>) {
-        val formatted = rounds.map { round ->
-            "${if (round.roundResult == RoundResult.Win) "W" else "L"} ${round.leader.name} ${if (round.turnOrder == TurnOrder.First) "1st" else "2nd"}"
-        }.joinToString(separator = "\n")
-        _uiState.update { it.copy(punkRecordEntry = "!PR add\n${leader.name}\n$formatted") }
     }
 
     private suspend fun saveEntry(leader: Leader, rounds: List<Round>) {

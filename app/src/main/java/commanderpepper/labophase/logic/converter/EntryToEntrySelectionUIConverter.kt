@@ -2,22 +2,23 @@ package commanderpepper.labophase.logic.converter
 
 import commanderpepper.labophase.data.EntryWithRounds
 import commanderpepper.labophase.data.entity.RoundEntity
-import commanderpepper.labophase.models.Leader
+import commanderpepper.labophase.logic.PunkRecordCreator
 import commanderpepper.labophase.models.Round
 import commanderpepper.labophase.models.RoundResult
-import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.models.leaderByCardId
+import commanderpepper.labophase.models.locationById
 import commanderpepper.labophase.screens.entries.models.EntrySelectionUI
 import commanderpepper.labophase.screens.entries.models.RoundEntrySelectionUI
 
-class EntryToEntrySelectionUIConverter {
+class EntryToEntrySelectionUIConverter(private val punkRecordCreator: PunkRecordCreator) {
     fun entryToEntrySelectionUI(entry: EntryWithRounds): EntrySelectionUI {
         return EntrySelectionUI(
             entryId = entry.entry.id,
             leader = leaderByCardId(entry.entry.leaderCardId),
             wins = getWins(entry.rounds),
             losses = getLosses(entry.rounds),
-            punkRecord = getPunkRecord(
+            punkRecord = punkRecordCreator.createForEntrySelection(
+                prLocation = locationById(entry.entry.locationId)?.punkRecordAbbreviation ?: "other",
                 leader = leaderByCardId(entry.entry.leaderCardId),
                 rounds = entry.rounds
             ),
@@ -49,11 +50,4 @@ fun getWins(rounds: List<RoundEntity>): Int {
 
 fun getLosses(rounds: List<RoundEntity>): Int {
     return rounds.count { round -> round.roundResult == RoundResult.Loss }
-}
-
-fun getPunkRecord(leader: Leader, rounds: List<RoundEntity>): String {
-    val formatted = rounds.map { round ->
-        "${if (round.roundResult == RoundResult.Win) "W" else "L"} ${leaderByCardId(round.leaderCardId).name} ${if (round.turnOrder == TurnOrder.First) "1st" else "2nd"}"
-    }.joinToString(separator = "\n")
-    return "!PR add\n${leader.name}\n$formatted"
 }

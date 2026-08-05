@@ -7,6 +7,7 @@ import commanderpepper.labophase.data.entity.RoundEntity
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.logic.LeaderOrderDecider
+import commanderpepper.labophase.logic.PunkRecordCreatorImpl
 import commanderpepper.labophase.models.Leader
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -47,7 +48,7 @@ class RoundEntryViewModelImplTest {
     }
 
     private fun createViewModel(entryId: Int? = null) =
-        RoundEntryViewModelImpl(leaderOrderDecider, entryRepository, entryId, testDispatcher)
+        RoundEntryViewModelImpl(leaderOrderDecider, entryRepository, PunkRecordCreatorImpl(), entryId, testDispatcher)
 
     @Test
     fun `initial leader selected is PKatakuri`() = runTest {
@@ -201,7 +202,7 @@ class RoundEntryViewModelImplTest {
     }
 
     @Test
-    fun `transformEntry punk record second line is leader name`() = runTest {
+    fun `transformEntry punk record third line is leader name`() = runTest {
         val vm = createViewModel()
         vm.chooseLeader(Leader.RShanks)
         vm.addNewRound()
@@ -209,7 +210,7 @@ class RoundEntryViewModelImplTest {
         vm.transformEntry()
 
         val lines = vm.uiState.value.punkRecordEntry.lines()
-        assertEquals(Leader.RShanks.name, lines[1])
+        assertEquals(Leader.RShanks.name, lines[2])
     }
 
     @Test

@@ -8,6 +8,8 @@ import commanderpepper.labophase.data.SettingsRepositoryImpl
 import commanderpepper.labophase.data.settingsDataStore
 import commanderpepper.labophase.logic.LeaderOrderDecider
 import commanderpepper.labophase.logic.LeaderOrderDeciderImpl
+import commanderpepper.labophase.logic.PunkRecordCreator
+import commanderpepper.labophase.logic.PunkRecordCreatorImpl
 import commanderpepper.labophase.logic.converter.EntryToEntrySelectionUIConverter
 import commanderpepper.labophase.screens.entries.EntrySelectionViewModelImpl
 import commanderpepper.labophase.screens.roundentry.RoundEntryViewModelImpl
@@ -23,8 +25,9 @@ val appModule = module {
     single<EntryRepository> { EntryRepositoryImpl(get()) }
     single<SettingsRepository> { SettingsRepositoryImpl(androidContext().settingsDataStore, get()) }
     single<LeaderOrderDecider> { LeaderOrderDeciderImpl(get(), get()) }
-    single { EntryToEntrySelectionUIConverter() }
-    viewModel { params -> RoundEntryViewModelImpl(get(), get(), params.getOrNull<Int>()) }
+    single<PunkRecordCreator> { PunkRecordCreatorImpl() }
+    single { EntryToEntrySelectionUIConverter(get()) }
+    viewModel { params -> RoundEntryViewModelImpl(get(), get(), get(), params.getOrNull<Int>()) }
     viewModel { EntrySelectionViewModelImpl(get(), get()) }
     viewModel { SettingsViewModelImpl(get()) }
     viewModel { StatsViewModelImpl(get()) }

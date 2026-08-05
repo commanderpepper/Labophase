@@ -3,6 +3,7 @@ package commanderpepper.labophase.logic.converter
 import commanderpepper.labophase.data.entity.EntryEntity
 import commanderpepper.labophase.data.EntryWithRounds
 import commanderpepper.labophase.data.entity.RoundEntity
+import commanderpepper.labophase.logic.PunkRecordCreatorImpl
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
@@ -12,7 +13,7 @@ import org.junit.Test
 
 class EntryToEntrySelectionUIConverterTest {
 
-    private val converter = EntryToEntrySelectionUIConverter()
+    private val converter = EntryToEntrySelectionUIConverter(PunkRecordCreatorImpl())
 
     private fun makeRound(
         entryId: Int = 1,
@@ -49,18 +50,19 @@ class EntryToEntrySelectionUIConverterTest {
     }
 
     @Test
-    fun `punk record starts with PR add header then leader name`() {
+    fun `punk record starts with PR add header then location then leader name`() {
         val result = converter.entryToEntrySelectionUI(makeEntry())
         val lines = result.punkRecord.lines()
         assertEquals("!PR add", lines[0])
-        assertEquals(Leader.UGLuffy.name, lines[1])
+        assertEquals("other", lines[1])
+        assertEquals(Leader.UGLuffy.name, lines[2])
     }
 
     @Test
     fun `punk record win first formats as W LeaderName 1st`() {
         val rounds = listOf(makeRound(result = RoundResult.Win, order = TurnOrder.First))
         val result = converter.entryToEntrySelectionUI(makeEntry(rounds = rounds))
-        val roundLine = result.punkRecord.lines()[2]
+        val roundLine = result.punkRecord.lines()[3]
         assertTrue(roundLine.startsWith("W "))
         assertTrue(roundLine.endsWith("1st"))
     }
@@ -69,7 +71,7 @@ class EntryToEntrySelectionUIConverterTest {
     fun `punk record loss second formats as L LeaderName 2nd`() {
         val rounds = listOf(makeRound(result = RoundResult.Loss, order = TurnOrder.Second))
         val result = converter.entryToEntrySelectionUI(makeEntry(rounds = rounds))
-        val roundLine = result.punkRecord.lines()[2]
+        val roundLine = result.punkRecord.lines()[3]
         assertTrue(roundLine.startsWith("L "))
         assertTrue(roundLine.endsWith("2nd"))
     }
@@ -140,8 +142,8 @@ class EntryToEntrySelectionUIConverterTest {
         )
         val result = converter.entryToEntrySelectionUI(makeEntry(rounds = rounds))
         val lines = result.punkRecord.lines()
-        assertEquals(4, lines.size)
-        assertTrue(lines[2].contains(Leader.RShanks.name))
-        assertTrue(lines[3].contains(Leader.PBLuffy.name))
+        assertEquals(5, lines.size)
+        assertTrue(lines[3].contains(Leader.RShanks.name))
+        assertTrue(lines[4].contains(Leader.PBLuffy.name))
     }
 }

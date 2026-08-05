@@ -7,6 +7,7 @@ import commanderpepper.labophase.data.EntryWithRounds
 import commanderpepper.labophase.data.entity.RoundEntity
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
+import commanderpepper.labophase.logic.PunkRecordCreatorImpl
 import commanderpepper.labophase.logic.converter.EntryToEntrySelectionUIConverter
 import commanderpepper.labophase.models.Leader
 import io.mockk.every
@@ -34,7 +35,7 @@ class EntrySelectionViewModelImplTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private val entryRepository: EntryRepository = mockk()
-    private val converter = EntryToEntrySelectionUIConverter()
+    private val converter = EntryToEntrySelectionUIConverter(PunkRecordCreatorImpl())
 
     private val entriesFlow = MutableStateFlow<List<EntryWithRounds>>(emptyList())
 
