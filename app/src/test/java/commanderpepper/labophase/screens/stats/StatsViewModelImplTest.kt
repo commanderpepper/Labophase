@@ -101,21 +101,22 @@ class StatsViewModelImplTest {
             assertNull(state.errorMessage)
             assertTrue(state.leadersPlayed.isEmpty())
             assertTrue(state.leadersPlayerAgainst.isEmpty())
+            assertTrue(state.availableLocations.isEmpty())
             cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun `leaders played contains distinct leaders across all entries`() = runTest {
+    fun `leaders played contains distinct leaders across all entries when no meta selected`() = runTest {
         val vm = createViewModel()
 
         vm.statsUIState.test {
             awaitItem()
 
             entriesFlow.value = listOf(
-                makeEntry(id = 1, leaderCardId = Leader.UGLuffy.cardId),
-                makeEntry(id = 2, leaderCardId = Leader.RShanks.cardId),
-                makeEntry(id = 3, leaderCardId = Leader.UGLuffy.cardId)
+                makeEntry(id = 1, leaderCardId = Leader.UGLuffy.cardId, metaId = Meta.OP16.id),
+                makeEntry(id = 2, leaderCardId = Leader.RShanks.cardId, metaId = Meta.OP16WithST.id),
+                makeEntry(id = 3, leaderCardId = Leader.UGLuffy.cardId, metaId = Meta.OP16.id)
             )
             val state = awaitItem()
 
@@ -414,6 +415,9 @@ class StatsViewModelImplTest {
             val state = awaitItem()
 
             assertTrue(state.locationSelected is LocationOption.SpecificLocation)
+            assertEquals(2, state.availableLocations.size)
+            assertTrue(state.availableLocations.contains(Location.ChronosGamesAndGifts))
+            assertTrue(state.availableLocations.contains(Location.TheClubhouse))
             val opponent = state.leadersPlayerAgainst.single()
             assertEquals(1, opponent.wins)
             assertEquals(0, opponent.losses)
@@ -473,6 +477,166 @@ class StatsViewModelImplTest {
             val opponent = state.leadersPlayerAgainst.single()
             assertEquals(1, opponent.wins)
             assertEquals(0, opponent.losses)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `availableLocations contains distinct locations from entries`() = runTest {
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            awaitItem()
+
+            entriesFlow.value = listOf(
+                makeEntry(id = 1, locationId = Location.ChronosGamesAndGifts.id),
+                makeEntry(id = 2, locationId = Location.TheClubhouse.id),
+                makeEntry(id = 3, locationId = Location.ChronosGamesAndGifts.id)
+            )
+            val state = awaitItem()
+
+            assertEquals(2, state.availableLocations.size)
+            assertTrue(state.availableLocations.contains(Location.ChronosGamesAndGifts))
+            assertTrue(state.availableLocations.contains(Location.TheClubhouse))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `availableLocations excludes entries with no location set`() = runTest {
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            awaitItem()
+
+            entriesFlow.value = listOf(
+                makeEntry(id = 1, locationId = Location.ChronosGamesAndGifts.id),
+                makeEntry(id = 2, locationId = null)
+            )
+            val state = awaitItem()
+
+            assertEquals(1, state.availableLocations.size)
+            assertTrue(state.availableLocations.contains(Location.ChronosGamesAndGifts))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `availableLocations is scoped to selected meta`() = runTest {
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            awaitItem()
+
+            entriesFlow.value = listOf(
+                makeEntry(id = 1, metaId = Meta.OP16.id, locationId = Location.ChronosGamesAndGifts.id),
+                makeEntry(id = 2, metaId = Meta.OP16WithST.id, locationId = Location.TheClubhouse.id)
+            )
+            awaitItem()
+
+            vm.metaSelected(Meta.OP16)
+            val state = awaitItem()
+
+            assertEquals(1, state.availableLocations.size)
+            assertTrue(state.availableLocations.contains(Location.ChronosGamesAndGifts))
+            assertFalse(state.availableLocations.contains(Location.TheClubhouse))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `availableLocations shows all locations when meta cleared`() = runTest {
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            awaitItem()
+
+            entriesFlow.value = listOf(
+                makeEntry(id = 1, metaId = Meta.OP16.id, locationId = Location.ChronosGamesAndGifts.id),
+                makeEntry(id = 2, metaId = Meta.OP16WithST.id, locationId = Location.TheClubhouse.id)
+            )
+            awaitItem()
+
+            vm.metaSelected(Meta.OP16)
+            awaitItem()
+
+            vm.allMetaSelected()
+            val state = awaitItem()
+
+            assertEquals(2, state.availableLocations.size)
+            assertTrue(state.availableLocations.contains(Location.ChronosGamesAndGifts))
+            assertTrue(state.availableLocations.contains(Location.TheClubhouse))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `location selection is cleared when meta changes`() = runTest {
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            awaitItem()
+
+            entriesFlow.value = listOf(
+                makeEntry(id = 1, metaId = Meta.OP16.id, locationId = Location.ChronosGamesAndGifts.id, rounds = listOf(makeRound())),
+                makeEntry(id = 2, metaId = Meta.OP16WithST.id, locationId = Location.TheClubhouse.id, rounds = listOf(makeRound()))
+            )
+            awaitItem()
+
+            vm.locationSelected(Location.ChronosGamesAndGifts)
+            awaitItem()
+
+            vm.metaSelected(Meta.OP16WithST)
+            val state = awaitItem()
+
+            assertTrue(state.locationSelected is LocationOption.All)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `leadersPlayed is scoped to selected meta`() = runTest {
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            awaitItem()
+
+            entriesFlow.value = listOf(
+                makeEntry(id = 1, leaderCardId = Leader.UGLuffy.cardId, metaId = Meta.OP16.id),
+                makeEntry(id = 2, leaderCardId = Leader.RShanks.cardId, metaId = Meta.OP16WithST.id)
+            )
+            awaitItem()
+
+            vm.metaSelected(Meta.OP16)
+            val state = awaitItem()
+
+            assertEquals(1, state.leadersPlayed.size)
+            assertTrue(state.leadersPlayed.contains(Leader.UGLuffy))
+            assertFalse(state.leadersPlayed.contains(Leader.RShanks))
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `leader selection falls back to all when selected leader not played in new meta`() = runTest {
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            awaitItem()
+
+            entriesFlow.value = listOf(
+                makeEntry(id = 1, leaderCardId = Leader.UGLuffy.cardId, metaId = Meta.OP16.id, rounds = listOf(makeRound())),
+                makeEntry(id = 2, leaderCardId = Leader.RShanks.cardId, metaId = Meta.OP16WithST.id, rounds = listOf(makeRound()))
+            )
+            awaitItem()
+
+            vm.leaderSelected(Leader.UGLuffy)
+            awaitItem()
+
+            vm.metaSelected(Meta.OP16WithST)
+            val state = awaitItem()
+
+            assertTrue(state.leaderSelected is LeaderSelectedOption.All)
             cancelAndIgnoreRemainingEvents()
         }
     }

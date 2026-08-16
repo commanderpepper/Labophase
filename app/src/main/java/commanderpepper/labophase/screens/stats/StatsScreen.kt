@@ -49,7 +49,6 @@ import commanderpepper.labophase.R
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.LeaderColor
 import commanderpepper.labophase.models.Location
-import commanderpepper.labophase.models.LOCATIONS_LIST
 import commanderpepper.labophase.models.METAS_LIST
 import commanderpepper.labophase.models.Meta
 import commanderpepper.labophase.screens.roundentry.LeaderThumbnail
@@ -294,6 +293,7 @@ private fun StatsHeader(
                 onAllMetasSelected = onAllMetasSelected
             )
             LocationFilterDropdown(
+                availableLocations = statsUIState.availableLocations,
                 locationSelected = statsUIState.locationSelected,
                 onLocationSelected = onLocationSelected,
                 onAllLocationsSelected = onAllLocationsSelected
@@ -386,6 +386,7 @@ private fun MetaFilterDropdown(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LocationFilterDropdown(
+    availableLocations: List<Location>,
     locationSelected: LocationOption,
     onLocationSelected: (Location) -> Unit,
     onAllLocationsSelected: () -> Unit
@@ -412,7 +413,7 @@ private fun LocationFilterDropdown(
                 onClick = { onAllLocationsSelected(); expanded = false },
                 contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
             )
-            LOCATIONS_LIST.forEach { location ->
+            availableLocations.forEach { location ->
                 DropdownMenuItem(
                     text = { Text(location.name) },
                     onClick = { onLocationSelected(location); expanded = false },
@@ -506,6 +507,7 @@ private fun PreviewStatsScreenLeaderSelected() {
                 ),
                 metaSelected = MetaOption.All,
                 locationSelected = LocationOption.All,
+                availableLocations = emptyList(),
                 leadersPlayed = listOf(Leader.PBLuffy, Leader.RShanks, Leader.GZoro),
                 leadersPlayerAgainst = previewOpponents,
                 isLoading = false
@@ -529,6 +531,7 @@ private fun PreviewStatsScreenAllLeaders() {
                 leaderSelected = LeaderSelectedOption.All,
                 metaSelected = MetaOption.SpecificMeta(Meta.OP16),
                 locationSelected = LocationOption.All,
+                availableLocations = emptyList(),
                 leadersPlayed = listOf(Leader.PBLuffy, Leader.RShanks, Leader.GZoro),
                 leadersPlayerAgainst = previewOpponents,
                 isLoading = false
@@ -556,6 +559,7 @@ private fun PreviewStatsScreenTabletLeaderSelected() {
                 ),
                 metaSelected = MetaOption.All,
                 locationSelected = LocationOption.All,
+                availableLocations = emptyList(),
                 leadersPlayed = listOf(Leader.PBLuffy, Leader.RShanks, Leader.GZoro),
                 leadersPlayerAgainst = previewOpponents,
                 isLoading = false
@@ -579,6 +583,7 @@ private fun PreviewStatsScreenTabletAllLeaders() {
                 leaderSelected = LeaderSelectedOption.All,
                 metaSelected = MetaOption.All,
                 locationSelected = LocationOption.All,
+                availableLocations = emptyList(),
                 leadersPlayed = listOf(Leader.PBLuffy, Leader.RShanks, Leader.GZoro),
                 leadersPlayerAgainst = previewOpponents,
                 isLoading = false
@@ -602,6 +607,7 @@ private fun PreviewStatsScreenLoading() {
                 leaderSelected = LeaderSelectedOption.All,
                 metaSelected = MetaOption.All,
                 locationSelected = LocationOption.All,
+                availableLocations = emptyList(),
                 leadersPlayed = emptyList(),
                 leadersPlayerAgainst = emptyList(),
                 isLoading = true

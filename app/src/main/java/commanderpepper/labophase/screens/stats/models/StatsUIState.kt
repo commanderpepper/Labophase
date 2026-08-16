@@ -8,6 +8,7 @@ data class StatsUIState(
     val leaderSelected: LeaderSelectedOption,
     val metaSelected: MetaOption,
     val locationSelected: LocationOption,
+    val availableLocations: List<Location>,
     val leadersPlayed: List<Leader>,
     val leadersPlayerAgainst: List<StatLeaderInfo>,
     val isLoading: Boolean = false,

@@ -10,6 +10,7 @@ import commanderpepper.labophase.models.Meta
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.models.leaderByCardId
+import commanderpepper.labophase.models.locationById
 import commanderpepper.labophase.screens.stats.models.LeaderSelectedOption
 import commanderpepper.labophase.screens.stats.models.LocationOption
 import commanderpepper.labophase.screens.stats.models.MetaOption
@@ -36,6 +37,7 @@ class StatsViewModelImpl(
             leaderSelected = LeaderSelectedOption.All,
             metaSelected = MetaOption.All,
             locationSelected = LocationOption.All,
+            availableLocations = emptyList(),
             leadersPlayed = emptyList(),
             leadersPlayerAgainst = emptyList(),
             isLoading = true
@@ -72,12 +74,21 @@ class StatsViewModelImpl(
         selectedLocation: Location?
     ): StatsUIState {
         val leadersPlayed = entries
+            .filter { selectedMeta == null || it.entry.metaId == selectedMeta.id }
             .map { leaderByCardId(it.entry.leaderCardId) }
             .distinct()
 
+        val availableLocations = entries
+            .filter { selectedMeta == null || it.entry.metaId == selectedMeta.id }
+            .mapNotNull { locationById(it.entry.locationId) }
+            .distinct()
+            .sortedBy { it.id }
+
+        val effectiveLeader = if (selectedLeader != null && selectedLeader in leadersPlayed) selectedLeader else null
+
         val filtered = entries.filter { entryWithRounds ->
             val entry = entryWithRounds.entry
-            (selectedLeader == null || entry.leaderCardId == selectedLeader.cardId) &&
+            (effectiveLeader == null || entry.leaderCardId == effectiveLeader.cardId) &&
             (selectedMeta == null || entry.metaId == selectedMeta.id) &&
             (selectedLocation == null || entry.locationId == selectedLocation.id)
         }
@@ -118,10 +129,10 @@ class StatsViewModelImpl(
             }
             .sortedByDescending { it.wins + it.losses }
 
-        val leaderOption = if (selectedLeader != null) {
+        val leaderOption = if (effectiveLeader != null) {
             LeaderSelectedOption.LeaderSelected(
                 StatLeaderInfo(
-                    leader = selectedLeader,
+                    leader = effectiveLeader,
                     wins = wins,
                     losses = losses,
                     percentage = pct(wins, losses),
@@ -137,10 +148,13 @@ class StatsViewModelImpl(
             LeaderSelectedOption.All
         }
 
+        val effectiveLocation = if (selectedLocation != null && selectedLocation in availableLocations) selectedLocation else null
+
         return StatsUIState(
             leaderSelected = leaderOption,
             metaSelected = if (selectedMeta != null) MetaOption.SpecificMeta(selectedMeta) else MetaOption.All,
-            locationSelected = if (selectedLocation != null) LocationOption.SpecificLocation(selectedLocation) else LocationOption.All,
+            locationSelected = if (effectiveLocation != null) LocationOption.SpecificLocation(effectiveLocation) else LocationOption.All,
+            availableLocations = availableLocations,
             leadersPlayed = leadersPlayed,
             leadersPlayerAgainst = leadersAgainst,
             isLoading = false
@@ -154,8 +168,8 @@ class StatsViewModelImpl(
 
     override fun allLeadersSelected() { _selectedLeader.value = null }
     override fun leaderSelected(leader: Leader) { _selectedLeader.value = leader }
-    override fun metaSelected(meta: Meta) { _selectedMeta.value = meta }
-    override fun allMetaSelected() { _selectedMeta.value = null }
+    override fun metaSelected(meta: Meta) { _selectedLocation.value = null; _selectedMeta.value = meta }
+    override fun allMetaSelected() { _selectedLocation.value = null; _selectedMeta.value = null }
     override fun locationSelected(location: Location) { _selectedLocation.value = location }
     override fun allLocationSelected() { _selectedLocation.value = null }
 }
