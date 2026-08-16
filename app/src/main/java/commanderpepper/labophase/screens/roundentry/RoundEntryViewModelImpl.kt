@@ -10,6 +10,7 @@ import commanderpepper.labophase.models.Round
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.models.Meta
+import commanderpepper.labophase.models.LOCATIONS_LIST
 import commanderpepper.labophase.models.leaderByCardId
 import commanderpepper.labophase.models.locationById
 import java.time.LocalDate
@@ -71,6 +72,13 @@ class RoundEntryViewModelImpl(
                             roundId = loaded.size
                         }
                     }
+                    val allEntries = entryRepository.getEntries()
+                    val locationCountById = allEntries
+                        .mapNotNull { it.entry.locationId }
+                        .groupingBy { it }
+                        .eachCount()
+                    val sortedLocations = LOCATIONS_LIST.sortedByDescending { locationCountById[it.id] ?: 0 }
+
                     val playerList = leaderOrderDecider.getPlayerLeaderSelect()
                     val roundList = leaderOrderDecider.getRoundLeaderSelect()
                     _uiState.update {
@@ -79,6 +87,7 @@ class RoundEntryViewModelImpl(
                             rounds = roundsMap.values.map { r -> r.toRoundUI() },
                             playerLeaderList = playerList,
                             roundLeaderList = roundList,
+                            locationList = sortedLocations,
                             title = loadedTitle,
                             locationId = loadedLocationId,
                             metaId = loadedMetaId,

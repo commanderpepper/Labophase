@@ -85,6 +85,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import commanderpepper.labophase.models.Leader
+import commanderpepper.labophase.models.Location
 import commanderpepper.labophase.models.LOCATIONS_LIST
 import commanderpepper.labophase.models.METAS_LIST
 import commanderpepper.labophase.models.Meta
@@ -133,6 +134,7 @@ fun RoundEntryScreen(
         date = uiState.value.date,
         metaId = uiState.value.metaId,
         locationId = uiState.value.locationId,
+        locationList = uiState.value.locationList,
         addNewRound = roundEntryViewModel::addNewRound,
         transformEntry = roundEntryViewModel::transformEntry,
         chooseLeader = roundEntryViewModel::chooseLeader,
@@ -166,6 +168,7 @@ fun RoundEntryScreen(
     date: String = LocalDate.now().toString(),
     metaId: Int = Meta.OP16.id,
     locationId: Int? = null,
+    locationList: List<Location> = LOCATIONS_LIST,
     addNewRound: () -> Unit,
     transformEntry: () -> Unit,
     chooseLeader: (Leader) -> Unit,
@@ -241,6 +244,7 @@ fun RoundEntryScreen(
                                 EntryLocationDropdown(
                                     modifier = Modifier.weight(1f),
                                     locationId = locationId,
+                                    locationList = locationList,
                                     onLocationSelected = onLocationSelected
                                 )
                             }
@@ -684,6 +688,7 @@ private fun EntryMetaDropdown(
 private fun EntryLocationDropdown(
     modifier: Modifier = Modifier,
     locationId: Int?,
+    locationList: List<Location> = LOCATIONS_LIST,
     onLocationSelected: (Int?) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -705,7 +710,7 @@ private fun EntryLocationDropdown(
                 onClick = { onLocationSelected(null); expanded = false },
                 contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
             )
-            LOCATIONS_LIST.forEach { location ->
+            locationList.forEach { location ->
                 DropdownMenuItem(
                     text = { Text(location.name) },
                     onClick = { onLocationSelected(location.id); expanded = false },

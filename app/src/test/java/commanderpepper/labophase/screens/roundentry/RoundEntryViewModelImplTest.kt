@@ -9,6 +9,8 @@ import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.logic.LeaderOrderDecider
 import commanderpepper.labophase.logic.PunkRecordCreatorImpl
 import commanderpepper.labophase.models.Leader
+import commanderpepper.labophase.models.Location
+import commanderpepper.labophase.models.LOCATIONS_LIST
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -40,7 +42,11 @@ class RoundEntryViewModelImplTest {
         Dispatchers.setMain(testDispatcher)
         coEvery { leaderOrderDecider.getPlayerLeaderSelect() } returns emptyList()
         coEvery { leaderOrderDecider.getRoundLeaderSelect() } returns emptyList()
+        coEvery { entryRepository.getEntries() } returns emptyList()
     }
+
+    private fun makeEntry(locationId: Int? = null) =
+        EntryWithRounds(entry = EntryEntity(leaderCardId = Leader.UGLuffy.cardId, locationId = locationId), rounds = emptyList())
 
     @After
     fun tearDown() {
@@ -322,5 +328,73 @@ class RoundEntryViewModelImplTest {
         advanceUntilIdle()
         assertFalse(vm.uiState.value.isLoading)
         assertNotNull(vm.uiState.value.errorMessage)
+    }
+
+    @Test
+    fun `location list contains all locations when no previous entries`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+        assertEquals(LOCATIONS_LIST.size, vm.uiState.value.locationList.size)
+        assertTrue(vm.uiState.value.locationList.containsAll(LOCATIONS_LIST))
+    }
+
+    @Test
+    fun `location list preserves LOCATIONS_LIST order when all counts are equal`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+        assertEquals(LOCATIONS_LIST, vm.uiState.value.locationList)
+    }
+
+    @Test
+    fun `most frequently used location appears first`() = runTest {
+        coEvery { entryRepository.getEntries() } returns listOf(
+            makeEntry(locationId = Location.TheClubhouse.id),
+            makeEntry(locationId = Location.TheClubhouse.id),
+            makeEntry(locationId = Location.ChronosGamesAndGifts.id)
+        )
+        val vm = createViewModel()
+        advanceUntilIdle()
+        assertEquals(Location.TheClubhouse, vm.uiState.value.locationList.first())
+    }
+
+    @Test
+    fun `location list is sorted by frequency descending`() = runTest {
+        coEvery { entryRepository.getEntries() } returns listOf(
+            makeEntry(locationId = Location.TOTLGames.id),
+            makeEntry(locationId = Location.TOTLGames.id),
+            makeEntry(locationId = Location.TOTLGames.id),
+            makeEntry(locationId = Location.TheClubhouse.id),
+            makeEntry(locationId = Location.TheClubhouse.id),
+            makeEntry(locationId = Location.ChronosGamesAndGifts.id)
+        )
+        val vm = createViewModel()
+        advanceUntilIdle()
+        val list = vm.uiState.value.locationList
+        assertEquals(Location.TOTLGames, list[0])
+        assertEquals(Location.TheClubhouse, list[1])
+        assertTrue(list.indexOf(Location.ChronosGamesAndGifts) > list.indexOf(Location.TheClubhouse))
+    }
+
+    @Test
+    fun `location list always contains all locations regardless of frequency`() = runTest {
+        coEvery { entryRepository.getEntries() } returns listOf(
+            makeEntry(locationId = Location.ChronosGamesAndGifts.id)
+        )
+        val vm = createViewModel()
+        advanceUntilIdle()
+        assertEquals(LOCATIONS_LIST.size, vm.uiState.value.locationList.size)
+        assertTrue(vm.uiState.value.locationList.containsAll(LOCATIONS_LIST))
+    }
+
+    @Test
+    fun `entries without a location do not affect location ordering`() = runTest {
+        coEvery { entryRepository.getEntries() } returns listOf(
+            makeEntry(locationId = null),
+            makeEntry(locationId = null),
+            makeEntry(locationId = Location.ChronosGamesAndGifts.id)
+        )
+        val vm = createViewModel()
+        advanceUntilIdle()
+        assertEquals(Location.ChronosGamesAndGifts, vm.uiState.value.locationList.first())
     }
 }
