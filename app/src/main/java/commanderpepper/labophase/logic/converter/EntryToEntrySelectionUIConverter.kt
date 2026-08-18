@@ -3,6 +3,7 @@ package commanderpepper.labophase.logic.converter
 import commanderpepper.labophase.data.EntryWithRounds
 import commanderpepper.labophase.data.entity.RoundEntity
 import commanderpepper.labophase.logic.PunkRecordCreator
+import commanderpepper.labophase.models.Opponent
 import commanderpepper.labophase.models.Round
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.leaderByCardId
@@ -11,7 +12,7 @@ import commanderpepper.labophase.screens.entries.models.EntrySelectionUI
 import commanderpepper.labophase.screens.entries.models.RoundEntrySelectionUI
 
 class EntryToEntrySelectionUIConverter(private val punkRecordCreator: PunkRecordCreator) {
-    fun entryToEntrySelectionUI(entry: EntryWithRounds): EntrySelectionUI {
+    fun entryToEntrySelectionUI(entry: EntryWithRounds, opponents: List<Opponent>): EntrySelectionUI {
         return EntrySelectionUI(
             entryId = entry.entry.id,
             leader = leaderByCardId(entry.entry.leaderCardId),
@@ -20,7 +21,8 @@ class EntryToEntrySelectionUIConverter(private val punkRecordCreator: PunkRecord
             punkRecord = punkRecordCreator.createForEntrySelection(
                 prLocation = locationById(entry.entry.locationId)?.punkRecordAbbreviation ?: "other",
                 leader = leaderByCardId(entry.entry.leaderCardId),
-                rounds = entry.rounds
+                rounds = entry.rounds,
+                opponents = opponents
             ),
             rounds = entry.rounds.map { roundToRoundEntrySelectionUI(it) },
             title = entry.entry.title,
@@ -38,7 +40,8 @@ class EntryToEntrySelectionUIConverter(private val punkRecordCreator: PunkRecord
             leader = leader,
             roundResult = roundEntity.roundResult,
             turnOrder = roundEntity.turnOrder,
-            dieRoll = roundEntity.dieRoll
+            dieRoll = roundEntity.dieRoll,
+            opponentId = roundEntity.opponentId
         )
         return RoundEntrySelectionUI(leader = leader, summary = round.singleLine())
     }

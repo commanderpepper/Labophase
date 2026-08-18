@@ -23,5 +23,6 @@ data class RoundEntity(
     val leaderCardId: String,
     val roundResult: RoundResult,
     val turnOrder: TurnOrder,
-    val dieRoll: String? = null
+    val dieRoll: String? = null,
+    val opponentId: Int? = null
 )

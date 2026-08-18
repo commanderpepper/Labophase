@@ -66,7 +66,11 @@ class StatsScreenTest {
                     onMetaSelected = onMetaSelected,
                     onAllMetasSelected = onAllMetasSelected,
                     onLocationSelected = { onLocationSelected() },
-                    onAllLocationsSelected = onAllLocationsSelected
+                    onAllLocationsSelected = onAllLocationsSelected,
+                    onTabSelected = {},
+                    onAddOpponent = { _, _ -> },
+                    onUpdateOpponent = { _, _, _ -> },
+                    onDeleteOpponent = {}
                 )
             }
         }
@@ -76,6 +80,7 @@ class StatsScreenTest {
         leaderSelected = LeaderSelectedOption.All,
         metaSelected = MetaOption.All,
         locationSelected = LocationOption.All,
+        availableLocations = emptyList(),
         leadersPlayed = emptyList(),
         leadersPlayerAgainst = emptyList(),
         isLoading = true
@@ -88,6 +93,7 @@ class StatsScreenTest {
         leaderSelected = LeaderSelectedOption.All,
         metaSelected = MetaOption.All,
         locationSelected = LocationOption.All,
+        availableLocations = emptyList(),
         leadersPlayed = leadersPlayed,
         leadersPlayerAgainst = opponents,
         isLoading = false
@@ -97,6 +103,7 @@ class StatsScreenTest {
         leaderSelected = LeaderSelectedOption.LeaderSelected(sampleLeaderInfo),
         metaSelected = MetaOption.All,
         locationSelected = LocationOption.All,
+        availableLocations = emptyList(),
         leadersPlayed = listOf(Leader.UGLuffy),
         leadersPlayerAgainst = opponents,
         isLoading = false
@@ -236,7 +243,11 @@ class StatsScreenTest {
                     onMetaSelected = { selectedMeta = it },
                     onAllMetasSelected = {},
                     onLocationSelected = {},
-                    onAllLocationsSelected = {}
+                    onAllLocationsSelected = {},
+                    onTabSelected = {},
+                    onAddOpponent = { _, _ -> },
+                    onUpdateOpponent = { _, _, _ -> },
+                    onDeleteOpponent = {}
                 )
             }
         }

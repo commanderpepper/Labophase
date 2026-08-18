@@ -48,6 +48,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -89,8 +90,10 @@ import commanderpepper.labophase.models.Location
 import commanderpepper.labophase.models.LOCATIONS_LIST
 import commanderpepper.labophase.models.METAS_LIST
 import commanderpepper.labophase.models.Meta
+import commanderpepper.labophase.models.Opponent
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
+import commanderpepper.labophase.models.findById
 import commanderpepper.labophase.models.locationById
 import commanderpepper.labophase.models.metaById
 import java.time.Instant
@@ -135,6 +138,7 @@ fun RoundEntryScreen(
         metaId = uiState.value.metaId,
         locationId = uiState.value.locationId,
         locationList = uiState.value.locationList,
+        opponentList = uiState.value.opponentList,
         addNewRound = roundEntryViewModel::addNewRound,
         transformEntry = roundEntryViewModel::transformEntry,
         chooseLeader = roundEntryViewModel::chooseLeader,
@@ -142,6 +146,7 @@ fun RoundEntryScreen(
         chooseRoundTurnOrder = roundEntryViewModel::roundTurnOrderSelect,
         chooseRoundResult = roundEntryViewModel::roundResultSelect,
         chooseDieRoll = roundEntryViewModel::roundDieRollSelect,
+        chooseOpponent = roundEntryViewModel::roundOpponentSet,
         removeRound = roundEntryViewModel::removeRound,
         onTitleChanged = roundEntryViewModel::setTitle,
         onDateChanged = roundEntryViewModel::setDate,
@@ -169,6 +174,7 @@ fun RoundEntryScreen(
     metaId: Int = Meta.OP16.id,
     locationId: Int? = null,
     locationList: List<Location> = LOCATIONS_LIST,
+    opponentList: List<Opponent> = emptyList(),
     addNewRound: () -> Unit,
     transformEntry: () -> Unit,
     chooseLeader: (Leader) -> Unit,
@@ -176,6 +182,7 @@ fun RoundEntryScreen(
     chooseRoundTurnOrder: (Int, TurnOrder) -> Unit,
     chooseRoundResult: (Int, RoundResult) -> Unit,
     chooseDieRoll: (Int, String?) -> Unit = { _, _ -> },
+    chooseOpponent: (Int, Int?) -> Unit = { _, _ -> },
     removeRound: (Int) -> Unit,
     onTitleChanged: (String?) -> Unit = {},
     onDateChanged: (String) -> Unit = {},
@@ -289,11 +296,13 @@ fun RoundEntryScreen(
                     RoundEntry(
                         round = round,
                         leaders = roundLeaderList,
+                        opponentList = opponentList,
                         initiallyExpanded = leaderSelectExpanded,
                         leaderSelected = chooseRoundLeader,
                         roundResult = chooseRoundResult,
                         turnOrder = chooseRoundTurnOrder,
                         dieRoll = chooseDieRoll,
+                        opponentSet = chooseOpponent,
                         showingDieRoll = showingDieRoll,
                         removeRound = removeRound
                     )
@@ -505,11 +514,13 @@ fun RoundEntry(
     modifier: Modifier = Modifier,
     round: RoundUI,
     leaders: List<Leader>,
+    opponentList: List<Opponent> = emptyList(),
     removeRound: (Int) -> Unit,
     leaderSelected: (Int, Leader) -> Unit,
     roundResult: (Int, RoundResult) -> Unit,
     turnOrder: (Int, TurnOrder) -> Unit,
     dieRoll: (Int, String?) -> Unit = { _, _ -> },
+    opponentSet: (Int, Int?) -> Unit = { _, _ -> },
     showingDieRoll: Boolean = false,
     initiallyExpanded: Boolean = true
 ) {
@@ -564,6 +575,11 @@ fun RoundEntry(
                         }
                     }
                 }
+                OpponentDropdown(
+                    opponentId = round.opponentId,
+                    opponentList = opponentList,
+                    onOpponentSelected = { opponentSet(round.roundId, it) }
+                )
             }
         }
     }
@@ -586,6 +602,49 @@ fun CopyableResult(text: String) {
             }
         ) {
             Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.cd_copy))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun OpponentDropdown(
+    opponentId: Int?,
+    opponentList: List<Opponent>,
+    onOpponentSelected: (Int?) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selected = opponentList.findById(opponentId)
+    val displayName = selected?.let { "${it.nickname} (${it.name})" } ?: stringResource(R.string.label_none)
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+        OutlinedTextField(
+            value = displayName,
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(R.string.label_opponent)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth()
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.label_none)) },
+                onClick = { onOpponentSelected(null); expanded = false },
+                contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+            )
+            opponentList.forEach { opponent ->
+                DropdownMenuItem(
+                    text = {
+                        Column {
+                            Text(opponent.nickname)
+                            Text(opponent.name, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    },
+                    onClick = { onOpponentSelected(opponent.id); expanded = false },
+                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                )
+            }
         }
     }
 }

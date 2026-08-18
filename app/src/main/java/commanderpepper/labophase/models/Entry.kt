@@ -8,7 +8,8 @@ data class Round(
     val leader: Leader = Leader.PBLuffy,
     val roundResult: RoundResult = RoundResult.Win,
     val turnOrder: TurnOrder = TurnOrder.First,
-    val dieRoll: String? = null
+    val dieRoll: String? = null,
+    val opponentId: Int? = null
 ) {
     fun singleLine(): String {
         return "${this.leader.name}, ${if (this.roundResult == RoundResult.Win) "W" else "L"}, ${if (this.turnOrder == TurnOrder.First) "1" else "2"}${transformDieRoll()}"

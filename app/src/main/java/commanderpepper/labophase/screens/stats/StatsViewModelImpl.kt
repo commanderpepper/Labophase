@@ -4,28 +4,35 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import commanderpepper.labophase.data.EntryRepository
 import commanderpepper.labophase.data.EntryWithRounds
+import commanderpepper.labophase.data.OpponentRepository
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Location
 import commanderpepper.labophase.models.Meta
+import commanderpepper.labophase.models.Opponent
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
+import commanderpepper.labophase.models.findById
 import commanderpepper.labophase.models.leaderByCardId
 import commanderpepper.labophase.models.locationById
 import commanderpepper.labophase.screens.stats.models.LeaderSelectedOption
 import commanderpepper.labophase.screens.stats.models.LocationOption
 import commanderpepper.labophase.screens.stats.models.MetaOption
 import commanderpepper.labophase.screens.stats.models.StatLeaderInfo
+import commanderpepper.labophase.screens.stats.models.StatOpponentInfo
+import commanderpepper.labophase.screens.stats.models.StatsTab
 import commanderpepper.labophase.screens.stats.models.StatsUIState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class StatsViewModelImpl(
-    private val entryRepository: EntryRepository
+    private val entryRepository: EntryRepository,
+    private val opponentRepository: OpponentRepository
 ) : StatsViewModel, ViewModel() {
 
     private val _selectedLeader = MutableStateFlow<Leader?>(null)
@@ -50,11 +57,12 @@ class StatsViewModelImpl(
             try {
                 combine(
                     entryRepository.getAllEntries(),
+                    opponentRepository.getOpponents(),
                     _selectedLeader,
                     _selectedMeta,
                     _selectedLocation
-                ) { entries, leader, meta, location ->
-                    withContext(Dispatchers.Default) { computeStats(entries, leader, meta, location) }
+                ) { entries, opponents, leader, meta, location ->
+                    withContext(Dispatchers.Default) { computeStats(entries, opponents, leader, meta, location) }
                 }.collect { newState ->
                     _statsUIState.value = newState
                 }
@@ -69,6 +77,7 @@ class StatsViewModelImpl(
 
     private fun computeStats(
         entries: List<EntryWithRounds>,
+        opponents: List<Opponent>,
         selectedLeader: Leader?,
         selectedMeta: Meta?,
         selectedLocation: Location?
@@ -129,6 +138,18 @@ class StatsViewModelImpl(
             }
             .sortedByDescending { it.wins + it.losses }
 
+        val roundsByOpponentId = allRounds
+            .filter { it.opponentId != null }
+            .groupBy { it.opponentId!! }
+        val opponentStats = opponents
+            .map { opp ->
+                val rounds = roundsByOpponentId[opp.id] ?: emptyList()
+                val w = rounds.count { it.roundResult == RoundResult.Win }
+                val l = rounds.count { it.roundResult == RoundResult.Loss }
+                StatOpponentInfo(opponent = opp, wins = w, losses = l, percentage = pct(w, l))
+            }
+            .sortedByDescending { it.wins + it.losses }
+
         val leaderOption = if (effectiveLeader != null) {
             LeaderSelectedOption.LeaderSelected(
                 StatLeaderInfo(
@@ -157,6 +178,8 @@ class StatsViewModelImpl(
             availableLocations = availableLocations,
             leadersPlayed = leadersPlayed,
             leadersPlayerAgainst = leadersAgainst,
+            opponentStats = opponentStats,
+            activeTab = _statsUIState.value.activeTab,
             isLoading = false
         )
     }
@@ -172,4 +195,16 @@ class StatsViewModelImpl(
     override fun allMetaSelected() { _selectedLocation.value = null; _selectedMeta.value = null }
     override fun locationSelected(location: Location) { _selectedLocation.value = location }
     override fun allLocationSelected() { _selectedLocation.value = null }
+    override fun tabSelected(tab: StatsTab) { _statsUIState.update { it.copy(activeTab = tab) } }
+    override fun addOpponent(name: String, nickname: String) {
+        viewModelScope.launch { opponentRepository.addOpponent(name, nickname) }
+    }
+
+    override fun updateOpponent(id: Int, name: String, nickname: String) {
+        viewModelScope.launch { opponentRepository.updateOpponent(id, name, nickname) }
+    }
+
+    override fun deleteOpponent(id: Int) {
+        viewModelScope.launch { opponentRepository.deleteOpponent(id) }
+    }
 }

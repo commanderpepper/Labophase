@@ -3,7 +3,9 @@ package commanderpepper.labophase.screens.roundentry
 import commanderpepper.labophase.data.entity.EntryEntity
 import commanderpepper.labophase.data.EntryRepository
 import commanderpepper.labophase.data.EntryWithRounds
+import commanderpepper.labophase.data.OpponentRepository
 import commanderpepper.labophase.data.entity.RoundEntity
+import commanderpepper.labophase.models.Opponent
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.logic.LeaderOrderDecider
@@ -13,9 +15,11 @@ import commanderpepper.labophase.models.Location
 import commanderpepper.labophase.models.LOCATIONS_LIST
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -36,6 +40,7 @@ class RoundEntryViewModelImplTest {
     private val testDispatcher = UnconfinedTestDispatcher()
     private val leaderOrderDecider: LeaderOrderDecider = mockk()
     private val entryRepository: EntryRepository = mockk(relaxed = true)
+    private val opponentRepository: OpponentRepository = mockk()
 
     @Before
     fun setUp() {
@@ -43,6 +48,7 @@ class RoundEntryViewModelImplTest {
         coEvery { leaderOrderDecider.getPlayerLeaderSelect() } returns emptyList()
         coEvery { leaderOrderDecider.getRoundLeaderSelect() } returns emptyList()
         coEvery { entryRepository.getEntries() } returns emptyList()
+        every { opponentRepository.getOpponents() } returns flowOf(emptyList())
     }
 
     private fun makeEntry(locationId: Int? = null) =
@@ -54,7 +60,7 @@ class RoundEntryViewModelImplTest {
     }
 
     private fun createViewModel(entryId: Int? = null) =
-        RoundEntryViewModelImpl(leaderOrderDecider, entryRepository, PunkRecordCreatorImpl(), entryId, testDispatcher)
+        RoundEntryViewModelImpl(leaderOrderDecider, entryRepository, PunkRecordCreatorImpl(), opponentRepository, entryId, testDispatcher)
 
     @Test
     fun `initial leader selected is PKatakuri`() = runTest {
@@ -166,7 +172,7 @@ class RoundEntryViewModelImplTest {
         val vm = createViewModel()
         vm.addNewRound()
         val roundId = vm.uiState.value.rounds.first().roundId
-        vm.roundTurnOrderSelect(roundId, TurnOrder.Second) // set to Second first
+        vm.roundTurnOrderSelect(roundId, TurnOrder.Second)
 
         vm.roundTurnOrderSelect(roundId, TurnOrder.First)
 
@@ -396,5 +402,82 @@ class RoundEntryViewModelImplTest {
         val vm = createViewModel()
         advanceUntilIdle()
         assertEquals(Location.ChronosGamesAndGifts, vm.uiState.value.locationList.first())
+    }
+
+    @Test
+    fun `roundOpponentSet updates opponentId on correct round`() = runTest {
+        val vm = createViewModel()
+        vm.addNewRound()
+        val roundId = vm.uiState.value.rounds.first().roundId
+
+        vm.roundOpponentSet(roundId, 6)
+
+        assertEquals(6, vm.uiState.value.rounds.first().opponentId)
+    }
+
+    @Test
+    fun `roundOpponentSet with null clears opponentId`() = runTest {
+        val vm = createViewModel()
+        vm.addNewRound()
+        val roundId = vm.uiState.value.rounds.first().roundId
+        vm.roundOpponentSet(roundId, 6)
+
+        vm.roundOpponentSet(roundId, null)
+
+        assertNull(vm.uiState.value.rounds.first().opponentId)
+    }
+
+    @Test
+    fun `transformEntry punk record round line includes opponent nickname when set`() = runTest {
+        every { opponentRepository.getOpponents() } returns flowOf(listOf(Opponent(6, "commanderpepper", "Pepper")))
+        val vm = createViewModel()
+        advanceUntilIdle()
+        vm.addNewRound()
+        val roundId = vm.uiState.value.rounds.first().roundId
+        vm.roundLeaderSelect(roundId, Leader.RShanks)
+        vm.roundResultSelect(roundId, RoundResult.Win)
+        vm.roundTurnOrderSelect(roundId, TurnOrder.First)
+        vm.roundOpponentSet(roundId, 6)
+
+        vm.transformEntry()
+
+        val lines = vm.uiState.value.punkRecordEntry.lines()
+        assertTrue(lines[3].endsWith("Pepper"))
+    }
+
+    @Test
+    fun `transformEntry punk record round line omits opponent when not set`() = runTest {
+        val vm = createViewModel()
+        vm.addNewRound()
+        val roundId = vm.uiState.value.rounds.first().roundId
+        vm.roundLeaderSelect(roundId, Leader.RShanks)
+        vm.roundResultSelect(roundId, RoundResult.Win)
+        vm.roundTurnOrderSelect(roundId, TurnOrder.First)
+
+        vm.transformEntry()
+
+        val lines = vm.uiState.value.punkRecordEntry.lines()
+        assertTrue(lines[3].endsWith("1st"))
+    }
+
+    @Test
+    fun `existing entry loads opponentId on init`() = runTest {
+        val existingEntry = EntryWithRounds(
+            entry = EntryEntity(id = 1, leaderCardId = Leader.UGLuffy.cardId),
+            rounds = listOf(
+                RoundEntity(
+                    entryId = 1, roundNumber = 1,
+                    leaderCardId = Leader.RShanks.cardId,
+                    roundResult = RoundResult.Win, turnOrder = TurnOrder.First,
+                    opponentId = 6
+                )
+            )
+        )
+        coEvery { entryRepository.getEntryById(1) } returns existingEntry
+
+        val vm = createViewModel(entryId = 1)
+        advanceUntilIdle()
+
+        assertEquals(6, vm.uiState.value.rounds.first().opponentId)
     }
 }

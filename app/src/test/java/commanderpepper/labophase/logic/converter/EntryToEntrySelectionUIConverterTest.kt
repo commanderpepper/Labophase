@@ -5,6 +5,7 @@ import commanderpepper.labophase.data.EntryWithRounds
 import commanderpepper.labophase.data.entity.RoundEntity
 import commanderpepper.labophase.logic.PunkRecordCreatorImpl
 import commanderpepper.labophase.models.Leader
+import commanderpepper.labophase.models.Opponent
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
 import org.junit.Assert.assertEquals
@@ -14,14 +15,16 @@ import org.junit.Test
 class EntryToEntrySelectionUIConverterTest {
 
     private val converter = EntryToEntrySelectionUIConverter(PunkRecordCreatorImpl())
+    private val testOpponent = Opponent(id = 1, name = "testuser", nickname = "TestNick")
 
     private fun makeRound(
         entryId: Int = 1,
         leaderCardId: String = Leader.RShanks.cardId,
         result: RoundResult = RoundResult.Win,
         order: TurnOrder = TurnOrder.First,
-        num: Int = 1
-    ) = RoundEntity(entryId = entryId, roundNumber = num, leaderCardId = leaderCardId, roundResult = result, turnOrder = order)
+        num: Int = 1,
+        opponentId: Int? = null
+    ) = RoundEntity(entryId = entryId, roundNumber = num, leaderCardId = leaderCardId, roundResult = result, turnOrder = order, opponentId = opponentId)
 
     private fun makeEntry(
         id: Int = 1,
@@ -31,7 +34,7 @@ class EntryToEntrySelectionUIConverterTest {
 
     @Test
     fun `empty rounds produces zero wins and losses with empty rounds list`() {
-        val result = converter.entryToEntrySelectionUI(makeEntry())
+        val result = converter.entryToEntrySelectionUI(makeEntry(), emptyList())
         assertEquals(0, result.wins)
         assertEquals(0, result.losses)
         assertTrue(result.rounds.isEmpty())
@@ -44,14 +47,14 @@ class EntryToEntrySelectionUIConverterTest {
             makeRound(result = RoundResult.Win),
             makeRound(result = RoundResult.Loss)
         )
-        val result = converter.entryToEntrySelectionUI(makeEntry(rounds = rounds))
+        val result = converter.entryToEntrySelectionUI(makeEntry(rounds = rounds), emptyList())
         assertEquals(2, result.wins)
         assertEquals(1, result.losses)
     }
 
     @Test
     fun `punk record starts with PR add header then location then leader name`() {
-        val result = converter.entryToEntrySelectionUI(makeEntry())
+        val result = converter.entryToEntrySelectionUI(makeEntry(), emptyList())
         val lines = result.punkRecord.lines()
         assertEquals("!PR add", lines[0])
         assertEquals("other", lines[1])
@@ -61,7 +64,7 @@ class EntryToEntrySelectionUIConverterTest {
     @Test
     fun `punk record win first formats as W LeaderName 1st`() {
         val rounds = listOf(makeRound(result = RoundResult.Win, order = TurnOrder.First))
-        val result = converter.entryToEntrySelectionUI(makeEntry(rounds = rounds))
+        val result = converter.entryToEntrySelectionUI(makeEntry(rounds = rounds), emptyList())
         val roundLine = result.punkRecord.lines()[3]
         assertTrue(roundLine.startsWith("W "))
         assertTrue(roundLine.endsWith("1st"))
@@ -70,7 +73,7 @@ class EntryToEntrySelectionUIConverterTest {
     @Test
     fun `punk record loss second formats as L LeaderName 2nd`() {
         val rounds = listOf(makeRound(result = RoundResult.Loss, order = TurnOrder.Second))
-        val result = converter.entryToEntrySelectionUI(makeEntry(rounds = rounds))
+        val result = converter.entryToEntrySelectionUI(makeEntry(rounds = rounds), emptyList())
         val roundLine = result.punkRecord.lines()[3]
         assertTrue(roundLine.startsWith("L "))
         assertTrue(roundLine.endsWith("2nd"))
@@ -79,26 +82,26 @@ class EntryToEntrySelectionUIConverterTest {
     @Test
     fun `round summary formats as LeaderName W 1 for win first`() {
         val round = makeRound(leaderCardId = Leader.RShanks.cardId, result = RoundResult.Win, order = TurnOrder.First)
-        val result = converter.entryToEntrySelectionUI(makeEntry(rounds = listOf(round)))
+        val result = converter.entryToEntrySelectionUI(makeEntry(rounds = listOf(round)), emptyList())
         assertEquals("${Leader.RShanks.name}, W, 1", result.rounds[0].summary)
     }
 
     @Test
     fun `round summary formats as LeaderName L 2 for loss second`() {
         val round = makeRound(leaderCardId = Leader.RShanks.cardId, result = RoundResult.Loss, order = TurnOrder.Second)
-        val result = converter.entryToEntrySelectionUI(makeEntry(rounds = listOf(round)))
+        val result = converter.entryToEntrySelectionUI(makeEntry(rounds = listOf(round)), emptyList())
         assertEquals("${Leader.RShanks.name}, L, 2", result.rounds[0].summary)
     }
 
     @Test
     fun `entryId is preserved in UI model`() {
-        val result = converter.entryToEntrySelectionUI(makeEntry(id = 42))
+        val result = converter.entryToEntrySelectionUI(makeEntry(id = 42), emptyList())
         assertEquals(42, result.entryId)
     }
 
     @Test
     fun `leader is looked up correctly from card ID`() {
-        val result = converter.entryToEntrySelectionUI(makeEntry(leaderCardId = Leader.UGLuffy.cardId))
+        val result = converter.entryToEntrySelectionUI(makeEntry(leaderCardId = Leader.UGLuffy.cardId), emptyList())
         assertEquals(Leader.UGLuffy, result.leader)
     }
 
@@ -140,10 +143,24 @@ class EntryToEntrySelectionUIConverterTest {
             makeRound(leaderCardId = Leader.RShanks.cardId, result = RoundResult.Win, order = TurnOrder.First, num = 1),
             makeRound(leaderCardId = Leader.PBLuffy.cardId, result = RoundResult.Loss, order = TurnOrder.Second, num = 2)
         )
-        val result = converter.entryToEntrySelectionUI(makeEntry(rounds = rounds))
+        val result = converter.entryToEntrySelectionUI(makeEntry(rounds = rounds), emptyList())
         val lines = result.punkRecord.lines()
         assertEquals(5, lines.size)
         assertTrue(lines[3].contains(Leader.RShanks.name))
         assertTrue(lines[4].contains(Leader.PBLuffy.name))
+    }
+
+    @Test
+    fun `punk record round line includes opponent nickname when opponentId is set`() {
+        val rounds = listOf(makeRound(result = RoundResult.Win, order = TurnOrder.First, opponentId = 1))
+        val result = converter.entryToEntrySelectionUI(makeEntry(rounds = rounds), listOf(testOpponent))
+        assertTrue(result.punkRecord.lines()[3].endsWith("TestNick"))
+    }
+
+    @Test
+    fun `punk record round line omits opponent when opponentId is not set`() {
+        val rounds = listOf(makeRound(result = RoundResult.Win, order = TurnOrder.First))
+        val result = converter.entryToEntrySelectionUI(makeEntry(rounds = rounds), emptyList())
+        assertTrue(result.punkRecord.lines()[3].endsWith("1st"))
     }
 }

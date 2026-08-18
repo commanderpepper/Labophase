@@ -16,11 +16,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "commanderpepper.labophase"
-    compileSdk {
-        version = release(37) {
-            minorApiLevel = 0
-        }
-    }
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "commanderpepper.labophase"

@@ -3,16 +3,21 @@ package commanderpepper.labophase.screens.stats
 import app.cash.turbine.test
 import commanderpepper.labophase.data.EntryRepository
 import commanderpepper.labophase.data.EntryWithRounds
+import commanderpepper.labophase.data.OpponentRepository
 import commanderpepper.labophase.data.entity.EntryEntity
 import commanderpepper.labophase.data.entity.RoundEntity
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Location
 import commanderpepper.labophase.models.Meta
+import commanderpepper.labophase.models.Opponent
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.screens.stats.models.LeaderSelectedOption
 import commanderpepper.labophase.screens.stats.models.LocationOption
 import commanderpepper.labophase.screens.stats.models.MetaOption
+import commanderpepper.labophase.screens.stats.models.StatsTab
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +26,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -38,12 +44,15 @@ class StatsViewModelImplTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private val entryRepository: EntryRepository = mockk()
+    private val opponentRepository: OpponentRepository = mockk()
     private val entriesFlow = MutableStateFlow<List<EntryWithRounds>>(emptyList())
+    private val opponentsFlow = MutableStateFlow<List<Opponent>>(emptyList())
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         every { entryRepository.getAllEntries() } returns entriesFlow
+        every { opponentRepository.getOpponents() } returns opponentsFlow
     }
 
     @After
@@ -65,16 +74,18 @@ class StatsViewModelImplTest {
     private fun makeRound(
         opponentCardId: String = Leader.RShanks.cardId,
         result: RoundResult = RoundResult.Win,
-        turnOrder: TurnOrder = TurnOrder.First
+        turnOrder: TurnOrder = TurnOrder.First,
+        opponentId: Int? = null
     ) = RoundEntity(
         entryId = 1,
         roundNumber = 1,
         leaderCardId = opponentCardId,
         roundResult = result,
-        turnOrder = turnOrder
+        turnOrder = turnOrder,
+        opponentId = opponentId
     )
 
-    private fun createViewModel() = StatsViewModelImpl(entryRepository)
+    private fun createViewModel() = StatsViewModelImpl(entryRepository, opponentRepository)
 
     @Test
     fun `initial state is loading`() = runTest {
@@ -653,4 +664,278 @@ class StatsViewModelImplTest {
             cancelAndIgnoreRemainingEvents()
         }
     }
+
+    // region — Opponent stats
+
+    @Test
+    fun `opponentStats includes all opponents including those with no games`() = runTest {
+        opponentsFlow.value = listOf(Opponent(1, "playerA", "A"), Opponent(2, "playerB", "B"))
+        entriesFlow.value = listOf(makeEntry(rounds = listOf(makeRound(opponentId = 1))))
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            val state = awaitItem()
+            assertEquals(2, state.opponentStats.size)
+            assertTrue(state.opponentStats.any { it.opponent.id == 1 })
+            assertTrue(state.opponentStats.any { it.opponent.id == 2 })
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `opponent with zero games has zero wins losses and null percentage`() = runTest {
+        opponentsFlow.value = listOf(Opponent(1, "playerA", "A"))
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            val state = awaitItem()
+            val stat = state.opponentStats.single()
+            assertEquals(0, stat.wins)
+            assertEquals(0, stat.losses)
+            assertNull(stat.percentage)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `opponentStats are sorted by total play count descending`() = runTest {
+        opponentsFlow.value = listOf(
+            Opponent(1, "playerA", "A"),
+            Opponent(2, "playerB", "B"),
+            Opponent(3, "playerC", "C")
+        )
+        entriesFlow.value = listOf(
+            makeEntry(rounds = listOf(
+                makeRound(opponentId = 2),
+                makeRound(opponentId = 2),
+                makeRound(opponentId = 2),
+                makeRound(opponentId = 1)
+            ))
+        )
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            val state = awaitItem()
+            assertEquals(2, state.opponentStats[0].opponent.id)
+            assertEquals(1, state.opponentStats[1].opponent.id)
+            assertEquals(3, state.opponentStats[2].opponent.id)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `opponents with zero games appear after those with games`() = runTest {
+        opponentsFlow.value = listOf(Opponent(1, "playerA", "A"), Opponent(2, "playerB", "B"))
+        entriesFlow.value = listOf(makeEntry(rounds = listOf(makeRound(opponentId = 2))))
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            val state = awaitItem()
+            assertEquals(2, state.opponentStats[0].opponent.id)
+            assertEquals(1, state.opponentStats[1].opponent.id)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `opponent win and loss counts are tracked correctly`() = runTest {
+        opponentsFlow.value = listOf(Opponent(1, "playerA", "A"))
+        entriesFlow.value = listOf(
+            makeEntry(rounds = listOf(
+                makeRound(opponentId = 1, result = RoundResult.Win),
+                makeRound(opponentId = 1, result = RoundResult.Win),
+                makeRound(opponentId = 1, result = RoundResult.Loss)
+            ))
+        )
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            val state = awaitItem()
+            val stat = state.opponentStats.single()
+            assertEquals(2, stat.wins)
+            assertEquals(1, stat.losses)
+            assertEquals(66, stat.percentage)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `opponent stats are computed independently per opponent`() = runTest {
+        opponentsFlow.value = listOf(Opponent(1, "playerA", "A"), Opponent(2, "playerB", "B"))
+        entriesFlow.value = listOf(
+            makeEntry(rounds = listOf(
+                makeRound(opponentId = 1, result = RoundResult.Win),
+                makeRound(opponentId = 2, result = RoundResult.Loss),
+                makeRound(opponentId = 2, result = RoundResult.Loss)
+            ))
+        )
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            val state = awaitItem()
+            val statA = state.opponentStats.first { it.opponent.id == 1 }
+            val statB = state.opponentStats.first { it.opponent.id == 2 }
+            assertEquals(1, statA.wins)
+            assertEquals(0, statA.losses)
+            assertEquals(0, statB.wins)
+            assertEquals(2, statB.losses)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `rounds without opponentId are not attributed to any opponent`() = runTest {
+        opponentsFlow.value = listOf(Opponent(1, "playerA", "A"))
+        entriesFlow.value = listOf(
+            makeEntry(rounds = listOf(
+                makeRound(opponentId = null, result = RoundResult.Win),
+                makeRound(opponentId = null, result = RoundResult.Loss)
+            ))
+        )
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            val state = awaitItem()
+            val stat = state.opponentStats.single()
+            assertEquals(0, stat.wins)
+            assertEquals(0, stat.losses)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    // endregion
+
+    @Test
+    fun `opponent stats respect meta filter`() = runTest {
+        opponentsFlow.value = listOf(Opponent(1, "playerA", "A"))
+        entriesFlow.value = listOf(
+            makeEntry(metaId = Meta.OP16.id, rounds = listOf(makeRound(opponentId = 1, result = RoundResult.Win))),
+            makeEntry(metaId = Meta.OP16WithST.id, rounds = listOf(makeRound(opponentId = 1, result = RoundResult.Loss)))
+        )
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            awaitItem()
+            vm.metaSelected(Meta.OP16)
+            val state = awaitItem()
+            val stat = state.opponentStats.single()
+            assertEquals(1, stat.wins)
+            assertEquals(0, stat.losses)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `opponent stats respect leader filter`() = runTest {
+        opponentsFlow.value = listOf(Opponent(1, "playerA", "A"))
+        entriesFlow.value = listOf(
+            makeEntry(leaderCardId = Leader.UGLuffy.cardId, rounds = listOf(makeRound(opponentId = 1, result = RoundResult.Win))),
+            makeEntry(leaderCardId = Leader.RShanks.cardId, rounds = listOf(makeRound(opponentId = 1, result = RoundResult.Loss)))
+        )
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            awaitItem()
+            vm.leaderSelected(Leader.UGLuffy)
+            val state = awaitItem()
+            val stat = state.opponentStats.single()
+            assertEquals(1, stat.wins)
+            assertEquals(0, stat.losses)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `opponent stats respect location filter`() = runTest {
+        opponentsFlow.value = listOf(Opponent(1, "playerA", "A"))
+        entriesFlow.value = listOf(
+            makeEntry(locationId = Location.ChronosGamesAndGifts.id, rounds = listOf(makeRound(opponentId = 1, result = RoundResult.Win))),
+            makeEntry(locationId = Location.TheClubhouse.id, rounds = listOf(makeRound(opponentId = 1, result = RoundResult.Loss)))
+        )
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            awaitItem()
+            vm.locationSelected(Location.ChronosGamesAndGifts)
+            val state = awaitItem()
+            val stat = state.opponentStats.single()
+            assertEquals(1, stat.wins)
+            assertEquals(0, stat.losses)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    // region — Tab selection
+
+    @Test
+    fun `default active tab is Leaders`() = runTest {
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            val state = awaitItem()
+            assertEquals(StatsTab.Leaders, state.activeTab)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `tabSelected Opponents changes activeTab to Opponents`() = runTest {
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            awaitItem()
+            vm.tabSelected(StatsTab.Opponents)
+            val state = awaitItem()
+            assertEquals(StatsTab.Opponents, state.activeTab)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `tabSelected Leaders changes activeTab back to Leaders`() = runTest {
+        val vm = createViewModel()
+
+        vm.statsUIState.test {
+            awaitItem()
+            vm.tabSelected(StatsTab.Opponents)
+            awaitItem()
+            vm.tabSelected(StatsTab.Leaders)
+            val state = awaitItem()
+            assertEquals(StatsTab.Leaders, state.activeTab)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    // endregion
+
+    // region — Repository delegation
+
+    @Test
+    fun `addOpponent delegates to repository with correct arguments`() = runTest {
+        coEvery { opponentRepository.addOpponent(any(), any()) } returns Unit
+        val vm = createViewModel()
+        vm.addOpponent("newhandle", "NewNick")
+        advanceUntilIdle()
+        coVerify { opponentRepository.addOpponent("newhandle", "NewNick") }
+    }
+
+    @Test
+    fun `updateOpponent delegates to repository with correct arguments`() = runTest {
+        coEvery { opponentRepository.updateOpponent(any(), any(), any()) } returns Unit
+        val vm = createViewModel()
+        vm.updateOpponent(7, "updatedhandle", "UpdatedNick")
+        advanceUntilIdle()
+        coVerify { opponentRepository.updateOpponent(7, "updatedhandle", "UpdatedNick") }
+    }
+
+    @Test
+    fun `deleteOpponent delegates to repository with correct id`() = runTest {
+        coEvery { opponentRepository.deleteOpponent(any()) } returns Unit
+        val vm = createViewModel()
+        vm.deleteOpponent(3)
+        advanceUntilIdle()
+        coVerify { opponentRepository.deleteOpponent(3) }
+    }
+
+    // endregion
 }

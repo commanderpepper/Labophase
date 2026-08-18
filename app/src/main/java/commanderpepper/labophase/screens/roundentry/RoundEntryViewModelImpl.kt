@@ -3,6 +3,7 @@ package commanderpepper.labophase.screens.roundentry
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import commanderpepper.labophase.data.EntryRepository
+import commanderpepper.labophase.data.OpponentRepository
 import commanderpepper.labophase.logic.LeaderOrderDecider
 import commanderpepper.labophase.logic.PunkRecordCreator
 import commanderpepper.labophase.models.Leader
@@ -29,6 +30,7 @@ class RoundEntryViewModelImpl(
     private val leaderOrderDecider: LeaderOrderDecider,
     private val entryRepository: EntryRepository,
     private val punkRecordCreator: PunkRecordCreator,
+    private val opponentRepository: OpponentRepository,
     private val entryId: Int? = null,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : RoundEntryViewModel, ViewModel() {
@@ -42,6 +44,12 @@ class RoundEntryViewModelImpl(
     override val uiState: StateFlow<RoundEntryUIState> = _uiState.asStateFlow()
 
     init {
+        viewModelScope.launch {
+            opponentRepository.getOpponents().collect { opponents ->
+                _uiState.update { it.copy(opponentList = opponents) }
+            }
+        }
+
         viewModelScope.launch {
             withContext(ioDispatcher) {
                 try {
@@ -65,7 +73,8 @@ class RoundEntryViewModelImpl(
                                     leader = leaderByCardId(r.leaderCardId),
                                     roundResult = r.roundResult,
                                     turnOrder = r.turnOrder,
-                                    dieRoll = r.dieRoll
+                                    dieRoll = r.dieRoll,
+                                    opponentId = r.opponentId
                                 )
                             }
                             roundsMap = loaded.associateBy { it.roundId }
@@ -115,7 +124,7 @@ class RoundEntryViewModelImpl(
         val leader = _uiState.value.leaderSelected
         val rounds = roundsMap.values.toList()
         val prLocation = locationById(_uiState.value.locationId)?.punkRecordAbbreviation ?: "other"
-        _uiState.update { it.copy(punkRecordEntry = punkRecordCreator.createForRoundEntry(prLocation, leader, rounds)) }
+        _uiState.update { it.copy(punkRecordEntry = punkRecordCreator.createForRoundEntry(prLocation, leader, rounds, it.opponentList)) }
         viewModelScope.launch {
             saveEntry(leader, rounds)
             isSaving = false
@@ -173,6 +182,10 @@ class RoundEntryViewModelImpl(
         updateRound(roundId) { it.copy(dieRoll = dieRoll) }
     }
 
+    override fun roundOpponentSet(roundId: Int, opponentId: Int?) {
+        updateRound(roundId) { it.copy(opponentId = opponentId) }
+    }
+
     override fun removeRound(roundId: Int) {
         roundsMap = roundsMap.minus(roundId)
         _uiState.update { it.copy(rounds = roundsMap.values.map { r -> r.toRoundUI() }) }
@@ -200,6 +213,7 @@ class RoundEntryViewModelImpl(
         summary = singleLine(),
         roundResult = roundResult,
         turnOrder = turnOrder,
-        dieRoll = dieRoll
+        dieRoll = dieRoll,
+        opponentId = opponentId
     )
 }

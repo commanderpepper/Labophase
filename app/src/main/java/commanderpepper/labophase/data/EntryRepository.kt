@@ -83,7 +83,8 @@ class EntryRepositoryImpl(private val dao: EntryDao) : EntryRepository {
             leaderCardId = r.leader.cardId,
             roundResult = r.roundResult,
             turnOrder = r.turnOrder,
-            dieRoll = r.dieRoll
+            dieRoll = r.dieRoll,
+            opponentId = r.opponentId
         )
     }
 

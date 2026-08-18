@@ -3,6 +3,8 @@ package commanderpepper.labophase.di
 import commanderpepper.labophase.data.AppDatabase
 import commanderpepper.labophase.data.EntryRepository
 import commanderpepper.labophase.data.EntryRepositoryImpl
+import commanderpepper.labophase.data.OpponentRepository
+import commanderpepper.labophase.data.OpponentRepositoryImpl
 import commanderpepper.labophase.data.SettingsRepository
 import commanderpepper.labophase.data.SettingsRepositoryImpl
 import commanderpepper.labophase.data.settingsDataStore
@@ -22,13 +24,15 @@ import org.koin.dsl.module
 val appModule = module {
     single { AppDatabase.create(androidContext()) }
     single { get<AppDatabase>().entryDao() }
+    single { get<AppDatabase>().opponentDao() }
     single<EntryRepository> { EntryRepositoryImpl(get()) }
+    single<OpponentRepository> { OpponentRepositoryImpl(get()) }
     single<SettingsRepository> { SettingsRepositoryImpl(androidContext().settingsDataStore, get()) }
     single<LeaderOrderDecider> { LeaderOrderDeciderImpl(get(), get()) }
     single<PunkRecordCreator> { PunkRecordCreatorImpl() }
     single { EntryToEntrySelectionUIConverter(get()) }
-    viewModel { params -> RoundEntryViewModelImpl(get(), get(), get(), params.getOrNull<Int>()) }
-    viewModel { EntrySelectionViewModelImpl(get(), get()) }
+    viewModel { params -> RoundEntryViewModelImpl(get(), get(), get(), get(), params.getOrNull<Int>()) }
+    viewModel { EntrySelectionViewModelImpl(get(), get(), get()) }
     viewModel { SettingsViewModelImpl(get()) }
-    viewModel { StatsViewModelImpl(get()) }
+    viewModel { StatsViewModelImpl(get(), get()) }
 }

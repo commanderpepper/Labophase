@@ -16,6 +16,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialogDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
@@ -23,11 +28,18 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
@@ -43,6 +55,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import commanderpepper.labophase.R
@@ -51,6 +64,7 @@ import commanderpepper.labophase.models.LeaderColor
 import commanderpepper.labophase.models.Location
 import commanderpepper.labophase.models.METAS_LIST
 import commanderpepper.labophase.models.Meta
+import commanderpepper.labophase.models.Opponent
 import commanderpepper.labophase.screens.roundentry.LeaderThumbnail
 import commanderpepper.labophase.screens.roundentry.WithSharedBorderAngle
 import commanderpepper.labophase.screens.roundentry.animatedBorder
@@ -58,9 +72,16 @@ import commanderpepper.labophase.screens.stats.models.LeaderSelectedOption
 import commanderpepper.labophase.screens.stats.models.LocationOption
 import commanderpepper.labophase.screens.stats.models.MetaOption
 import commanderpepper.labophase.screens.stats.models.StatLeaderInfo
+import commanderpepper.labophase.screens.stats.models.StatOpponentInfo
+import commanderpepper.labophase.screens.stats.models.StatsTab
 import commanderpepper.labophase.screens.stats.models.StatsUIState
 import commanderpepper.labophase.ui.theme.LabophaseTheme
 import org.koin.androidx.compose.koinViewModel
+
+private sealed class OpponentDialogState {
+    data object Add : OpponentDialogState()
+    data class Edit(val opponent: Opponent) : OpponentDialogState()
+}
 
 @Composable
 fun StatsScreen(
@@ -74,7 +95,11 @@ fun StatsScreen(
         onMetaSelected = statsViewModel::metaSelected,
         onAllMetasSelected = statsViewModel::allMetaSelected,
         onLocationSelected = statsViewModel::locationSelected,
-        onAllLocationsSelected = statsViewModel::allLocationSelected
+        onAllLocationsSelected = statsViewModel::allLocationSelected,
+        onTabSelected = statsViewModel::tabSelected,
+        onAddOpponent = statsViewModel::addOpponent,
+        onUpdateOpponent = statsViewModel::updateOpponent,
+        onDeleteOpponent = statsViewModel::deleteOpponent
     )
 }
 
@@ -87,13 +112,26 @@ fun StatsScreen(
     onMetaSelected: (Meta) -> Unit,
     onAllMetasSelected: () -> Unit,
     onLocationSelected: (Location) -> Unit,
-    onAllLocationsSelected: () -> Unit
+    onAllLocationsSelected: () -> Unit,
+    onTabSelected: (StatsTab) -> Unit,
+    onAddOpponent: (String, String) -> Unit,
+    onUpdateOpponent: (Int, String, String) -> Unit,
+    onDeleteOpponent: (Int) -> Unit
 ) {
     val isExpandedWidth = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass != WindowWidthSizeClass.COMPACT
+    var dialogState by remember { mutableStateOf<OpponentDialogState?>(null) }
+    val showFab = statsUIState.activeTab == StatsTab.Opponents && !statsUIState.isLoading && statsUIState.errorMessage == null
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(title = { Text(stringResource(R.string.stats_title)) })
+        },
+        floatingActionButton = {
+            if (showFab) {
+                FloatingActionButton(onClick = { dialogState = OpponentDialogState.Add }) {
+                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.stats_add_opponent))
+                }
+            }
         }
     ) { innerPadding ->
         WithSharedBorderAngle {
@@ -131,8 +169,10 @@ fun StatsScreen(
                     )
                 }
                 VerticalDivider(modifier = Modifier.padding(vertical = 16.dp))
-                OpponentsPane(
-                    opponents = statsUIState.leadersPlayerAgainst,
+                RightPane(
+                    statsUIState = statsUIState,
+                    onTabSelected = onTabSelected,
+                    onEditOpponent = { dialogState = OpponentDialogState.Edit(it) },
                     modifier = Modifier
                         .weight(3f)
                         .fillMaxHeight()
@@ -159,19 +199,208 @@ fun StatsScreen(
                     )
                 }
                 item {
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-                    Text(
-                        text = stringResource(R.string.stats_leaders_against),
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.padding(bottom = 4.dp)
+                    StatsTabRow(
+                        activeTab = statsUIState.activeTab,
+                        onTabSelected = onTabSelected
                     )
                 }
-                items(statsUIState.leadersPlayerAgainst) { opponent ->
-                    OpponentRow(opponent = opponent)
+                if (statsUIState.activeTab == StatsTab.Leaders) {
+                    item {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        Text(
+                            text = stringResource(R.string.stats_leaders_against),
+                            style = MaterialTheme.typography.titleSmall,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                    }
+                    items(statsUIState.leadersPlayerAgainst) { opponent ->
+                        LeaderAgainstRow(opponent = opponent)
+                    }
+                } else {
+                    item {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                        Text(
+                            text = stringResource(R.string.stats_opponents),
+                            style = MaterialTheme.typography.titleSmall,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                    }
+                    items(statsUIState.opponentStats) { stat ->
+                        OpponentStatRow(
+                            stat = stat,
+                            onEditOpponent = { dialogState = OpponentDialogState.Edit(stat.opponent) }
+                        )
+                    }
                 }
             }
         }
         } // WithSharedBorderAngle
+    }
+
+    dialogState?.let { state ->
+        OpponentDialog(
+            state = state,
+            onDismiss = { dialogState = null },
+            onAdd = { name, nick -> onAddOpponent(name, nick); dialogState = null },
+            onUpdate = { id, name, nick -> onUpdateOpponent(id, name, nick); dialogState = null },
+            onDelete = { id -> onDeleteOpponent(id); dialogState = null }
+        )
+    }
+}
+
+@Composable
+private fun OpponentDialog(
+    state: OpponentDialogState,
+    onDismiss: () -> Unit,
+    onAdd: (String, String) -> Unit,
+    onUpdate: (Int, String, String) -> Unit,
+    onDelete: (Int) -> Unit
+) {
+    val isEdit = state is OpponentDialogState.Edit
+    val existing = (state as? OpponentDialogState.Edit)?.opponent
+    var name by remember(state) { mutableStateOf(existing?.name ?: "") }
+    var nickname by remember(state) { mutableStateOf(existing?.nickname ?: "") }
+    val canSave = name.isNotBlank() && nickname.isNotBlank()
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = AlertDialogDefaults.TonalElevation
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = stringResource(if (isEdit) R.string.stats_edit_opponent else R.string.stats_add_opponent),
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(stringResource(R.string.label_handle)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = nickname,
+                    onValueChange = { nickname = it },
+                    label = { Text(stringResource(R.string.label_nickname)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isEdit && existing != null) {
+                        TextButton(
+                            onClick = { onDelete(existing.id) },
+                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Text(stringResource(R.string.action_delete))
+                        }
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.action_cancel))
+                    }
+                    TextButton(
+                        onClick = {
+                            if (isEdit && existing != null) {
+                                onUpdate(existing.id, name.trim(), nickname.trim())
+                            } else {
+                                onAdd(name.trim(), nickname.trim())
+                            }
+                        },
+                        enabled = canSave
+                    ) {
+                        Text(stringResource(R.string.action_save))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatsTabRow(activeTab: StatsTab, onTabSelected: (StatsTab) -> Unit) {
+    val selectedIndex = if (activeTab == StatsTab.Leaders) 0 else 1
+    TabRow(selectedTabIndex = selectedIndex) {
+        Tab(
+            selected = selectedIndex == 0,
+            onClick = { onTabSelected(StatsTab.Leaders) },
+            text = { Text(stringResource(R.string.stats_tab_leaders)) }
+        )
+        Tab(
+            selected = selectedIndex == 1,
+            onClick = { onTabSelected(StatsTab.Opponents) },
+            text = { Text(stringResource(R.string.stats_tab_opponents)) }
+        )
+    }
+}
+
+@Composable
+private fun RightPane(
+    statsUIState: StatsUIState,
+    onTabSelected: (StatsTab) -> Unit,
+    onEditOpponent: (Opponent) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        StatsTabRow(activeTab = statsUIState.activeTab, onTabSelected = onTabSelected)
+        if (statsUIState.activeTab == StatsTab.Leaders) {
+            LeadersAgainstPane(
+                opponents = statsUIState.leadersPlayerAgainst,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            OpponentsPane(
+                opponentStats = statsUIState.opponentStats,
+                onEditOpponent = onEditOpponent,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+@Composable
+private fun LeadersAgainstPane(opponents: List<StatLeaderInfo>, modifier: Modifier = Modifier) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        item {
+            Text(
+                text = stringResource(R.string.stats_leaders_against),
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+        }
+        items(opponents) { LeaderAgainstRow(it) }
+    }
+}
+
+@Composable
+private fun OpponentsPane(
+    opponentStats: List<StatOpponentInfo>,
+    onEditOpponent: (Opponent) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        item {
+            Text(
+                text = stringResource(R.string.stats_opponents),
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+        }
+        items(opponentStats) { OpponentStatRow(it, onEditOpponent = { onEditOpponent(it.opponent) }) }
     }
 }
 
@@ -217,7 +446,6 @@ private fun StatsHeader(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Left: leader card or "All" placeholder
         if (!isAllLeaders) {
             val borderColors = if (leaderInfo.leader.leaderColors.size == 1) {
                 listOf(leaderInfo.leader.leaderColors.first().color, Color.White, leaderInfo.leader.leaderColors.first().color)
@@ -253,7 +481,6 @@ private fun StatsHeader(
             }
         }
 
-        // Right: W/L%, filters
         Column(
             modifier = Modifier.weight(0.6f),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -425,25 +652,7 @@ private fun LocationFilterDropdown(
 }
 
 @Composable
-private fun OpponentsPane(opponents: List<StatLeaderInfo>, modifier: Modifier = Modifier) {
-    LazyColumn(
-        modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        item {
-            Text(
-                text = stringResource(R.string.stats_leaders_against),
-                style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-        }
-        items(opponents) { OpponentRow(it) }
-    }
-}
-
-@Composable
-private fun OpponentRow(opponent: StatLeaderInfo) {
+private fun LeaderAgainstRow(opponent: StatLeaderInfo) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -482,6 +691,31 @@ private fun OpponentRow(opponent: StatLeaderInfo) {
     }
 }
 
+@Composable
+private fun OpponentStatRow(stat: StatOpponentInfo, onEditOpponent: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = "${stat.opponent.nickname} (${stat.opponent.name})", style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = when (val pct = stat.percentage) {
+                    null -> stringResource(R.string.wins_losses_format, stat.wins, stat.losses)
+                    else -> stringResource(R.string.wins_losses_pct_format, stat.wins, stat.losses, pct)
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        IconButton(onClick = onEditOpponent) {
+            Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.cd_edit_opponent))
+        }
+    }
+}
+
 private val previewOpponents = listOf(
     StatLeaderInfo(Leader.RShanks, wins = 2, losses = 0, percentage = 100,
         firstWins = 1, firstLosses = 0, firstPercentage = 100,
@@ -492,6 +726,11 @@ private val previewOpponents = listOf(
     StatLeaderInfo(Leader.PBLuffy, wins = 0, losses = 1, percentage = 0,
         firstWins = 0, firstLosses = 1, firstPercentage = 0,
         secondWins = 0, secondLosses = 0, secondPercentage = null)
+)
+
+private val previewOpponentStats = listOf(
+    StatOpponentInfo(Opponent(1, "scooterd22", "scooter"), wins = 3, losses = 1, percentage = 75),
+    StatOpponentInfo(Opponent(2, "derpinic", "Dom"), wins = 2, losses = 2, percentage = 50)
 )
 
 @Preview(showBackground = true)
@@ -510,6 +749,7 @@ private fun PreviewStatsScreenLeaderSelected() {
                 availableLocations = emptyList(),
                 leadersPlayed = listOf(Leader.PBLuffy, Leader.RShanks, Leader.GZoro),
                 leadersPlayerAgainst = previewOpponents,
+                opponentStats = previewOpponentStats,
                 isLoading = false
             ),
             onLeaderSelected = {},
@@ -517,23 +757,29 @@ private fun PreviewStatsScreenLeaderSelected() {
             onMetaSelected = {},
             onAllMetasSelected = {},
             onLocationSelected = {},
-            onAllLocationsSelected = {}
+            onAllLocationsSelected = {},
+            onTabSelected = {},
+            onAddOpponent = { _, _ -> },
+            onUpdateOpponent = { _, _, _ -> },
+            onDeleteOpponent = {}
         )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun PreviewStatsScreenAllLeaders() {
+private fun PreviewStatsScreenOpponentsTab() {
     LabophaseTheme {
         StatsScreen(
             statsUIState = StatsUIState(
                 leaderSelected = LeaderSelectedOption.All,
-                metaSelected = MetaOption.SpecificMeta(Meta.OP16),
+                metaSelected = MetaOption.All,
                 locationSelected = LocationOption.All,
                 availableLocations = emptyList(),
                 leadersPlayed = listOf(Leader.PBLuffy, Leader.RShanks, Leader.GZoro),
                 leadersPlayerAgainst = previewOpponents,
+                opponentStats = previewOpponentStats,
+                activeTab = StatsTab.Opponents,
                 isLoading = false
             ),
             onLeaderSelected = {},
@@ -541,7 +787,11 @@ private fun PreviewStatsScreenAllLeaders() {
             onMetaSelected = {},
             onAllMetasSelected = {},
             onLocationSelected = {},
-            onAllLocationsSelected = {}
+            onAllLocationsSelected = {},
+            onTabSelected = {},
+            onAddOpponent = { _, _ -> },
+            onUpdateOpponent = { _, _, _ -> },
+            onDeleteOpponent = {}
         )
     }
 }
@@ -562,6 +812,7 @@ private fun PreviewStatsScreenTabletLeaderSelected() {
                 availableLocations = emptyList(),
                 leadersPlayed = listOf(Leader.PBLuffy, Leader.RShanks, Leader.GZoro),
                 leadersPlayerAgainst = previewOpponents,
+                opponentStats = previewOpponentStats,
                 isLoading = false
             ),
             onLeaderSelected = {},
@@ -569,31 +820,11 @@ private fun PreviewStatsScreenTabletLeaderSelected() {
             onMetaSelected = {},
             onAllMetasSelected = {},
             onLocationSelected = {},
-            onAllLocationsSelected = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 840, heightDp = 600)
-@Composable
-private fun PreviewStatsScreenTabletAllLeaders() {
-    LabophaseTheme {
-        StatsScreen(
-            statsUIState = StatsUIState(
-                leaderSelected = LeaderSelectedOption.All,
-                metaSelected = MetaOption.All,
-                locationSelected = LocationOption.All,
-                availableLocations = emptyList(),
-                leadersPlayed = listOf(Leader.PBLuffy, Leader.RShanks, Leader.GZoro),
-                leadersPlayerAgainst = previewOpponents,
-                isLoading = false
-            ),
-            onLeaderSelected = {},
-            onAllLeadersSelected = {},
-            onMetaSelected = {},
-            onAllMetasSelected = {},
-            onLocationSelected = {},
-            onAllLocationsSelected = {}
+            onAllLocationsSelected = {},
+            onTabSelected = {},
+            onAddOpponent = { _, _ -> },
+            onUpdateOpponent = { _, _, _ -> },
+            onDeleteOpponent = {}
         )
     }
 }
@@ -617,7 +848,11 @@ private fun PreviewStatsScreenLoading() {
             onMetaSelected = {},
             onAllMetasSelected = {},
             onLocationSelected = {},
-            onAllLocationsSelected = {}
+            onAllLocationsSelected = {},
+            onTabSelected = {},
+            onAddOpponent = { _, _ -> },
+            onUpdateOpponent = { _, _, _ -> },
+            onDeleteOpponent = {}
         )
     }
 }

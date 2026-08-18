@@ -3,6 +3,9 @@ package commanderpepper.labophase.screens.stats.models
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Location
 import commanderpepper.labophase.models.Meta
+import commanderpepper.labophase.models.Opponent
+
+enum class StatsTab { Leaders, Opponents }
 
 data class StatsUIState(
     val leaderSelected: LeaderSelectedOption,
@@ -11,6 +14,8 @@ data class StatsUIState(
     val availableLocations: List<Location>,
     val leadersPlayed: List<Leader>,
     val leadersPlayerAgainst: List<StatLeaderInfo>,
+    val opponentStats: List<StatOpponentInfo> = emptyList(),
+    val activeTab: StatsTab = StatsTab.Leaders,
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
@@ -41,4 +46,11 @@ data class StatLeaderInfo(
     val secondWins: Int = 0,
     val secondLosses: Int = 0,
     val secondPercentage: Int? = null
+)
+
+data class StatOpponentInfo(
+    val opponent: Opponent,
+    val wins: Int,
+    val losses: Int,
+    val percentage: Int?
 )

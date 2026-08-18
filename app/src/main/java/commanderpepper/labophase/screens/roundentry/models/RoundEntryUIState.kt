@@ -4,6 +4,7 @@ import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Location
 import commanderpepper.labophase.models.LOCATIONS_LIST
 import commanderpepper.labophase.models.Meta
+import commanderpepper.labophase.models.Opponent
 import java.time.LocalDate
 
 data class RoundEntryUIState(
@@ -12,6 +13,7 @@ data class RoundEntryUIState(
     val playerLeaderList: List<Leader> = emptyList(),
     val roundLeaderList: List<Leader> = emptyList(),
     val locationList: List<Location> = LOCATIONS_LIST,
+    val opponentList: List<Opponent> = emptyList(),
     val punkRecordEntry: String = "",
     val title: String? = null,
     val locationId: Int? = null,

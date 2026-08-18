@@ -5,9 +5,11 @@
     <string name="action_cancel">Cancel</string>
     <string name="action_confirm">Confirm</string>
     <string name="action_delete">Delete</string>
+    <string name="action_save">Save</string>
 
     <!-- Content descriptions -->
     <string name="cd_back">Back</string>
+    <string name="cd_edit_opponent">Edit opponent</string>
     <string name="cd_collapse">Collapse</string>
     <string name="cd_expand">Expand</string>
     <string name="cd_copy">Copy</string>
@@ -27,6 +29,7 @@
     <string name="wins_losses_format">W: %1$d - L: %2$d</string>
     <string name="wins_losses_pct_format">W: %1$d - L: %2$d (%3$d%%)</string>
     <string name="label_title">Title</string>
+    <string name="label_opponent">Opponent</string>
     <string name="label_date">Date</string>
     <string name="label_meta">Meta</string>
     <string name="label_location">Location</string>
@@ -44,6 +47,13 @@
     <string name="stats_all_locations">All Locations</string>
     <string name="stats_label_leader">Leader</string>
     <string name="stats_leaders_against">Leaders Played Against</string>
+    <string name="stats_tab_leaders">Leaders</string>
+    <string name="stats_tab_opponents">Opponents</string>
+    <string name="stats_opponents">Opponents</string>
+    <string name="stats_add_opponent">Add Opponent</string>
+    <string name="stats_edit_opponent">Edit Opponent</string>
+    <string name="label_handle">Handle</string>
+    <string name="label_nickname">Nickname</string>
     <string name="stats_going_first">1st: W: %1$d - L: %2$d (%3$d%%)</string>
     <string name="stats_going_second">2nd: W: %1$d - L: %2$d (%3$d%%)</string>
     <string name="stats_going_first_no_pct">1st: W: %1$d - L: %2$d</string>

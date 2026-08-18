@@ -4,7 +4,9 @@ import app.cash.turbine.test
 import commanderpepper.labophase.data.entity.EntryEntity
 import commanderpepper.labophase.data.EntryRepository
 import commanderpepper.labophase.data.EntryWithRounds
+import commanderpepper.labophase.data.OpponentRepository
 import commanderpepper.labophase.data.entity.RoundEntity
+import commanderpepper.labophase.models.Opponent
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.logic.PunkRecordCreatorImpl
@@ -17,6 +19,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -35,14 +38,17 @@ class EntrySelectionViewModelImplTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private val entryRepository: EntryRepository = mockk()
+    private val opponentRepository: OpponentRepository = mockk()
     private val converter = EntryToEntrySelectionUIConverter(PunkRecordCreatorImpl())
 
     private val entriesFlow = MutableStateFlow<List<EntryWithRounds>>(emptyList())
+    private val opponentsFlow = MutableStateFlow<List<Opponent>>(emptyList())
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         every { entryRepository.getAllEntries() } returns entriesFlow
+        every { opponentRepository.getOpponents() } returns opponentsFlow
     }
 
     @After
@@ -63,11 +69,11 @@ class EntrySelectionViewModelImplTest {
         order: TurnOrder = TurnOrder.First
     ) = RoundEntity(entryId = entryId, roundNumber = 1, leaderCardId = leaderCardId, roundResult = result, turnOrder = order)
 
-    private fun createViewModel() = EntrySelectionViewModelImpl(entryRepository, converter)
+    private fun createViewModel() = EntrySelectionViewModelImpl(entryRepository, converter, opponentRepository)
 
     @Test
     fun `initial state is loading`() = runTest {
-        // SharedFlow has no initial value, so the stateIn loading state is preserved and visible
+        // SharedFlow has no initial value — combine won't emit until entries emits
         every { entryRepository.getAllEntries() } returns MutableSharedFlow()
         val vm = createViewModel()
 
@@ -182,7 +188,6 @@ class EntrySelectionViewModelImplTest {
         val vm = createViewModel()
 
         vm.entrySelectionUiState.test {
-            // loading state conflated by error state before collector processes it
             val state = awaitItem()
             assertNotNull(state.errorMessage)
             assertTrue(state.entries.isEmpty())
