@@ -2,18 +2,26 @@ package commanderpepper.labophase.screens.stats
 
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextClearance
+import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Meta
+import commanderpepper.labophase.models.Opponent
 import commanderpepper.labophase.screens.stats.models.LeaderSelectedOption
 import commanderpepper.labophase.screens.stats.models.LocationOption
 import commanderpepper.labophase.screens.stats.models.MetaOption
 import commanderpepper.labophase.screens.stats.models.StatLeaderInfo
+import commanderpepper.labophase.screens.stats.models.StatOpponentInfo
+import commanderpepper.labophase.screens.stats.models.StatsTab
 import commanderpepper.labophase.screens.stats.models.StatsUIState
 import commanderpepper.labophase.ui.theme.LabophaseTheme
 import org.junit.Assert.assertEquals
@@ -254,6 +262,127 @@ class StatsScreenTest {
         composeTestRule.onNodeWithText("All Metas").performClick()
         composeTestRule.onAllNodesWithText(Meta.OP16.name)[0].performClick()
         assertEquals(Meta.OP16, selectedMeta)
+    }
+
+    // endregion
+
+    // region — Opponent dialog validation
+
+    private fun opponentsTabState(opponentStats: List<StatOpponentInfo> = emptyList()) = StatsUIState(
+        leaderSelected = LeaderSelectedOption.All,
+        metaSelected = MetaOption.All,
+        locationSelected = LocationOption.All,
+        availableLocations = emptyList(),
+        leadersPlayed = emptyList(),
+        leadersPlayerAgainst = emptyList(),
+        opponentStats = opponentStats,
+        activeTab = StatsTab.Opponents,
+        isLoading = false
+    )
+
+    @Test
+    fun addOpponentDialog_saveButton_disabledInitially() {
+        setContent(opponentsTabState())
+        composeTestRule.onNodeWithContentDescription("Add Opponent").performClick()
+        composeTestRule.onNodeWithText("Save").assertIsNotEnabled()
+    }
+
+    @Test
+    fun addOpponentDialog_saveButton_disabledWhenHandleIsSpacesOnly() {
+        setContent(opponentsTabState())
+        composeTestRule.onNodeWithContentDescription("Add Opponent").performClick()
+        composeTestRule.onNodeWithText("Handle").performTextInput("   ")
+        composeTestRule.onNodeWithText("Save").assertIsNotEnabled()
+    }
+
+    @Test
+    fun addOpponentDialog_saveButton_disabledWhenNicknameIsSpacesOnly() {
+        setContent(opponentsTabState())
+        composeTestRule.onNodeWithContentDescription("Add Opponent").performClick()
+        composeTestRule.onNodeWithText("Handle").performTextInput("playerA")
+        composeTestRule.onNodeWithText("Nickname").performTextInput("   ")
+        composeTestRule.onNodeWithText("Save").assertIsNotEnabled()
+    }
+
+    @Test
+    fun addOpponentDialog_saveButton_disabledWhenOnlyHandleFilled() {
+        setContent(opponentsTabState())
+        composeTestRule.onNodeWithContentDescription("Add Opponent").performClick()
+        composeTestRule.onNodeWithText("Handle").performTextInput("playerA")
+        composeTestRule.onNodeWithText("Save").assertIsNotEnabled()
+    }
+
+    @Test
+    fun addOpponentDialog_saveButton_disabledWhenHandleHasInternalSpace() {
+        setContent(opponentsTabState())
+        composeTestRule.onNodeWithContentDescription("Add Opponent").performClick()
+        composeTestRule.onNodeWithText("Handle").performTextInput("Moon Cat")
+        composeTestRule.onNodeWithText("Nickname").performTextInput("MoonCat")
+        composeTestRule.onNodeWithText("Save").assertIsNotEnabled()
+    }
+
+    @Test
+    fun addOpponentDialog_saveButton_disabledWhenNicknameHasInternalSpace() {
+        setContent(opponentsTabState())
+        composeTestRule.onNodeWithContentDescription("Add Opponent").performClick()
+        composeTestRule.onNodeWithText("Handle").performTextInput("mooncat")
+        composeTestRule.onNodeWithText("Nickname").performTextInput("Moon Cat")
+        composeTestRule.onNodeWithText("Save").assertIsNotEnabled()
+    }
+
+    @Test
+    fun addOpponentDialog_saveButton_enabledWhenBothFieldsHaveContent() {
+        setContent(opponentsTabState())
+        composeTestRule.onNodeWithContentDescription("Add Opponent").performClick()
+        composeTestRule.onNodeWithText("Handle").performTextInput("playerA")
+        composeTestRule.onNodeWithText("Nickname").performTextInput("NickA")
+        composeTestRule.onNodeWithText("Save").assertIsEnabled()
+    }
+
+    @Test
+    fun editOpponentDialog_saveButton_enabledWithExistingValues() {
+        val stat = StatOpponentInfo(Opponent(1, "playerA", "NickA"), wins = 1, losses = 0, percentage = 100)
+        setContent(opponentsTabState(opponentStats = listOf(stat)))
+        composeTestRule.onNodeWithContentDescription("Edit opponent").performClick()
+        composeTestRule.onNodeWithText("Save").assertIsEnabled()
+    }
+
+    @Test
+    fun editOpponentDialog_saveButton_disabledWhenNicknameCleared() {
+        val stat = StatOpponentInfo(Opponent(1, "playerA", "NickA"), wins = 1, losses = 0, percentage = 100)
+        setContent(opponentsTabState(opponentStats = listOf(stat)))
+        composeTestRule.onNodeWithContentDescription("Edit opponent").performClick()
+        composeTestRule.onNodeWithText("NickA").performTextClearance()
+        composeTestRule.onNodeWithText("Save").assertIsNotEnabled()
+    }
+
+    @Test
+    fun editOpponentDialog_saveButton_disabledWhenNicknameIsSpacesOnly() {
+        val stat = StatOpponentInfo(Opponent(1, "playerA", "NickA"), wins = 1, losses = 0, percentage = 100)
+        setContent(opponentsTabState(opponentStats = listOf(stat)))
+        composeTestRule.onNodeWithContentDescription("Edit opponent").performClick()
+        composeTestRule.onNodeWithText("NickA").performTextClearance()
+        composeTestRule.onNodeWithText("Nickname").performTextInput("   ")
+        composeTestRule.onNodeWithText("Save").assertIsNotEnabled()
+    }
+
+    @Test
+    fun editOpponentDialog_saveButton_disabledWhenNicknameHasInternalSpace() {
+        val stat = StatOpponentInfo(Opponent(1, "playerA", "NickA"), wins = 1, losses = 0, percentage = 100)
+        setContent(opponentsTabState(opponentStats = listOf(stat)))
+        composeTestRule.onNodeWithContentDescription("Edit opponent").performClick()
+        composeTestRule.onNodeWithText("NickA").performTextClearance()
+        composeTestRule.onNodeWithText("Nickname").performTextInput("Moon Cat")
+        composeTestRule.onNodeWithText("Save").assertIsNotEnabled()
+    }
+
+    @Test
+    fun editOpponentDialog_handleField_isNotEditable() {
+        val stat = StatOpponentInfo(Opponent(1, "playerA", "NickA"), wins = 1, losses = 0, percentage = 100)
+        setContent(opponentsTabState(opponentStats = listOf(stat)))
+        composeTestRule.onNodeWithContentDescription("Edit opponent").performClick()
+        composeTestRule.onNodeWithText("playerA").assertIsDisplayed()
+        composeTestRule.onNodeWithText("playerA").assertIsNotEnabled()
     }
 
     // endregion

@@ -7,6 +7,7 @@ import commanderpepper.labophase.data.entity.RoundEntity
 import commanderpepper.labophase.data.SettingsRepository
 import commanderpepper.labophase.models.LEADERS_LIST
 import commanderpepper.labophase.models.Leader
+import commanderpepper.labophase.models.Meta
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
 import io.mockk.coEvery
@@ -40,8 +41,8 @@ class LeaderOrderDeciderImplTest {
         Dispatchers.resetMain()
     }
 
-    private fun makeEntry(leaderCardId: String, rounds: List<RoundEntity> = emptyList()) =
-        EntryWithRounds(entry = EntryEntity(leaderCardId = leaderCardId), rounds = rounds)
+    private fun makeEntry(leaderCardId: String, metaId: Int? = null, rounds: List<RoundEntity> = emptyList()) =
+        EntryWithRounds(entry = EntryEntity(leaderCardId = leaderCardId, metaId = metaId), rounds = rounds)
 
     private fun makeRound(leaderCardId: String) =
         RoundEntity(entryId = 0, roundNumber = 1, leaderCardId = leaderCardId, roundResult = RoundResult.Win, turnOrder = TurnOrder.First)
@@ -172,4 +173,73 @@ class LeaderOrderDeciderImplTest {
 
         assertEquals(Leader.RShanks, result.first())
     }
+
+    // region — Meta filtering
+
+    @Test
+    fun `getPlayerLeaderSelect with metaId only counts entries in that meta`() = runTest {
+        coEvery { settingsRepository.isShowingAllLeaders() } returns true
+        coEvery { entryRepository.getEntries() } returns listOf(
+            makeEntry(leaderCardId = Leader.UGLuffy.cardId, metaId = Meta.OP16.id),
+            makeEntry(leaderCardId = Leader.UGLuffy.cardId, metaId = Meta.OP16.id),
+            makeEntry(leaderCardId = Leader.RShanks.cardId, metaId = Meta.OP16WithST.id)
+        )
+
+        val result = decider.getPlayerLeaderSelect(metaId = Meta.OP16.id)
+
+        assertEquals(Leader.UGLuffy, result.first())
+    }
+
+    @Test
+    fun `getPlayerLeaderSelect meta filter excludes entries from other metas`() = runTest {
+        coEvery { settingsRepository.isShowingAllLeaders() } returns true
+        coEvery { entryRepository.getEntries() } returns listOf(
+            makeEntry(leaderCardId = Leader.RShanks.cardId, metaId = Meta.OP16WithST.id),
+            makeEntry(leaderCardId = Leader.RShanks.cardId, metaId = Meta.OP16WithST.id),
+            makeEntry(leaderCardId = Leader.UGLuffy.cardId, metaId = Meta.OP16.id)
+        )
+
+        // RShanks has 2 entries overall, but 0 in OP16 — UGLuffy has 1 in OP16
+        val result = decider.getPlayerLeaderSelect(metaId = Meta.OP16.id)
+
+        assertEquals(Leader.UGLuffy, result.first())
+    }
+
+    @Test
+    fun `getRoundLeaderSelect with metaId only counts rounds in that meta`() = runTest {
+        coEvery { settingsRepository.isShowingAllLeaders() } returns true
+        coEvery { entryRepository.getEntries() } returns listOf(
+            makeEntry(
+                leaderCardId = Leader.UGLuffy.cardId,
+                metaId = Meta.OP16.id,
+                rounds = listOf(makeRound(Leader.RShanks.cardId), makeRound(Leader.RShanks.cardId))
+            ),
+            makeEntry(
+                leaderCardId = Leader.UGLuffy.cardId,
+                metaId = Meta.OP16WithST.id,
+                rounds = listOf(makeRound(Leader.PBLuffy.cardId), makeRound(Leader.PBLuffy.cardId), makeRound(Leader.PBLuffy.cardId))
+            )
+        )
+
+        // PBLuffy has 3 rounds overall but they're all in OP16WithST — in OP16, RShanks has 2
+        val result = decider.getRoundLeaderSelect(metaId = Meta.OP16.id)
+
+        assertEquals(Leader.RShanks, result.first())
+    }
+
+    @Test
+    fun `getPlayerLeaderSelect with null metaId includes all entries`() = runTest {
+        coEvery { settingsRepository.isShowingAllLeaders() } returns true
+        coEvery { entryRepository.getEntries() } returns listOf(
+            makeEntry(leaderCardId = Leader.UGLuffy.cardId, metaId = Meta.OP16.id),
+            makeEntry(leaderCardId = Leader.RShanks.cardId, metaId = Meta.OP16WithST.id),
+            makeEntry(leaderCardId = Leader.RShanks.cardId, metaId = Meta.OP16WithST.id)
+        )
+
+        val result = decider.getPlayerLeaderSelect(metaId = null)
+
+        assertEquals(Leader.RShanks, result.first())
+    }
+
+    // endregion
 }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,7 +54,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.window.core.layout.WindowWidthSizeClass
 import commanderpepper.labophase.R
 import commanderpepper.labophase.models.Leader
+import commanderpepper.labophase.models.Meta
 import commanderpepper.labophase.models.locationById
+import commanderpepper.labophase.models.metaById
 import commanderpepper.labophase.screens.entries.models.EntrySelectionUI
 import commanderpepper.labophase.screens.entries.models.RoundEntrySelectionUI
 import commanderpepper.labophase.screens.roundentry.CopyableResult
@@ -188,6 +192,12 @@ private fun EntryListContent(
                 Text(errorMessage)
             }
         } else {
+            val groupedEntries = remember(entries) {
+                entries
+                    .groupBy { it.metaId }
+                    .entries
+                    .sortedWith(compareBy({ metaGroupSortOrder(it.key) }, { -(it.key ?: 0) }))
+            }
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 360.dp),
                 modifier = Modifier.padding(innerPadding),
@@ -195,8 +205,20 @@ private fun EntryListContent(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(items = entries, key = { it.entryId }) { entry ->
-                    EntryRow(entrySelectionUI = entry, onEntrySelect = onEntrySelect, onEntryDelete = onEntryDelete)
+                groupedEntries.forEach { (metaId, groupEntries) ->
+                    item(
+                        key = "header_${metaId ?: "none"}",
+                        span = { GridItemSpan(maxLineSpan) }
+                    ) {
+                        Text(
+                            text = metaId?.let { metaById(it)?.name } ?: "No Meta",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                        )
+                    }
+                    items(groupEntries, key = { it.entryId }) { entry ->
+                        EntryRow(entrySelectionUI = entry, onEntrySelect = onEntrySelect, onEntryDelete = onEntryDelete)
+                    }
                 }
             }
         }
@@ -285,6 +307,13 @@ fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit, o
             }
         }
     }
+}
+
+// 0 = regular metas (highest id first), 1 = Extra Grand Battle, 2 = no meta
+private fun metaGroupSortOrder(metaId: Int?): Int = when {
+    metaId == null -> 2
+    metaId == Meta.ExtraGrandBattle.id -> 1
+    else -> 0
 }
 
 private val previewRounds = listOf(

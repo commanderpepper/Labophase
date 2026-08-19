@@ -88,8 +88,8 @@ class RoundEntryViewModelImpl(
                         .eachCount()
                     val sortedLocations = LOCATIONS_LIST.sortedByDescending { locationCountById[it.id] ?: 0 }
 
-                    val playerList = leaderOrderDecider.getPlayerLeaderSelect()
-                    val roundList = leaderOrderDecider.getRoundLeaderSelect()
+                    val playerList = leaderOrderDecider.getPlayerLeaderSelect(loadedMetaId)
+                    val roundList = leaderOrderDecider.getRoundLeaderSelect(loadedMetaId)
                     _uiState.update {
                         it.copy(
                             leaderSelected = loadedLeader,
@@ -201,6 +201,13 @@ class RoundEntryViewModelImpl(
 
     override fun setMetaId(metaId: Int) {
         _uiState.update { it.copy(metaId = metaId) }
+        viewModelScope.launch {
+            withContext(ioDispatcher) {
+                val playerList = leaderOrderDecider.getPlayerLeaderSelect(metaId)
+                val roundList = leaderOrderDecider.getRoundLeaderSelect(metaId)
+                _uiState.update { it.copy(playerLeaderList = playerList, roundLeaderList = roundList) }
+            }
+        }
     }
 
     override fun setDate(date: String) {

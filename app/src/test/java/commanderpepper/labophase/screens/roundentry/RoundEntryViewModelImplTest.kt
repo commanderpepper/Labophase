@@ -12,6 +12,7 @@ import commanderpepper.labophase.logic.LeaderOrderDecider
 import commanderpepper.labophase.logic.PunkRecordCreatorImpl
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Location
+import commanderpepper.labophase.models.Meta
 import commanderpepper.labophase.models.LOCATIONS_LIST
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -45,8 +46,8 @@ class RoundEntryViewModelImplTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        coEvery { leaderOrderDecider.getPlayerLeaderSelect() } returns emptyList()
-        coEvery { leaderOrderDecider.getRoundLeaderSelect() } returns emptyList()
+        coEvery { leaderOrderDecider.getPlayerLeaderSelect(any()) } returns emptyList()
+        coEvery { leaderOrderDecider.getRoundLeaderSelect(any()) } returns emptyList()
         coEvery { entryRepository.getEntries() } returns emptyList()
         every { opponentRepository.getOpponents() } returns flowOf(emptyList())
     }
@@ -329,7 +330,7 @@ class RoundEntryViewModelImplTest {
 
     @Test
     fun `error message is set and isLoading is false when repository throws`() = runTest {
-        coEvery { leaderOrderDecider.getPlayerLeaderSelect() } throws RuntimeException("db error")
+        coEvery { leaderOrderDecider.getPlayerLeaderSelect(any()) } throws RuntimeException("db error")
         val vm = createViewModel()
         advanceUntilIdle()
         assertFalse(vm.uiState.value.isLoading)
@@ -479,5 +480,33 @@ class RoundEntryViewModelImplTest {
         advanceUntilIdle()
 
         assertEquals(6, vm.uiState.value.rounds.first().opponentId)
+    }
+
+    @Test
+    fun `setMetaId refreshes player and round leader lists for new meta`() = runTest {
+        val op16PlayerList = listOf(Leader.UGLuffy, Leader.RShanks)
+        val op16RoundList = listOf(Leader.RShanks, Leader.UGLuffy)
+        coEvery { leaderOrderDecider.getPlayerLeaderSelect(Meta.OP16.id) } returns op16PlayerList
+        coEvery { leaderOrderDecider.getRoundLeaderSelect(Meta.OP16.id) } returns op16RoundList
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.setMetaId(Meta.OP16.id)
+        advanceUntilIdle()
+
+        assertEquals(op16PlayerList, vm.uiState.value.playerLeaderList)
+        assertEquals(op16RoundList, vm.uiState.value.roundLeaderList)
+    }
+
+    @Test
+    fun `setMetaId updates stored metaId`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.setMetaId(Meta.OP16.id)
+        advanceUntilIdle()
+
+        assertEquals(Meta.OP16.id, vm.uiState.value.metaId)
     }
 }

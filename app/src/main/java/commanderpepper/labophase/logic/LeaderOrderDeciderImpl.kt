@@ -6,18 +6,20 @@ import commanderpepper.labophase.models.LEADERS_LIST
 import commanderpepper.labophase.models.Leader
 
 class LeaderOrderDeciderImpl(private val entryRepository: EntryRepository, private val settingsRepository: SettingsRepository) : LeaderOrderDecider {
-    override suspend fun getPlayerLeaderSelect(): List<Leader> {
+    override suspend fun getPlayerLeaderSelect(metaId: Int?): List<Leader> {
         val leaders = filteredLeaders()
         val countByCardId = entryRepository.getEntries()
+            .filter { metaId == null || it.entry.metaId == metaId }
             .map { it.entry.leaderCardId }
             .groupingBy { it }
             .eachCount()
         return sortedByCount(leaders, countByCardId)
     }
 
-    override suspend fun getRoundLeaderSelect(): List<Leader> {
+    override suspend fun getRoundLeaderSelect(metaId: Int?): List<Leader> {
         val leaders = filteredLeaders()
         val countByCardId = entryRepository.getEntries()
+            .filter { metaId == null || it.entry.metaId == metaId }
             .flatMap { it.rounds }
             .map { it.leaderCardId }
             .groupingBy { it }

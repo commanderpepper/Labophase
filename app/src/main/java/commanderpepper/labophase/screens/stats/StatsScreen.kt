@@ -260,7 +260,11 @@ private fun OpponentDialog(
     val existing = (state as? OpponentDialogState.Edit)?.opponent
     var name by remember(state) { mutableStateOf(existing?.name ?: "") }
     var nickname by remember(state) { mutableStateOf(existing?.nickname ?: "") }
-    val canSave = name.isNotBlank() && nickname.isNotBlank()
+    val canSave = if (isEdit) {
+        nickname.isNotBlank() && !nickname.contains(' ')
+    } else {
+        name.isNotBlank() && !name.contains(' ') && nickname.isNotBlank() && !nickname.contains(' ')
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -280,6 +284,7 @@ private fun OpponentDialog(
                     onValueChange = { name = it },
                     label = { Text(stringResource(R.string.label_handle)) },
                     singleLine = true,
+                    enabled = !isEdit,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
