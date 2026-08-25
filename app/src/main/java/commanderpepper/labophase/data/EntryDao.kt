@@ -10,34 +10,48 @@ import commanderpepper.labophase.data.entity.RoundEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface EntryDao {
+abstract class EntryDao {
     @Insert
-    suspend fun insertEntry(entry: EntryEntity): Long
+    abstract suspend fun insertEntry(entry: EntryEntity): Long
 
     @Update
-    suspend fun updateEntry(entry: EntryEntity)
+    abstract suspend fun updateEntry(entry: EntryEntity)
 
     @Insert
-    suspend fun insertRounds(rounds: List<RoundEntity>)
+    abstract suspend fun insertRounds(rounds: List<RoundEntity>)
 
     @Query("DELETE FROM rounds WHERE entryId = :entryId")
-    suspend fun deleteRoundsByEntryId(entryId: Int)
+    abstract suspend fun deleteRoundsByEntryId(entryId: Int)
 
     @Transaction
     @Query("SELECT * FROM entries ORDER BY id DESC")
-    fun getAllEntries(): Flow<List<EntryWithRounds>>
+    abstract fun getAllEntries(): Flow<List<EntryWithRounds>>
 
     @Transaction
     @Query("SELECT * FROM entries ORDER BY id DESC")
-    suspend fun getEntries(): List<EntryWithRounds>
+    abstract suspend fun getEntries(): List<EntryWithRounds>
 
     @Transaction
     @Query("SELECT * FROM entries WHERE id = :id")
-    suspend fun getEntryById(id: Int): EntryWithRounds?
+    abstract suspend fun getEntryById(id: Int): EntryWithRounds?
 
     @Query("DELETE FROM entries WHERE id = :entryId")
-    suspend fun deleteEntry(entryId: Int)
+    abstract suspend fun deleteEntry(entryId: Int)
 
     @Query("DELETE FROM entries")
-    suspend fun deleteAllEntries()
+    abstract suspend fun deleteAllEntries()
+
+    @Transaction
+    open suspend fun insertEntryWithRounds(entry: EntryEntity, rounds: List<RoundEntity>): Int {
+        val entryId = insertEntry(entry).toInt()
+        insertRounds(rounds.map { it.copy(entryId = entryId) })
+        return entryId
+    }
+
+    @Transaction
+    open suspend fun replaceRoundsForEntry(entryId: Int, entry: EntryEntity, rounds: List<RoundEntity>) {
+        updateEntry(entry)
+        deleteRoundsByEntryId(entryId)
+        insertRounds(rounds)
+    }
 }

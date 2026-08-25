@@ -7,9 +7,12 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class SettingsViewModelImpl(private val settingsRepository: SettingsRepository) : SettingsViewModel,
     ViewModel() {
+
+    private val TAG = "SettingsViewModelImpl"
     override val showingAllLeaders: StateFlow<Boolean> = settingsRepository.showingAllLeaders()
         .stateIn(
             scope = viewModelScope,
@@ -26,19 +29,31 @@ class SettingsViewModelImpl(private val settingsRepository: SettingsRepository) 
 
     override fun toggleLeaders() {
         viewModelScope.launch {
-            settingsRepository.toggleLeadersShown()
+            try {
+                settingsRepository.toggleLeadersShown()
+            } catch (e: Exception) {
+                Timber.tag(TAG).e(e, "Failed to toggle leaders setting")
+            }
         }
     }
 
     override fun toggleDieRoll() {
         viewModelScope.launch {
-            settingsRepository.toggleDieRoll()
+            try {
+                settingsRepository.toggleDieRoll()
+            } catch (e: Exception) {
+                Timber.tag(TAG).e(e, "Failed to toggle die roll setting")
+            }
         }
     }
 
     override fun deleteHistory() {
         viewModelScope.launch {
-            settingsRepository.clearHistory()
+            try {
+                settingsRepository.clearHistory()
+            } catch (e: Exception) {
+                Timber.tag(TAG).e(e, "Failed to clear history")
+            }
         }
     }
 }

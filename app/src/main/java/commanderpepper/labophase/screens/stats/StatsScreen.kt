@@ -383,7 +383,7 @@ private fun LeadersAgainstPane(opponents: List<StatLeaderInfo>, modifier: Modifi
                 modifier = Modifier.padding(bottom = 4.dp)
             )
         }
-        items(opponents) { LeaderAgainstRow(it) }
+        items(opponents, key = { it.leader.cardId }) { LeaderAgainstRow(it) }
     }
 }
 
@@ -405,7 +405,7 @@ private fun OpponentsPane(
                 modifier = Modifier.padding(bottom = 4.dp)
             )
         }
-        items(opponentStats) { OpponentStatRow(it, onEditOpponent = { onEditOpponent(it.opponent) }) }
+        items(opponentStats, key = { it.opponent.id }) { OpponentStatRow(it, onEditOpponent = { onEditOpponent(it.opponent) }) }
     }
 }
 

@@ -30,12 +30,15 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 class StatsViewModelImpl(
     private val entryRepository: EntryRepository,
     private val opponentRepository: OpponentRepository,
     private val computationDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : StatsViewModel, ViewModel() {
+
+    private val TAG = "StatsViewModelImpl"
 
     private val _selectedLeader = MutableStateFlow<Leader?>(null)
     private val _selectedMeta = MutableStateFlow<Meta?>(null)
@@ -199,14 +202,35 @@ class StatsViewModelImpl(
     override fun allLocationSelected() { _selectedLocation.value = null }
     override fun tabSelected(tab: StatsTab) { _statsUIState.update { it.copy(activeTab = tab) } }
     override fun addOpponent(name: String, nickname: String) {
-        viewModelScope.launch { opponentRepository.addOpponent(name, nickname) }
+        viewModelScope.launch {
+            try {
+                opponentRepository.addOpponent(name, nickname)
+            } catch (e: Exception) {
+                Timber.tag(TAG).e(e, "Failed to add opponent")
+                _statsUIState.update { it.copy(errorMessage = "Failed to add opponent") }
+            }
+        }
     }
 
     override fun updateOpponent(id: Int, name: String, nickname: String) {
-        viewModelScope.launch { opponentRepository.updateOpponent(id, name, nickname) }
+        viewModelScope.launch {
+            try {
+                opponentRepository.updateOpponent(id, name, nickname)
+            } catch (e: Exception) {
+                Timber.tag(TAG).e(e, "Failed to update opponent $id")
+                _statsUIState.update { it.copy(errorMessage = "Failed to update opponent") }
+            }
+        }
     }
 
     override fun deleteOpponent(id: Int) {
-        viewModelScope.launch { opponentRepository.deleteOpponent(id) }
+        viewModelScope.launch {
+            try {
+                opponentRepository.deleteOpponent(id)
+            } catch (e: Exception) {
+                Timber.tag(TAG).e(e, "Failed to delete opponent $id")
+                _statsUIState.update { it.copy(errorMessage = "Failed to delete opponent") }
+            }
+        }
     }
 }

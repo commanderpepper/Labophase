@@ -9,7 +9,9 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.State
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -313,12 +315,12 @@ fun RoundEntryScreen(
     }
 }
 
-val LocalBorderAngle = compositionLocalOf { 0f }
+val LocalBorderAngle = compositionLocalOf<State<Float>> { mutableStateOf(0f) }
 
 @Composable
 fun WithSharedBorderAngle(content: @Composable () -> Unit) {
     val infiniteTransition = rememberInfiniteTransition(label = "border")
-    val angle by infiniteTransition.animateFloat(
+    val angle = infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
@@ -337,11 +339,11 @@ fun Modifier.animatedBorder(
     shape: Shape = CardDefaults.elevatedShape,
     borderWidth: Dp = 2.dp
 ): Modifier {
-    val angle = LocalBorderAngle.current
+    val angleState = LocalBorderAngle.current
     return this
         .clip(shape)
         .drawWithContent {
-            rotate(degrees = angle) {
+            rotate(degrees = angleState.value) {
                 drawCircle(
                     brush = Brush.sweepGradient(colors),
                     radius = size.maxDimension

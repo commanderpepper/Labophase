@@ -12,12 +12,15 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 class EntrySelectionViewModelImpl(
     private val eventRepository: EntryRepository,
     private val entrySelectionUIConverter: EntryToEntrySelectionUIConverter,
     private val opponentRepository: OpponentRepository
 ) : EntrySelectionViewModel, ViewModel() {
+
+    private val TAG = "EntrySelectionViewModelImpl"
 
     override val entrySelectionUiState: StateFlow<EntrySelectionUIState> =
         combine(
@@ -37,6 +40,12 @@ class EntrySelectionViewModelImpl(
         )
 
     override fun deleteEntry(entryId: Int) {
-        viewModelScope.launch { eventRepository.deleteEntry(entryId) }
+        viewModelScope.launch {
+            try {
+                eventRepository.deleteEntry(entryId)
+            } catch (e: Exception) {
+                Timber.tag(TAG).e(e, "Failed to delete entry $entryId")
+            }
+        }
     }
 }

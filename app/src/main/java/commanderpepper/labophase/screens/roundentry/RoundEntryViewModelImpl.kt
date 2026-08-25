@@ -17,6 +17,7 @@ import commanderpepper.labophase.models.locationById
 import java.time.LocalDate
 import commanderpepper.labophase.screens.roundentry.models.RoundEntryUIState
 import commanderpepper.labophase.screens.roundentry.models.RoundUI
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 class RoundEntryViewModelImpl(
     private val leaderOrderDecider: LeaderOrderDecider,
@@ -37,7 +39,9 @@ class RoundEntryViewModelImpl(
 
     private var roundId: Int = 0
     private var roundsMap: Map<Int, Round> = emptyMap()
-    @Volatile private var isSaving = false
+    private val isSaving = AtomicBoolean(false)
+
+    private val TAG = "RoundEntryViewModelImpl"
     private var savedEntryId: Int? = null
 
     private val _uiState = MutableStateFlow(RoundEntryUIState(leaderSelected = Leader.BLuffyOP17, isLoading = true))
@@ -119,15 +123,20 @@ class RoundEntryViewModelImpl(
     }
 
     override fun transformEntry() {
-        if (isSaving) return
-        isSaving = true
+        if (!isSaving.compareAndSet(false, true)) return
         val leader = _uiState.value.leaderSelected
         val rounds = roundsMap.values.toList()
         val prLocation = locationById(_uiState.value.locationId)?.punkRecordAbbreviation ?: "other"
         _uiState.update { it.copy(punkRecordEntry = punkRecordCreator.createForRoundEntry(prLocation, leader, rounds, it.opponentList)) }
         viewModelScope.launch {
-            saveEntry(leader, rounds)
-            isSaving = false
+            try {
+                saveEntry(leader, rounds)
+            } catch (e: Exception) {
+                Timber.tag(TAG).e(e, "Failed to save entry")
+                _uiState.update { it.copy(errorMessage = "Failed to save entry") }
+            } finally {
+                isSaving.set(false)
+            }
         }
     }
 
@@ -203,9 +212,13 @@ class RoundEntryViewModelImpl(
         _uiState.update { it.copy(metaId = metaId) }
         viewModelScope.launch {
             withContext(ioDispatcher) {
-                val playerList = leaderOrderDecider.getPlayerLeaderSelect(metaId)
-                val roundList = leaderOrderDecider.getRoundLeaderSelect(metaId)
-                _uiState.update { it.copy(playerLeaderList = playerList, roundLeaderList = roundList) }
+                try {
+                    val playerList = leaderOrderDecider.getPlayerLeaderSelect(metaId)
+                    val roundList = leaderOrderDecider.getRoundLeaderSelect(metaId)
+                    _uiState.update { it.copy(playerLeaderList = playerList, roundLeaderList = roundList) }
+                } catch (e: Exception) {
+                    Timber.tag(TAG).e(e, "Failed to refresh leader lists for meta $metaId")
+                }
             }
         }
     }

@@ -39,19 +39,16 @@ class EntryRepositoryImpl(private val dao: EntryDao) : EntryRepository {
         locationId: Int?,
         metaId: Int,
         date: String
-    ): Int {
-        val entryId = dao.insertEntry(
-            EntryEntity(
-                leaderCardId = leader.cardId,
-                title = title,
-                locationId = locationId,
-                metaId = metaId,
-                date = date
-            )
-        ).toInt()
-        dao.insertRounds(rounds.toRoundEntities(entryId))
-        return entryId
-    }
+    ): Int = dao.insertEntryWithRounds(
+        entry = EntryEntity(
+            leaderCardId = leader.cardId,
+            title = title,
+            locationId = locationId,
+            metaId = metaId,
+            date = date
+        ),
+        rounds = rounds.toRoundEntities(entryId = 0)
+    )
 
     override suspend fun updateEntry(
         entryId: Int,
@@ -61,20 +58,18 @@ class EntryRepositoryImpl(private val dao: EntryDao) : EntryRepository {
         locationId: Int?,
         metaId: Int,
         date: String
-    ) {
-        dao.updateEntry(
-            EntryEntity(
-                id = entryId,
-                leaderCardId = leader.cardId,
-                title = title,
-                locationId = locationId,
-                metaId = metaId,
-                date = date
-            )
-        )
-        dao.deleteRoundsByEntryId(entryId)
-        dao.insertRounds(rounds.toRoundEntities(entryId))
-    }
+    ) = dao.replaceRoundsForEntry(
+        entryId = entryId,
+        entry = EntryEntity(
+            id = entryId,
+            leaderCardId = leader.cardId,
+            title = title,
+            locationId = locationId,
+            metaId = metaId,
+            date = date
+        ),
+        rounds = rounds.toRoundEntities(entryId)
+    )
 
     private fun List<Round>.toRoundEntities(entryId: Int) = map { r ->
         RoundEntity(
@@ -95,7 +90,6 @@ class EntryRepositoryImpl(private val dao: EntryDao) : EntryRepository {
     override suspend fun getEntryById(id: Int): EntryWithRounds? = dao.getEntryById(id)
 
     override suspend fun deleteEntry(entryId: Int) {
-        dao.deleteRoundsByEntryId(entryId)
         dao.deleteEntry(entryId)
     }
 

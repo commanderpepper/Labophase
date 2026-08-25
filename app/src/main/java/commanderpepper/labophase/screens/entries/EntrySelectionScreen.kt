@@ -199,13 +199,12 @@ private fun EntryListContent(
                     .sortedWith(compareBy({ metaGroupSortOrder(it.key) }, { -(it.key ?: 0) }))
             }
 
-            // All groups except the first (newest meta) start collapsed
-            var collapsedGroups by remember { mutableStateOf(emptySet<String>()) }
-            val collapseInitialized = remember { mutableStateOf(false) }
-            if (!collapseInitialized.value && groupedEntries.isNotEmpty()) {
-                collapseInitialized.value = true
-                collapsedGroups = groupedEntries.drop(1).map { it.key?.toString() ?: "none" }.toSet()
-            }
+            // null = no user override yet; default collapses all groups except the first (newest meta)
+            var collapsedGroupsOverride by remember { mutableStateOf<Set<String>?>(null) }
+            val collapsedGroups: Set<String> = collapsedGroupsOverride
+                ?: if (groupedEntries.isNotEmpty())
+                    groupedEntries.drop(1).map { it.key?.toString() ?: "none" }.toSet()
+                else emptySet()
 
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 360.dp),
@@ -232,7 +231,7 @@ private fun EntryListContent(
                                 .animateItem()
                                 .fillMaxWidth()
                                 .clickable {
-                                    collapsedGroups = if (collapsed) collapsedGroups - groupKey
+                                    collapsedGroupsOverride = if (collapsed) collapsedGroups - groupKey
                                     else collapsedGroups + groupKey
                                 }
                                 .padding(top = 8.dp, bottom = 4.dp),
