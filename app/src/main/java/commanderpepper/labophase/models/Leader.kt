@@ -32,7 +32,7 @@ sealed class Leader(
     object UPKaido : Leader(name = "UP Kaido", sets = listOf(Set.OP01), cardId = "OP01-061", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Purple))
     object UPCrocodile : Leader(name = "UP Crocodile", sets = listOf(Set.OP01), cardId = "OP01-062", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Purple))
     object PKing : Leader(name = "P King", sets = listOf(Set.OP01), cardId = "OP01-091", leaderColors = listOf(LeaderColor.Purple))
-    object RNewgate : Leader(name = "R Newgate", sets = listOf(Set.OP02, Set.ST15), cardId = "OP02-001", leaderColors = listOf(LeaderColor.Red))
+    object RNewgate : Leader(name = "R NewgateOP02", sets = listOf(Set.OP02, Set.ST15), cardId = "OP02-001", leaderColors = listOf(LeaderColor.Red))
     object RBGarp : Leader(name = "RB Garp", sets = listOf(Set.OP02), cardId = "OP02-002", leaderColors = listOf(LeaderColor.Red, LeaderColor.Black))
     object GKinemon : Leader(name = "G Kin'emon", sets = listOf(Set.OP02), cardId = "OP02-025", leaderColors = listOf(LeaderColor.Green))
     object UGSanji : Leader(name = "UG Sanji", sets = listOf(Set.OP02), cardId = "OP02-026", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Green))
@@ -126,6 +126,12 @@ sealed class Leader(
     object BYBlackbeard : Leader(name = "BY Blackbeard", sets = listOf(Set.OP16), cardId = "OP16-080", leaderColors = listOf(LeaderColor.Black, LeaderColor.Yellow))
     object RAce : Leader(name = "R Ace", sets = listOf(Set.OP16), cardId = "OP16-001", leaderColors = listOf(LeaderColor.Red))
     object UGLuffy : Leader(name = "UG Luffy", sets = listOf(Set.OP16), cardId = "OP16-022", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Green))
+    object RNewgateOP17 : Leader(name = "R Newgate", sets = listOf(Set.OP17), cardId = "OP17-001", leaderColors = listOf(LeaderColor.Red))
+    object GShanks : Leader(name = "G Shanks", sets = listOf(Set.OP17), cardId = "OP17-020", leaderColors = listOf(LeaderColor.Green))
+    object URocks : Leader(name = "U Rocks", sets = listOf(Set.OP17), cardId = "OP17-039", leaderColors = listOf(LeaderColor.Blue))
+    object PKaidoOP17 : Leader(name = "P Kaido", sets = listOf(Set.OP17), cardId = "OP17-058", leaderColors = listOf(LeaderColor.Purple))
+    object BLuffyOP17 : Leader(name = "B Luffy", sets = listOf(Set.OP17), cardId = "OP17-079", leaderColors = listOf(LeaderColor.Black))
+    object YLinlinOP17 : Leader(name = "Y Linlin", sets = listOf(Set.OP17), cardId = "OP17-099", leaderColors = listOf(LeaderColor.Yellow))
     object ULuffy : Leader(name = "U Luffy", sets = listOf(Set.PROMOS), cardId = "P-047", leaderColors = listOf(LeaderColor.Blue), blockNumber = 2)
     object UBSakazukiP : Leader(name = "UB SakazukiP", sets = listOf(Set.PROMOS), cardId = "P-076", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Black), blockNumber = 2)
     object RPLawP : Leader(name = "RP LawP", sets = listOf(Set.PROMOS), cardId = "P-086", leaderColors = listOf(LeaderColor.Red, LeaderColor.Purple), blockNumber = 3)
@@ -134,10 +140,10 @@ sealed class Leader(
     object RLuffyST01 : Leader(name = "R LuffyST01", sets = listOf(Set.ST01), cardId = "ST01-001", leaderColors = listOf(LeaderColor.Red))
     object GKid : Leader(name = "G Kid", sets = listOf(Set.ST02), cardId = "ST02-001", leaderColors = listOf(LeaderColor.Green))
     object UCrocodile : Leader(name = "U Crocodile", sets = listOf(Set.ST03), cardId = "ST03-001", leaderColors = listOf(LeaderColor.Blue))
-    object PKaido : Leader(name = "P Kaido", sets = listOf(Set.ST04), cardId = "ST04-001", leaderColors = listOf(LeaderColor.Purple))
+    object PKaido : Leader(name = "P KaidoST04", sets = listOf(Set.ST04), cardId = "ST04-001", leaderColors = listOf(LeaderColor.Purple))
     object PShanks : Leader(name = "P Shanks", sets = listOf(Set.ST05), cardId = "ST05-001", leaderColors = listOf(LeaderColor.Purple))
     object BSakazuki : Leader(name = "B Sakazuki", sets = listOf(Set.ST06), cardId = "ST06-001", leaderColors = listOf(LeaderColor.Black))
-    object YLinlin : Leader(name = "Y Linlin", sets = listOf(Set.ST07), cardId = "ST07-001", leaderColors = listOf(LeaderColor.Yellow))
+    object YLinlin : Leader(name = "Y LinlinST07", sets = listOf(Set.ST07), cardId = "ST07-001", leaderColors = listOf(LeaderColor.Yellow))
     object BLuffyST08 : Leader(name = "B LuffyST08", sets = listOf(Set.ST08), cardId = "ST08-001", leaderColors = listOf(LeaderColor.Black))
     object YYamato : Leader(name = "Y Yamato", sets = listOf(Set.ST09), cardId = "ST09-001", leaderColors = listOf(LeaderColor.Yellow))
     object RPLaw : Leader(name = "RP Law", sets = listOf(Set.ST10), cardId = "ST10-001", leaderColors = listOf(LeaderColor.Red, LeaderColor.Purple))
@@ -148,7 +154,7 @@ sealed class Leader(
     object RYSabo : Leader(name = "RY Sabo", sets = listOf(Set.ST13), cardId = "ST13-001", leaderColors = listOf(LeaderColor.Red, LeaderColor.Yellow))
     object UYAce : Leader(name = "UY Ace", sets = listOf(Set.ST13), cardId = "ST13-002", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Yellow))
     object BYLuffy : Leader(name = "BY Luffy", sets = listOf(Set.ST13), cardId = "ST13-003", leaderColors = listOf(LeaderColor.Black, LeaderColor.Yellow))
-    object BLuffy : Leader(name = "B Luffy", sets = listOf(Set.ST14), cardId = "ST14-001", leaderColors = listOf(LeaderColor.Black))
+    object BLuffy : Leader(name = "B LuffyST14", sets = listOf(Set.ST14), cardId = "ST14-001", leaderColors = listOf(LeaderColor.Black))
     object RLuffy : Leader(name = "R Luffy", sets = listOf(Set.ST21, Set.ST31), cardId = "ST21-001", leaderColors = listOf(LeaderColor.Red))
     object UAceNewgate : Leader(name = "U AceNewgate", sets = listOf(Set.ST22), cardId = "ST22-001", leaderColors = listOf(LeaderColor.Blue))
     object YLuffyST29 : Leader(name = "Y LuffyST29", sets = listOf(Set.ST29), cardId = "ST29-001", leaderColors = listOf(LeaderColor.Yellow))
@@ -214,6 +220,7 @@ sealed class Set(val name: String, val code: String, val number: Int, val blockN
     object ST34 : Set(name = "PURPLE Charlotte Katakuri", code = "ST34", number = 56, blockNumber = 5)
     object ST35 : Set(name = "RED/BLACK Sabo", code = "ST35", number = 57, blockNumber = 5)
     object ST36 : Set(name = "YELLOW Eustass\"Captain\"Kid", code = "ST36", number = 58, blockNumber = 5)
+    object OP17 : Set(name = "The World's Strongest Warriors", code = "OP17", number = 59, blockNumber = 5)
     object PROMOS : Set(name = "Promotional Cards", code = "PROMOS", number = 0, blockNumber = 0)
 }
 
@@ -335,6 +342,12 @@ val LEADERS_LIST = listOf(
     Leader.BYBlackbeard,
     Leader.RAce,
     Leader.UGLuffy,
+    Leader.RNewgateOP17,
+    Leader.GShanks,
+    Leader.URocks,
+    Leader.PKaidoOP17,
+    Leader.BLuffyOP17,
+    Leader.YLinlinOP17,
     Leader.ULuffy,
     Leader.UBSakazukiP,
     Leader.RPLawP,

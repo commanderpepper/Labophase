@@ -242,4 +242,77 @@ class LeaderOrderDeciderImplTest {
     }
 
     // endregion
+
+    // region — OP17
+
+    @Test
+    fun `OP17 leaders are included when showAll is false`() = runTest {
+        coEvery { settingsRepository.isShowingAllLeaders() } returns false
+        coEvery { entryRepository.getEntries() } returns emptyList()
+
+        val result = decider.getPlayerLeaderSelect()
+
+        assertTrue(result.contains(Leader.GShanks))
+        assertTrue(result.contains(Leader.URocks))
+        assertTrue(result.contains(Leader.RNewgateOP17))
+        assertTrue(result.contains(Leader.PKaidoOP17))
+        assertTrue(result.contains(Leader.BLuffyOP17))
+        assertTrue(result.contains(Leader.YLinlinOP17))
+    }
+
+    @Test
+    fun `getPlayerLeaderSelect with OP17 metaId ranks OP17 entries first`() = runTest {
+        coEvery { settingsRepository.isShowingAllLeaders() } returns true
+        coEvery { entryRepository.getEntries() } returns listOf(
+            makeEntry(leaderCardId = Leader.BLuffyOP17.cardId, metaId = Meta.OP17.id),
+            makeEntry(leaderCardId = Leader.BLuffyOP17.cardId, metaId = Meta.OP17.id),
+            makeEntry(leaderCardId = Leader.UGLuffy.cardId, metaId = Meta.OP16.id),
+            makeEntry(leaderCardId = Leader.UGLuffy.cardId, metaId = Meta.OP16.id),
+            makeEntry(leaderCardId = Leader.UGLuffy.cardId, metaId = Meta.OP16.id)
+        )
+
+        // UGLuffy has 3 entries overall but BLuffyOP17 has 2 in OP17
+        val result = decider.getPlayerLeaderSelect(metaId = Meta.OP17.id)
+
+        assertEquals(Leader.BLuffyOP17, result.first())
+    }
+
+    @Test
+    fun `getPlayerLeaderSelect with OP17 metaId excludes OP16 entries`() = runTest {
+        coEvery { settingsRepository.isShowingAllLeaders() } returns true
+        coEvery { entryRepository.getEntries() } returns listOf(
+            makeEntry(leaderCardId = Leader.UGLuffy.cardId, metaId = Meta.OP16.id),
+            makeEntry(leaderCardId = Leader.UGLuffy.cardId, metaId = Meta.OP16.id),
+            makeEntry(leaderCardId = Leader.BLuffyOP17.cardId, metaId = Meta.OP17.id)
+        )
+
+        // UGLuffy has 2 entries in OP16 but 0 in OP17; BLuffyOP17 has 1 in OP17
+        val result = decider.getPlayerLeaderSelect(metaId = Meta.OP17.id)
+
+        assertEquals(Leader.BLuffyOP17, result.first())
+    }
+
+    @Test
+    fun `getRoundLeaderSelect with OP17 metaId ranks OP17 rounds first`() = runTest {
+        coEvery { settingsRepository.isShowingAllLeaders() } returns true
+        coEvery { entryRepository.getEntries() } returns listOf(
+            makeEntry(
+                leaderCardId = Leader.BLuffyOP17.cardId,
+                metaId = Meta.OP17.id,
+                rounds = listOf(makeRound(Leader.GShanks.cardId), makeRound(Leader.GShanks.cardId))
+            ),
+            makeEntry(
+                leaderCardId = Leader.UGLuffy.cardId,
+                metaId = Meta.OP16.id,
+                rounds = listOf(makeRound(Leader.RShanks.cardId), makeRound(Leader.RShanks.cardId), makeRound(Leader.RShanks.cardId))
+            )
+        )
+
+        // RShanks has 3 rounds overall but they're all in OP16; GShanks has 2 in OP17
+        val result = decider.getRoundLeaderSelect(metaId = Meta.OP17.id)
+
+        assertEquals(Leader.GShanks, result.first())
+    }
+
+    // endregion
 }

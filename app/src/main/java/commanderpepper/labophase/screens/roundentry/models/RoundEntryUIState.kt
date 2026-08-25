@@ -17,7 +17,7 @@ data class RoundEntryUIState(
     val punkRecordEntry: String = "",
     val title: String? = null,
     val locationId: Int? = null,
-    val metaId: Int = Meta.OP16.id,
+    val metaId: Int = Meta.OP17.id,
     val date: String = LocalDate.now().toString(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null

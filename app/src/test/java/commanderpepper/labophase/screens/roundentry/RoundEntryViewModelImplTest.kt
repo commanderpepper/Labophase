@@ -64,9 +64,9 @@ class RoundEntryViewModelImplTest {
         RoundEntryViewModelImpl(leaderOrderDecider, entryRepository, PunkRecordCreatorImpl(), opponentRepository, entryId, testDispatcher)
 
     @Test
-    fun `initial leader selected is PKatakuri`() = runTest {
+    fun `initial leader selected is BLuffyOP17`() = runTest {
         val vm = createViewModel()
-        assertEquals(Leader.PKatakuri, vm.uiState.value.leaderSelected)
+        assertEquals(Leader.BLuffyOP17, vm.uiState.value.leaderSelected)
     }
 
     @Test
@@ -509,4 +509,64 @@ class RoundEntryViewModelImplTest {
 
         assertEquals(Meta.OP16.id, vm.uiState.value.metaId)
     }
+
+    // region — OP17 defaults
+
+    @Test
+    fun `initial metaId defaults to OP17`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals(Meta.OP17.id, vm.uiState.value.metaId)
+    }
+
+    @Test
+    fun `init calls getPlayerLeaderSelect with OP17 meta id when no existing entry`() = runTest {
+        createViewModel()
+        advanceUntilIdle()
+
+        coVerify { leaderOrderDecider.getPlayerLeaderSelect(Meta.OP17.id) }
+    }
+
+    @Test
+    fun `init calls getRoundLeaderSelect with OP17 meta id when no existing entry`() = runTest {
+        createViewModel()
+        advanceUntilIdle()
+
+        coVerify { leaderOrderDecider.getRoundLeaderSelect(Meta.OP17.id) }
+    }
+
+    @Test
+    fun `setMetaId with OP17 refreshes player and round leader lists for OP17`() = runTest {
+        val op17PlayerList = listOf(Leader.BLuffyOP17, Leader.GShanks)
+        val op17RoundList = listOf(Leader.GShanks, Leader.BLuffyOP17)
+        coEvery { leaderOrderDecider.getPlayerLeaderSelect(Meta.OP17.id) } returns op17PlayerList
+        coEvery { leaderOrderDecider.getRoundLeaderSelect(Meta.OP17.id) } returns op17RoundList
+
+        val vm = createViewModel()
+        advanceUntilIdle()
+
+        vm.setMetaId(Meta.OP17.id)
+        advanceUntilIdle()
+
+        assertEquals(op17PlayerList, vm.uiState.value.playerLeaderList)
+        assertEquals(op17RoundList, vm.uiState.value.roundLeaderList)
+    }
+
+    @Test
+    fun `existing entry with OP17 meta loads OP17 metaId`() = runTest {
+        val existingEntry = EntryWithRounds(
+            entry = EntryEntity(id = 1, leaderCardId = Leader.BLuffyOP17.cardId, metaId = Meta.OP17.id),
+            rounds = emptyList()
+        )
+        coEvery { entryRepository.getEntryById(1) } returns existingEntry
+
+        val vm = createViewModel(entryId = 1)
+        advanceUntilIdle()
+
+        assertEquals(Meta.OP17.id, vm.uiState.value.metaId)
+        assertEquals(Leader.BLuffyOP17, vm.uiState.value.leaderSelected)
+    }
+
+    // endregion
 }

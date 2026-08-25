@@ -198,6 +198,15 @@ private fun EntryListContent(
                     .entries
                     .sortedWith(compareBy({ metaGroupSortOrder(it.key) }, { -(it.key ?: 0) }))
             }
+
+            // All groups except the first (newest meta) start collapsed
+            var collapsedGroups by remember { mutableStateOf(emptySet<String>()) }
+            val collapseInitialized = remember { mutableStateOf(false) }
+            if (!collapseInitialized.value && groupedEntries.isNotEmpty()) {
+                collapseInitialized.value = true
+                collapsedGroups = groupedEntries.drop(1).map { it.key?.toString() ?: "none" }.toSet()
+            }
+
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 360.dp),
                 modifier = Modifier.padding(innerPadding),
@@ -206,18 +215,50 @@ private fun EntryListContent(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 groupedEntries.forEach { (metaId, groupEntries) ->
+                    val groupKey = metaId?.toString() ?: "none"
+                    val isCollapsed = groupKey in collapsedGroups
                     item(
                         key = "header_${metaId ?: "none"}",
-                        span = { GridItemSpan(maxLineSpan) }
+                        span = { GridItemSpan(maxLineSpan) },
+                        contentType = "header"
                     ) {
-                        Text(
-                            text = metaId?.let { metaById(it)?.name } ?: "No Meta",
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                        val collapsed = groupKey in collapsedGroups
+                        val rotation by animateFloatAsState(
+                            targetValue = if (collapsed) -90f else 0f,
+                            label = "meta_header_rotation_$groupKey"
                         )
+                        Row(
+                            modifier = Modifier
+                                .animateItem()
+                                .fillMaxWidth()
+                                .clickable {
+                                    collapsedGroups = if (collapsed) collapsedGroups - groupKey
+                                    else collapsedGroups + groupKey
+                                }
+                                .padding(top = 8.dp, bottom = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = metaId?.let { metaById(it)?.name } ?: "No Meta",
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ExpandMore,
+                                contentDescription = if (collapsed) stringResource(R.string.cd_expand) else stringResource(R.string.cd_collapse),
+                                modifier = Modifier.rotate(rotation)
+                            )
+                        }
                     }
-                    items(groupEntries, key = { it.entryId }) { entry ->
-                        EntryRow(entrySelectionUI = entry, onEntrySelect = onEntrySelect, onEntryDelete = onEntryDelete)
+                    if (!isCollapsed) {
+                        items(groupEntries, key = { it.entryId }) { entry ->
+                            EntryRow(
+                                entrySelectionUI = entry,
+                                onEntrySelect = onEntrySelect,
+                                onEntryDelete = onEntryDelete,
+                                modifier = Modifier.animateItem()
+                            )
+                        }
                     }
                 }
             }
@@ -227,7 +268,7 @@ private fun EntryListContent(
 }
 
 @Composable
-fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit, onEntryDelete: (Int) -> Unit) {
+fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit, onEntryDelete: (Int) -> Unit, modifier: Modifier = Modifier) {
     val formattedDate = remember(entrySelectionUI.date) {
         entrySelectionUI.date?.let {
             runCatching { LocalDate.parse(it).format(DateTimeFormatter.ofPattern("MMM d, yyyy")) }
@@ -264,7 +305,7 @@ fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit, o
         )
     }
 
-    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+    OutlinedCard(modifier = modifier.fillMaxWidth()) {
         ListItem(
             modifier = Modifier.clickable { onEntrySelect(entrySelectionUI.entryId) },
             leadingContent = {

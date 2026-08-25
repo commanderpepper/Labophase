@@ -85,7 +85,7 @@ class StatsViewModelImplTest {
         opponentId = opponentId
     )
 
-    private fun createViewModel() = StatsViewModelImpl(entryRepository, opponentRepository)
+    private fun createViewModel() = StatsViewModelImpl(entryRepository, opponentRepository, testDispatcher)
 
     @Test
     fun `initial state is loading`() = runTest {

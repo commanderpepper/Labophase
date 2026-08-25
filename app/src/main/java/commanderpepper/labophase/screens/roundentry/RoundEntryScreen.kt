@@ -171,7 +171,7 @@ fun RoundEntryScreen(
     errorMessage: String?,
     title: String? = null,
     date: String = LocalDate.now().toString(),
-    metaId: Int = Meta.OP16.id,
+    metaId: Int = Meta.OP17.id,
     locationId: Int? = null,
     locationList: List<Location> = LOCATIONS_LIST,
     opponentList: List<Opponent> = emptyList(),

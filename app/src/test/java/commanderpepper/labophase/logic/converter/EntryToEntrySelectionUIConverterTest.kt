@@ -5,6 +5,7 @@ import commanderpepper.labophase.data.EntryWithRounds
 import commanderpepper.labophase.data.entity.RoundEntity
 import commanderpepper.labophase.logic.PunkRecordCreatorImpl
 import commanderpepper.labophase.models.Leader
+import commanderpepper.labophase.models.Meta
 import commanderpepper.labophase.models.Opponent
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
@@ -29,8 +30,9 @@ class EntryToEntrySelectionUIConverterTest {
     private fun makeEntry(
         id: Int = 1,
         leaderCardId: String = Leader.UGLuffy.cardId,
-        rounds: List<RoundEntity> = emptyList()
-    ) = EntryWithRounds(entry = EntryEntity(id = id, leaderCardId = leaderCardId), rounds = rounds)
+        rounds: List<RoundEntity> = emptyList(),
+        metaId: Int? = null
+    ) = EntryWithRounds(entry = EntryEntity(id = id, leaderCardId = leaderCardId, metaId = metaId), rounds = rounds)
 
     @Test
     fun `empty rounds produces zero wins and losses with empty rounds list`() {
@@ -162,5 +164,17 @@ class EntryToEntrySelectionUIConverterTest {
         val rounds = listOf(makeRound(result = RoundResult.Win, order = TurnOrder.First))
         val result = converter.entryToEntrySelectionUI(makeEntry(rounds = rounds), emptyList())
         assertTrue(result.punkRecord.lines()[3].endsWith("1st"))
+    }
+
+    @Test
+    fun `metaId is preserved in UI model`() {
+        val result = converter.entryToEntrySelectionUI(makeEntry(metaId = Meta.OP17.id), emptyList())
+        assertEquals(Meta.OP17.id, result.metaId)
+    }
+
+    @Test
+    fun `null metaId is preserved as null in UI model`() {
+        val result = converter.entryToEntrySelectionUI(makeEntry(metaId = null), emptyList())
+        assertEquals(null, result.metaId)
     }
 }

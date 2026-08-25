@@ -21,6 +21,7 @@ import commanderpepper.labophase.screens.stats.models.StatLeaderInfo
 import commanderpepper.labophase.screens.stats.models.StatOpponentInfo
 import commanderpepper.labophase.screens.stats.models.StatsTab
 import commanderpepper.labophase.screens.stats.models.StatsUIState
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,7 +33,8 @@ import kotlinx.coroutines.withContext
 
 class StatsViewModelImpl(
     private val entryRepository: EntryRepository,
-    private val opponentRepository: OpponentRepository
+    private val opponentRepository: OpponentRepository,
+    private val computationDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : StatsViewModel, ViewModel() {
 
     private val _selectedLeader = MutableStateFlow<Leader?>(null)
@@ -62,7 +64,7 @@ class StatsViewModelImpl(
                     _selectedMeta,
                     _selectedLocation
                 ) { entries, opponents, leader, meta, location ->
-                    withContext(Dispatchers.Default) { computeStats(entries, opponents, leader, meta, location) }
+                    withContext(computationDispatcher) { computeStats(entries, opponents, leader, meta, location) }
                 }.collect { newState ->
                     _statsUIState.value = newState
                 }

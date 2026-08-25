@@ -12,6 +12,7 @@ import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.logic.PunkRecordCreatorImpl
 import commanderpepper.labophase.logic.converter.EntryToEntrySelectionUIConverter
 import commanderpepper.labophase.models.Leader
+import commanderpepper.labophase.models.Meta
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -59,8 +60,9 @@ class EntrySelectionViewModelImplTest {
     private fun makeEntry(
         id: Int = 1,
         leaderCardId: String = Leader.UGLuffy.cardId,
-        rounds: List<RoundEntity> = emptyList()
-    ) = EntryWithRounds(entry = EntryEntity(id = id, leaderCardId = leaderCardId), rounds = rounds)
+        rounds: List<RoundEntity> = emptyList(),
+        metaId: Int? = null
+    ) = EntryWithRounds(entry = EntryEntity(id = id, leaderCardId = leaderCardId, metaId = metaId), rounds = rounds)
 
     private fun makeRound(
         entryId: Int = 1,
@@ -178,6 +180,58 @@ class EntrySelectionViewModelImplTest {
             assertEquals(2, state.entries.size)
             assertEquals(Leader.UGLuffy, state.entries[0].leader)
             assertEquals(Leader.RShanks, state.entries[1].leader)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `entries with OP17 metaId preserve metaId in UI state`() = runTest {
+        val vm = createViewModel()
+
+        vm.entrySelectionUiState.test {
+            awaitItem() // initial empty state
+
+            entriesFlow.value = listOf(makeEntry(id = 1, metaId = Meta.OP17.id))
+            val state = awaitItem()
+
+            assertEquals(Meta.OP17.id, state.entries[0].metaId)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `entries with null metaId preserve null metaId in UI state`() = runTest {
+        val vm = createViewModel()
+
+        vm.entrySelectionUiState.test {
+            awaitItem() // initial empty state
+
+            entriesFlow.value = listOf(makeEntry(id = 1, metaId = null))
+            val state = awaitItem()
+
+            assertEquals(null, state.entries[0].metaId)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `entries from different metas are all included in UI state`() = runTest {
+        val vm = createViewModel()
+
+        vm.entrySelectionUiState.test {
+            awaitItem() // initial empty state
+
+            entriesFlow.value = listOf(
+                makeEntry(id = 1, metaId = Meta.OP17.id),
+                makeEntry(id = 2, metaId = Meta.OP16.id),
+                makeEntry(id = 3, metaId = null)
+            )
+            val state = awaitItem()
+
+            assertEquals(3, state.entries.size)
+            assertEquals(Meta.OP17.id, state.entries.first { it.entryId == 1 }.metaId)
+            assertEquals(Meta.OP16.id, state.entries.first { it.entryId == 2 }.metaId)
+            assertNull(state.entries.first { it.entryId == 3 }.metaId)
             cancelAndIgnoreRemainingEvents()
         }
     }

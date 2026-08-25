@@ -40,7 +40,7 @@ class RoundEntryViewModelImpl(
     @Volatile private var isSaving = false
     private var savedEntryId: Int? = null
 
-    private val _uiState = MutableStateFlow(RoundEntryUIState(leaderSelected = Leader.PKatakuri, isLoading = true))
+    private val _uiState = MutableStateFlow(RoundEntryUIState(leaderSelected = Leader.BLuffyOP17, isLoading = true))
     override val uiState: StateFlow<RoundEntryUIState> = _uiState.asStateFlow()
 
     init {
@@ -53,10 +53,10 @@ class RoundEntryViewModelImpl(
         viewModelScope.launch {
             withContext(ioDispatcher) {
                 try {
-                    var loadedLeader: Leader = Leader.PKatakuri
+                    var loadedLeader: Leader = Leader.BLuffyOP17
                     var loadedTitle: String? = null
                     var loadedLocationId: Int? = null
-                    var loadedMetaId: Int = Meta.OP16WithST.id
+                    var loadedMetaId: Int = Meta.OP17.id
                     var loadedDate: String = LocalDate.now().toString()
                     if (entryId != null) {
                         val existing = entryRepository.getEntryById(entryId)
@@ -64,7 +64,7 @@ class RoundEntryViewModelImpl(
                             loadedLeader = leaderByCardId(existing.entry.leaderCardId)
                             loadedTitle = existing.entry.title
                             loadedLocationId = existing.entry.locationId
-                            loadedMetaId = existing.entry.metaId ?: Meta.OP16.id
+                            loadedMetaId = existing.entry.metaId ?: Meta.OP17.id
                             loadedDate = existing.entry.date ?: LocalDate.now().toString()
                             val loaded = existing.rounds.mapIndexed { index, r ->
                                 Round(
