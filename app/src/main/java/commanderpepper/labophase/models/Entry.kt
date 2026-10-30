@@ -5,7 +5,7 @@ data class Entry(val leaderPlayed: Leader, val rounds: List<Round> = emptyList()
 data class Round(
     val roundId: Int,
     val roundNumber: Int,
-    val leader: Leader = Leader.PBLuffy,
+    val leader: Leader = DEFAULT_OPPONENT_LEADER,
     val roundResult: RoundResult = RoundResult.Win,
     val turnOrder: TurnOrder = TurnOrder.First,
     val dieRoll: String? = null,

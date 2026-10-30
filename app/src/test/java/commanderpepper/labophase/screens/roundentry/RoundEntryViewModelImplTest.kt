@@ -10,6 +10,8 @@ import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.logic.LeaderOrderDecider
 import commanderpepper.labophase.logic.PunkRecordCreatorImpl
+import commanderpepper.labophase.models.DEFAULT_META
+import commanderpepper.labophase.models.DEFAULT_PLAYER_LEADER
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Location
 import commanderpepper.labophase.models.Meta
@@ -64,9 +66,9 @@ class RoundEntryViewModelImplTest {
         RoundEntryViewModelImpl(leaderOrderDecider, entryRepository, PunkRecordCreatorImpl(), opponentRepository, entryId, testDispatcher)
 
     @Test
-    fun `initial leader selected is BLuffyOP17`() = runTest {
+    fun `initial leader selected is DEFAULT_PLAYER_LEADER`() = runTest {
         val vm = createViewModel()
-        assertEquals(Leader.BLuffyOP17, vm.uiState.value.leaderSelected)
+        assertEquals(DEFAULT_PLAYER_LEADER, vm.uiState.value.leaderSelected)
     }
 
     @Test
@@ -510,30 +512,30 @@ class RoundEntryViewModelImplTest {
         assertEquals(Meta.OP16.id, vm.uiState.value.metaId)
     }
 
-    // region — OP17 defaults
+    // region — meta defaults
 
     @Test
-    fun `initial metaId defaults to OP17`() = runTest {
+    fun `initial metaId defaults to DEFAULT_META`() = runTest {
         val vm = createViewModel()
         advanceUntilIdle()
 
-        assertEquals(Meta.OP17.id, vm.uiState.value.metaId)
+        assertEquals(DEFAULT_META.id, vm.uiState.value.metaId)
     }
 
     @Test
-    fun `init calls getPlayerLeaderSelect with OP17 meta id when no existing entry`() = runTest {
+    fun `init calls getPlayerLeaderSelect with DEFAULT_META id when no existing entry`() = runTest {
         createViewModel()
         advanceUntilIdle()
 
-        coVerify { leaderOrderDecider.getPlayerLeaderSelect(Meta.OP17.id) }
+        coVerify { leaderOrderDecider.getPlayerLeaderSelect(DEFAULT_META.id) }
     }
 
     @Test
-    fun `init calls getRoundLeaderSelect with OP17 meta id when no existing entry`() = runTest {
+    fun `init calls getRoundLeaderSelect with DEFAULT_META id when no existing entry`() = runTest {
         createViewModel()
         advanceUntilIdle()
 
-        coVerify { leaderOrderDecider.getRoundLeaderSelect(Meta.OP17.id) }
+        coVerify { leaderOrderDecider.getRoundLeaderSelect(DEFAULT_META.id) }
     }
 
     @Test

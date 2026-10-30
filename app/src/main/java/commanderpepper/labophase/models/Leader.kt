@@ -24,6 +24,7 @@ sealed class Leader(
     object GPLuffy : Leader(name = "GP Luffy", sets = listOf(Set.EB02), cardId = "EB02-010", leaderColors = listOf(LeaderColor.Green, LeaderColor.Purple))
     object URVivi : Leader(name = "UR Vivi", sets = listOf(Set.EB03), cardId = "EB03-001", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Red))
     object RYBonney : Leader(name = "RY Bonney", sets = listOf(Set.EB04), cardId = "EB04-001", leaderColors = listOf(LeaderColor.Red, LeaderColor.Yellow))
+    object GYRobin : Leader(name = "GY Robin", sets = listOf(Set.EB05), cardId = "EB05-010", leaderColors = listOf(LeaderColor.Green, LeaderColor.Yellow))
     object RZoro : Leader(name = "R Zoro", sets = listOf(Set.OP01), cardId = "OP01-001", leaderColors = listOf(LeaderColor.Red))
     object RGLaw : Leader(name = "RG Law", sets = listOf(Set.OP01), cardId = "OP01-002", leaderColors = listOf(LeaderColor.Red, LeaderColor.Green))
     object RGLuffy01 : Leader(name = "RG Luffy01", sets = listOf(Set.OP01), cardId = "OP01-003", leaderColors = listOf(LeaderColor.Red, LeaderColor.Green))
@@ -221,6 +222,7 @@ sealed class Set(val name: String, val code: String, val number: Int, val blockN
     object ST35 : Set(name = "RED/BLACK Sabo", code = "ST35", number = 57, blockNumber = 5)
     object ST36 : Set(name = "YELLOW Eustass\"Captain\"Kid", code = "ST36", number = 58, blockNumber = 5)
     object OP17 : Set(name = "The World's Strongest Warriors", code = "OP17", number = 59, blockNumber = 5)
+    object EB05 : Set(name = "One Piece Heroines Edition vol.2", code = "EB05", number = 60, blockNumber = 5)
     object PROMOS : Set(name = "Promotional Cards", code = "PROMOS", number = 0, blockNumber = 0)
 }
 
@@ -240,6 +242,7 @@ val LEADERS_LIST = listOf(
     Leader.GPLuffy,
     Leader.URVivi,
     Leader.RYBonney,
+    Leader.GYRobin,
     Leader.RZoro,
     Leader.RGLaw,
     Leader.RGLuffy01,
@@ -376,5 +379,8 @@ val LEADERS_LIST = listOf(
     Leader.YLuffyST29,
     Leader.RGLuffyAce
 )
+
+val DEFAULT_PLAYER_LEADER: Leader = Leader.RLaw
+val DEFAULT_OPPONENT_LEADER: Leader = Leader.PBLuffy
 
 fun leaderByCardId(cardId: String): Leader = LEADERS_LIST.firstOrNull { it.cardId == cardId } ?: Leader.PLuffy

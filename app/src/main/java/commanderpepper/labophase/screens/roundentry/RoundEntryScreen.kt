@@ -89,9 +89,9 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Location
+import commanderpepper.labophase.models.DEFAULT_META
 import commanderpepper.labophase.models.LOCATIONS_LIST
 import commanderpepper.labophase.models.METAS_LIST
-import commanderpepper.labophase.models.Meta
 import commanderpepper.labophase.models.Opponent
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
@@ -173,7 +173,7 @@ fun RoundEntryScreen(
     errorMessage: String?,
     title: String? = null,
     date: String = LocalDate.now().toString(),
-    metaId: Int = Meta.OP17.id,
+    metaId: Int = DEFAULT_META.id,
     locationId: Int? = null,
     locationList: List<Location> = LOCATIONS_LIST,
     opponentList: List<Opponent> = emptyList(),

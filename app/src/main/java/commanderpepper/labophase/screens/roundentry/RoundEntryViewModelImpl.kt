@@ -10,7 +10,8 @@ import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Round
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
-import commanderpepper.labophase.models.Meta
+import commanderpepper.labophase.models.DEFAULT_META
+import commanderpepper.labophase.models.DEFAULT_PLAYER_LEADER
 import commanderpepper.labophase.models.LOCATIONS_LIST
 import commanderpepper.labophase.models.leaderByCardId
 import commanderpepper.labophase.models.locationById
@@ -44,7 +45,7 @@ class RoundEntryViewModelImpl(
     private val TAG = "RoundEntryViewModelImpl"
     private var savedEntryId: Int? = null
 
-    private val _uiState = MutableStateFlow(RoundEntryUIState(leaderSelected = Leader.BLuffyOP17, isLoading = true))
+    private val _uiState = MutableStateFlow(RoundEntryUIState(isLoading = true))
     override val uiState: StateFlow<RoundEntryUIState> = _uiState.asStateFlow()
 
     init {
@@ -57,10 +58,10 @@ class RoundEntryViewModelImpl(
         viewModelScope.launch {
             withContext(ioDispatcher) {
                 try {
-                    var loadedLeader: Leader = Leader.BLuffyOP17
+                    var loadedLeader: Leader = DEFAULT_PLAYER_LEADER
                     var loadedTitle: String? = null
                     var loadedLocationId: Int? = null
-                    var loadedMetaId: Int = Meta.OP17.id
+                    var loadedMetaId: Int = DEFAULT_META.id
                     var loadedDate: String = LocalDate.now().toString()
                     if (entryId != null) {
                         val existing = entryRepository.getEntryById(entryId)
@@ -68,7 +69,7 @@ class RoundEntryViewModelImpl(
                             loadedLeader = leaderByCardId(existing.entry.leaderCardId)
                             loadedTitle = existing.entry.title
                             loadedLocationId = existing.entry.locationId
-                            loadedMetaId = existing.entry.metaId ?: Meta.OP17.id
+                            loadedMetaId = existing.entry.metaId ?: DEFAULT_META.id
                             loadedDate = existing.entry.date ?: LocalDate.now().toString()
                             val loaded = existing.rounds.mapIndexed { index, r ->
                                 Round(

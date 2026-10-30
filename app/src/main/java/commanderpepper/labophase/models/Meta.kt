@@ -4,11 +4,14 @@ sealed class Meta(val id: Int, val name: String) {
     object OP16           : Meta(id = 1, name = "OP16")
     object OP16WithST     : Meta(id = 2, name = "OP16.5")
     object OP17           : Meta(id = 4, name = "OP17")
+    object EB05           : Meta(id = 5, name = "EB05")
     object ExtraGrandBattle : Meta(id = 3, name = "Extra Grand Battle")
 }
 
 val METAS_LIST = listOf(
-    Meta.OP16, Meta.OP16WithST, Meta.OP17, Meta.ExtraGrandBattle
+    Meta.OP16, Meta.OP16WithST, Meta.OP17, Meta.EB05, Meta.ExtraGrandBattle
 )
+
+val DEFAULT_META: Meta = Meta.EB05
 
 fun metaById(id: Int): Meta? = METAS_LIST.firstOrNull { it.id == id }
