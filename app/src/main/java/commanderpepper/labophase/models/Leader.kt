@@ -133,6 +133,12 @@ sealed class Leader(
     object PKaidoOP17 : Leader(name = "P Kaido", sets = listOf(Set.OP17), cardId = "OP17-058", leaderColors = listOf(LeaderColor.Purple))
     object BLuffyOP17 : Leader(name = "B Luffy", sets = listOf(Set.OP17), cardId = "OP17-079", leaderColors = listOf(LeaderColor.Black))
     object YLinlinOP17 : Leader(name = "Y Linlin", sets = listOf(Set.OP17), cardId = "OP17-099", leaderColors = listOf(LeaderColor.Yellow))
+    object URKaroo : Leader(name = "UR Karoo", sets = listOf(Set.OP18), cardId = "OP18-001", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Red))
+    object GPFranky : Leader(name = "GP Franky", sets = listOf(Set.OP18), cardId = "OP18-021", leaderColors = listOf(LeaderColor.Green, LeaderColor.Purple))
+    object GLuffy : Leader(name = "G Luffy", sets = listOf(Set.OP18), cardId = "OP18-022", leaderColors = listOf(LeaderColor.Green))
+    object UAllSunday : Leader(name = "U AllSunday", sets = listOf(Set.OP18), cardId = "OP18-041", leaderColors = listOf(LeaderColor.Blue))
+    object PBGunko : Leader(name = "PB Gunko", sets = listOf(Set.OP18), cardId = "OP18-060", leaderColors = listOf(LeaderColor.Purple, LeaderColor.Black))
+    object BYSpandam : Leader(name = "BY Spandam", sets = listOf(Set.OP18), cardId = "OP18-079", leaderColors = listOf(LeaderColor.Black, LeaderColor.Yellow))
     object ULuffy : Leader(name = "U Luffy", sets = listOf(Set.PROMOS), cardId = "P-047", leaderColors = listOf(LeaderColor.Blue), blockNumber = 2)
     object UBSakazukiP : Leader(name = "UB SakazukiP", sets = listOf(Set.PROMOS), cardId = "P-076", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Black), blockNumber = 2)
     object RPLawP : Leader(name = "RP LawP", sets = listOf(Set.PROMOS), cardId = "P-086", leaderColors = listOf(LeaderColor.Red, LeaderColor.Purple), blockNumber = 3)
@@ -223,6 +229,7 @@ sealed class Set(val name: String, val code: String, val number: Int, val blockN
     object ST36 : Set(name = "YELLOW Eustass\"Captain\"Kid", code = "ST36", number = 58, blockNumber = 5)
     object OP17 : Set(name = "The World's Strongest Warriors", code = "OP17", number = 59, blockNumber = 5)
     object EB05 : Set(name = "One Piece Heroines Edition vol.2", code = "EB05", number = 60, blockNumber = 5)
+    object OP18 : Set(name = "The Dominance of God", code = "OP18", number = 61, blockNumber = 5)
     object PROMOS : Set(name = "Promotional Cards", code = "PROMOS", number = 0, blockNumber = 0)
 }
 
@@ -351,6 +358,12 @@ val LEADERS_LIST = listOf(
     Leader.PKaidoOP17,
     Leader.BLuffyOP17,
     Leader.YLinlinOP17,
+    Leader.URKaroo,
+    Leader.GPFranky,
+    Leader.GLuffy,
+    Leader.UAllSunday,
+    Leader.PBGunko,
+    Leader.BYSpandam,
     Leader.ULuffy,
     Leader.UBSakazukiP,
     Leader.RPLawP,
@@ -380,7 +393,7 @@ val LEADERS_LIST = listOf(
     Leader.RGLuffyAce
 )
 
-val DEFAULT_PLAYER_LEADER: Leader = Leader.RLaw
+val DEFAULT_PLAYER_LEADER: Leader = Leader.PBLuffy
 val DEFAULT_OPPONENT_LEADER: Leader = Leader.PBLuffy
 
 fun leaderByCardId(cardId: String): Leader = LEADERS_LIST.firstOrNull { it.cardId == cardId } ?: Leader.PLuffy
