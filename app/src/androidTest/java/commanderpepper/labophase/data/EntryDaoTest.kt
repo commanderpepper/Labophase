@@ -97,6 +97,20 @@ class EntryDaoTest {
     }
 
     @Test
+    fun roundNotes_surviveRoundTrip() = runBlocking {
+        val id = insertEntry()
+        dao.insertRounds(
+            listOf(
+                RoundEntity(entryId = id, roundNumber = 1, leaderCardId = "OP09-001", roundResult = RoundResult.Win, turnOrder = TurnOrder.First, notes = "Went to time"),
+                RoundEntity(entryId = id, roundNumber = 2, leaderCardId = "OP09-001", roundResult = RoundResult.Loss, turnOrder = TurnOrder.Second)
+            )
+        )
+        val rounds = dao.getEntries()[0].rounds.sortedBy { it.roundNumber }
+        assertEquals("Went to time", rounds[0].notes)
+        assertNull(rounds[1].notes)
+    }
+
+    @Test
     fun getAllEntries_emitsInsertedEntry() = runBlocking {
         insertEntry("OP16-022")
         val result = dao.getAllEntries().first()

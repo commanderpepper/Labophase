@@ -10,6 +10,7 @@ import commanderpepper.labophase.models.Opponent
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -24,8 +25,9 @@ class EntryToEntrySelectionUIConverterTest {
         result: RoundResult = RoundResult.Win,
         order: TurnOrder = TurnOrder.First,
         num: Int = 1,
-        opponentId: Int? = null
-    ) = RoundEntity(entryId = entryId, roundNumber = num, leaderCardId = leaderCardId, roundResult = result, turnOrder = order, opponentId = opponentId)
+        opponentId: Int? = null,
+        notes: String? = null
+    ) = RoundEntity(entryId = entryId, roundNumber = num, leaderCardId = leaderCardId, roundResult = result, turnOrder = order, opponentId = opponentId, notes = notes)
 
     private fun makeEntry(
         id: Int = 1,
@@ -33,6 +35,21 @@ class EntryToEntrySelectionUIConverterTest {
         rounds: List<RoundEntity> = emptyList(),
         metaId: Int? = null
     ) = EntryWithRounds(entry = EntryEntity(id = id, leaderCardId = leaderCardId, metaId = metaId), rounds = rounds)
+
+    @Test
+    fun `round notes are carried to the round UI`() {
+        val rounds = listOf(makeRound(num = 1, notes = "Went to time"), makeRound(num = 2))
+        val result = converter.entryToEntrySelectionUI(makeEntry(rounds = rounds), emptyList())
+        assertEquals("Went to time", result.rounds[0].notes)
+        assertNull(result.rounds[1].notes)
+    }
+
+    @Test
+    fun `punk record does not include round notes`() {
+        val rounds = listOf(makeRound(notes = "Secret note"))
+        val result = converter.entryToEntrySelectionUI(makeEntry(rounds = rounds), emptyList())
+        assertTrue("Secret note" !in result.punkRecord)
+    }
 
     @Test
     fun `empty rounds produces zero wins and losses with empty rounds list`() {

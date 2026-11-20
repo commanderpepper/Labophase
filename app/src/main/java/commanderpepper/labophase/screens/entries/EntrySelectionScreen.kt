@@ -62,6 +62,8 @@ import commanderpepper.labophase.screens.entries.models.RoundEntrySelectionUI
 import commanderpepper.labophase.screens.roundentry.CopyableResult
 import commanderpepper.labophase.screens.roundentry.LeaderThumbnail
 import commanderpepper.labophase.screens.roundentry.RoundEntryScreen
+import commanderpepper.labophase.screens.roundentry.RoundNotesButton
+import commanderpepper.labophase.screens.roundentry.RoundNotesText
 import commanderpepper.labophase.screens.roundentry.WithSharedBorderAngle
 import commanderpepper.labophase.ui.theme.LabophaseTheme
 import java.time.LocalDate
@@ -337,11 +339,14 @@ fun EntryRow(entrySelectionUI: EntrySelectionUI, onEntrySelect: (Int) -> Unit, o
                     .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
             ) {
                 entrySelectionUI.rounds.forEach { round ->
+                    val showNotes = rememberSaveable { mutableStateOf(false) }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         LeaderThumbnail(round.leader)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(round.summary)
+                        Text(round.summary, modifier = Modifier.weight(1f))
+                        RoundNotesButton(notes = round.notes, showing = showNotes.value) { showNotes.value = !showNotes.value }
                     }
+                    RoundNotesText(notes = round.notes, visible = showNotes.value)
                 }
                 CopyableResult(text = entrySelectionUI.punkRecord)
             }

@@ -43,7 +43,7 @@ class EntryToEntrySelectionUIConverter(private val punkRecordCreator: PunkRecord
             dieRoll = roundEntity.dieRoll,
             opponentId = roundEntity.opponentId
         )
-        return RoundEntrySelectionUI(leader = leader, summary = round.singleLine())
+        return RoundEntrySelectionUI(leader = leader, summary = round.singleLine(), notes = roundEntity.notes)
     }
 }
 

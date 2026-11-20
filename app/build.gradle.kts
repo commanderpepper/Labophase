@@ -5,7 +5,13 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.ksp)
+    alias(libs.plugins.androidx.room)
     alias(libs.plugins.aboutlibraries)
+}
+
+room {
+    // Exported schemas are committed so MigrationTestHelper can test migrations between versions
+    schemaDirectory("$projectDir/schemas")
 }
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")

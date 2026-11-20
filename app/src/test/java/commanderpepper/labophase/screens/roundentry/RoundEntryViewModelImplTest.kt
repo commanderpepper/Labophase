@@ -512,6 +512,105 @@ class RoundEntryViewModelImplTest {
         assertEquals(Meta.OP16.id, vm.uiState.value.metaId)
     }
 
+    // region — round notes
+
+    @Test
+    fun `new round has no notes`() = runTest {
+        val vm = createViewModel()
+        vm.addNewRound()
+
+        assertNull(vm.uiState.value.rounds.first().notes)
+    }
+
+    @Test
+    fun `roundNotesSet updates notes on the correct round`() = runTest {
+        val vm = createViewModel()
+        vm.addNewRound()
+        vm.addNewRound()
+        val secondId = vm.uiState.value.rounds[1].roundId
+
+        vm.roundNotesSet(secondId, "Mulliganed for Gum-Gum")
+
+        assertNull(vm.uiState.value.rounds[0].notes)
+        assertEquals("Mulliganed for Gum-Gum", vm.uiState.value.rounds[1].notes)
+    }
+
+    @Test
+    fun `roundNotesSet keeps spaces while typing`() = runTest {
+        val vm = createViewModel()
+        vm.addNewRound()
+        val roundId = vm.uiState.value.rounds.first().roundId
+
+        vm.roundNotesSet(roundId, "Went second ")
+
+        assertEquals("Went second ", vm.uiState.value.rounds.first().notes)
+    }
+
+    @Test
+    fun `roundNotesSet with blank text clears notes`() = runTest {
+        val vm = createViewModel()
+        vm.addNewRound()
+        val roundId = vm.uiState.value.rounds.first().roundId
+        vm.roundNotesSet(roundId, "Close game")
+
+        vm.roundNotesSet(roundId, "   ")
+
+        assertNull(vm.uiState.value.rounds.first().notes)
+    }
+
+    @Test
+    fun `transformEntry saves round notes`() = runTest {
+        val vm = createViewModel()
+        advanceUntilIdle()
+        vm.addNewRound()
+        val roundId = vm.uiState.value.rounds.first().roundId
+        vm.roundNotesSet(roundId, "Opponent bricked")
+
+        vm.transformEntry()
+        advanceUntilIdle()
+
+        coVerify {
+            entryRepository.saveEntry(any(), match { it.single().notes == "Opponent bricked" }, any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun `transformEntry punk record does not include notes`() = runTest {
+        val vm = createViewModel()
+        vm.addNewRound()
+        val roundId = vm.uiState.value.rounds.first().roundId
+        vm.roundLeaderSelect(roundId, Leader.RShanks)
+        vm.roundNotesSet(roundId, "Secret note")
+
+        vm.transformEntry()
+
+        assertTrue(vm.uiState.value.punkRecordEntry.isNotEmpty())
+        assertTrue("Secret note" !in vm.uiState.value.punkRecordEntry)
+    }
+
+    @Test
+    fun `existing entry loads notes on init`() = runTest {
+        val existingEntry = EntryWithRounds(
+            entry = EntryEntity(id = 1, leaderCardId = Leader.UGLuffy.cardId),
+            rounds = listOf(
+                RoundEntity(
+                    entryId = 1, roundNumber = 1,
+                    leaderCardId = Leader.RShanks.cardId,
+                    roundResult = RoundResult.Win, turnOrder = TurnOrder.First,
+                    notes = "Top-decked the counter"
+                )
+            )
+        )
+        coEvery { entryRepository.getEntryById(1) } returns existingEntry
+
+        val vm = createViewModel(entryId = 1)
+        advanceUntilIdle()
+
+        assertEquals("Top-decked the counter", vm.uiState.value.rounds.first().notes)
+    }
+
+    // endregion
+
     // region — meta defaults
 
     @Test

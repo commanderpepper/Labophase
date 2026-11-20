@@ -79,7 +79,8 @@ class RoundEntryViewModelImpl(
                                     roundResult = r.roundResult,
                                     turnOrder = r.turnOrder,
                                     dieRoll = r.dieRoll,
-                                    opponentId = r.opponentId
+                                    opponentId = r.opponentId,
+                                    notes = r.notes
                                 )
                             }
                             roundsMap = loaded.associateBy { it.roundId }
@@ -196,6 +197,11 @@ class RoundEntryViewModelImpl(
         updateRound(roundId) { it.copy(opponentId = opponentId) }
     }
 
+    override fun roundNotesSet(roundId: Int, notes: String) {
+        // Not trimmed here, so spaces typed between words survive; the repository trims on save
+        updateRound(roundId) { it.copy(notes = notes.takeIf { n -> n.isNotBlank() }) }
+    }
+
     override fun removeRound(roundId: Int) {
         roundsMap = roundsMap.minus(roundId)
         _uiState.update { it.copy(rounds = roundsMap.values.map { r -> r.toRoundUI() }) }
@@ -235,6 +241,7 @@ class RoundEntryViewModelImpl(
         roundResult = roundResult,
         turnOrder = turnOrder,
         dieRoll = dieRoll,
-        opponentId = opponentId
+        opponentId = opponentId,
+        notes = notes
     )
 }

@@ -26,6 +26,8 @@ interface RoundEntryViewModel {
 
     fun roundOpponentSet(roundId: Int, opponentId: Int?)
 
+    fun roundNotesSet(roundId: Int, notes: String)
+
     fun removeRound(roundId: Int)
 
     fun setTitle(title: String?)

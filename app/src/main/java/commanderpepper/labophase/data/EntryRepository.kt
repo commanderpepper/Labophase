@@ -79,7 +79,8 @@ class EntryRepositoryImpl(private val dao: EntryDao) : EntryRepository {
             roundResult = r.roundResult,
             turnOrder = r.turnOrder,
             dieRoll = r.dieRoll,
-            opponentId = r.opponentId
+            opponentId = r.opponentId,
+            notes = r.notes?.trim()?.takeIf { it.isNotEmpty() }
         )
     }
 

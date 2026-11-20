@@ -2,6 +2,10 @@ package commanderpepper.labophase.screens.roundentry
 
 import android.content.ClipData
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -35,6 +39,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DateRange
@@ -162,6 +167,7 @@ fun RoundEntryScreen(
         chooseRoundResult = roundEntryViewModel::roundResultSelect,
         chooseDieRoll = roundEntryViewModel::roundDieRollSelect,
         chooseOpponent = roundEntryViewModel::roundOpponentSet,
+        chooseNotes = roundEntryViewModel::roundNotesSet,
         removeRound = roundEntryViewModel::removeRound,
         onTitleChanged = roundEntryViewModel::setTitle,
         onDateChanged = roundEntryViewModel::setDate,
@@ -198,6 +204,7 @@ fun RoundEntryScreen(
     chooseRoundResult: (Int, RoundResult) -> Unit,
     chooseDieRoll: (Int, String?) -> Unit = { _, _ -> },
     chooseOpponent: (Int, Int?) -> Unit = { _, _ -> },
+    chooseNotes: (Int, String) -> Unit = { _, _ -> },
     removeRound: (Int) -> Unit,
     onTitleChanged: (String?) -> Unit = {},
     onDateChanged: (String) -> Unit = {},
@@ -318,6 +325,7 @@ fun RoundEntryScreen(
                         turnOrder = chooseRoundTurnOrder,
                         dieRoll = chooseDieRoll,
                         opponentSet = chooseOpponent,
+                        notesSet = chooseNotes,
                         showingDieRoll = showingDieRoll,
                         removeRound = removeRound
                     )
@@ -644,10 +652,12 @@ fun RoundEntry(
     turnOrder: (Int, TurnOrder) -> Unit,
     dieRoll: (Int, String?) -> Unit = { _, _ -> },
     opponentSet: (Int, Int?) -> Unit = { _, _ -> },
+    notesSet: (Int, String) -> Unit = { _, _ -> },
     showingDieRoll: Boolean = false,
     initiallyExpanded: Boolean = true
 ) {
     val isExpanded = rememberSaveable { mutableStateOf(initiallyExpanded) }
+    val showNotes = rememberSaveable { mutableStateOf(false) }
     val rotation by animateFloatAsState(
         targetValue = if (isExpanded.value) 180f else 0f,
         label = "round_expand_rotation"
@@ -662,6 +672,8 @@ fun RoundEntry(
             LeaderThumbnail(leader = round.leader)
             Spacer(modifier = Modifier.width(8.dp))
             Text(round.summary, modifier = Modifier.weight(1f))
+            // Notes are written in the expanded section
+            RoundNotesButton(notes = round.notes, showing = showNotes.value) { showNotes.value = !showNotes.value }
             IconButton(onClick = { isExpanded.value = !isExpanded.value }) {
                 Icon(
                     Icons.Default.ExpandMore,
@@ -676,6 +688,7 @@ fun RoundEntry(
                 )
             }
         }
+        RoundNotesText(notes = round.notes, visible = showNotes.value)
         AnimatedVisibility(visible = isExpanded.value) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 LeaderSelection(leaders = leaders) { leader ->
@@ -699,8 +712,49 @@ fun RoundEntry(
                     opponentList = opponentList,
                     onOpponentSelected = { opponentSet(round.roundId, it) }
                 )
+                OutlinedTextField(
+                    value = round.notes.orEmpty(),
+                    onValueChange = { notesSet(round.roundId, it) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
+                    label = { Text(stringResource(R.string.label_notes)) },
+                    minLines = 2,
+                    maxLines = 6
+                )
             }
         }
+    }
+}
+
+/** Shows or hides a round's notes. Disabled (greyed out) when the round has no notes. */
+@Composable
+fun RoundNotesButton(notes: String?, showing: Boolean, onToggle: () -> Unit) {
+    val hasNotes = !notes.isNullOrBlank()
+    IconButton(onClick = onToggle, enabled = hasNotes) {
+        Icon(
+            Icons.AutoMirrored.Filled.Notes,
+            contentDescription = if (showing && hasNotes) stringResource(R.string.cd_hide_notes) else stringResource(R.string.cd_show_notes)
+        )
+    }
+}
+
+/** A round's notes, indented to line up with the round summary next to its 48dp thumbnail. */
+@Composable
+fun RoundNotesText(notes: String?, visible: Boolean) {
+    // Unfold from the top edge; the default expandIn grows out of a corner
+    AnimatedVisibility(
+        visible = visible && !notes.isNullOrBlank(),
+        enter = fadeIn() + expandVertically(expandFrom = Alignment.Top),
+        exit = fadeOut() + shrinkVertically(shrinkTowards = Alignment.Top)
+    ) {
+        Text(
+            text = notes.orEmpty(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 56.dp, end = 8.dp, bottom = 4.dp),
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }
 

@@ -19,6 +19,8 @@
     <string name="cd_clear_search">Clear search</string>
     <string name="cd_show_card_art">Show card art</string>
     <string name="cd_show_thumbnails">Show thumbnails</string>
+    <string name="cd_show_notes">Show notes</string>
+    <string name="cd_hide_notes">Hide notes</string>
 
     <!-- EntrySelectionScreen -->
     <string name="fab_new_entry">New Entry</string>
@@ -37,6 +39,7 @@
     <string name="label_meta">Meta</string>
     <string name="label_location">Location</string>
     <string name="label_none">None</string>
+    <string name="label_notes">Notes</string>
     <string name="label_search_leaders">Search leaders</string>
     <string name="leader_search_no_results">No leaders match</string>
 

@@ -11,5 +11,6 @@ data class RoundUI(
     val roundResult: RoundResult,
     val turnOrder: TurnOrder,
     val dieRoll: String? = null,
-    val opponentId: Int? = null
+    val opponentId: Int? = null,
+    val notes: String? = null
 )

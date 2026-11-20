@@ -15,7 +15,7 @@ data class EntrySelectionUI(
     val date: String? = null
 )
 
-data class RoundEntrySelectionUI(val leader: Leader, val summary: String)
+data class RoundEntrySelectionUI(val leader: Leader, val summary: String, val notes: String? = null)
 
 data class EntrySelectionUIState (
     val isLoading: Boolean = true,
