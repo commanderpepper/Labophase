@@ -26,6 +26,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -38,7 +40,9 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ViewCarousel
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -89,6 +93,8 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -362,7 +368,7 @@ fun Modifier.animatedBorder(
 }
 
 @Composable
-fun LeaderThumbnail(leader: Leader) {
+fun LeaderThumbnail(leader: Leader, size: Dp = 48.dp) {
     val colors = if (leader.leaderColors.size == 1) {
         listOf(leader.leaderColors.first().color, Color.White, leader.leaderColors.first().color)
     } else {
@@ -370,7 +376,7 @@ fun LeaderThumbnail(leader: Leader) {
     }
     ElevatedCard(modifier = Modifier.animatedBorder(colors = colors)) {
         AsyncImage(
-            modifier = Modifier.size(48.dp),
+            modifier = Modifier.size(size),
             model = "file:///android_asset/leader_thumbnails/${leader.cardId}.webp",
             contentDescription = leader.name
         )
@@ -440,6 +446,35 @@ fun LeaderPlayerInTournamentSelection(
 private const val MIN_CAROUSEL_ITEMS = 3
 private val LEADER_CARD_WIDTH = 128.dp
 private val LEADER_CARD_SPACING = 8.dp
+private val PICKER_THUMBNAIL_SIZE = 64.dp
+private val PICKER_THUMBNAIL_ITEM_WIDTH = 76.dp
+
+@Composable
+private fun LeaderThumbnailRow(leaders: List<Leader>, onLeaderSelected: (Leader) -> Unit) {
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(LEADER_CARD_SPACING)
+    ) {
+        items(leaders, key = { it.cardId }) { leader ->
+            Column(
+                modifier = Modifier
+                    .width(PICKER_THUMBNAIL_ITEM_WIDTH)
+                    .clickable { onLeaderSelected(leader) },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                LeaderThumbnail(leader = leader, size = PICKER_THUMBNAIL_SIZE)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = leader.name,
+                    style = MaterialTheme.typography.labelSmall,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -448,34 +483,52 @@ fun LeaderSelection(
     onLeaderSelected: (Leader) -> Unit
 ) {
     var query by rememberSaveable { mutableStateOf("") }
+    // Thumbnails by default; the button next to the search field switches to the card-art carousel
+    var showThumbnails by rememberSaveable { mutableStateOf(true) }
     val filteredLeaders = remember(leaders, query) { leaders.searchByName(query) }
     val focusManager = LocalFocusManager.current
+    val selectLeader: (Leader) -> Unit = { leader ->
+        focusManager.clearFocus()
+        onLeaderSelected(leader)
+    }
     Column(modifier = Modifier.fillMaxWidth()) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            singleLine = true,
-            label = { Text(stringResource(R.string.label_search_leaders)) },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-            trailingIcon = {
-                if (query.isNotEmpty()) {
-                    IconButton(onClick = { query = "" }) {
-                        Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.cd_clear_search))
+        Row(
+            modifier = Modifier.padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                label = { Text(stringResource(R.string.label_search_leaders)) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (query.isNotEmpty()) {
+                        IconButton(onClick = { query = "" }) {
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.cd_clear_search))
+                        }
                     }
+                },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
+            )
+            IconButton(onClick = { showThumbnails = !showThumbnails }) {
+                if (showThumbnails) {
+                    Icon(Icons.Default.ViewCarousel, contentDescription = stringResource(R.string.cd_show_card_art))
+                } else {
+                    Icon(Icons.Default.GridView, contentDescription = stringResource(R.string.cd_show_thumbnails))
                 }
-            },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
-        )
+            }
+        }
         if (filteredLeaders.isEmpty() && query.isNotBlank()) {
             Text(
                 text = stringResource(R.string.leader_search_no_results),
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 style = MaterialTheme.typography.bodyMedium
             )
+        } else if (showThumbnails) {
+            LeaderThumbnailRow(leaders = filteredLeaders, onLeaderSelected = selectLeader)
         } else if (filteredLeaders.size < MIN_CAROUSEL_ITEMS) {
             // The hero carousel shrinks and clips its items when it has fewer than three, so show a plain row
             Row(

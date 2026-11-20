@@ -17,6 +17,8 @@
     <string name="cd_show">Show</string>
     <string name="cd_delete_entry">Delete entry</string>
     <string name="cd_clear_search">Clear search</string>
+    <string name="cd_show_card_art">Show card art</string>
+    <string name="cd_show_thumbnails">Show thumbnails</string>
 
     <!-- EntrySelectionScreen -->
     <string name="fab_new_entry">New Entry</string>
