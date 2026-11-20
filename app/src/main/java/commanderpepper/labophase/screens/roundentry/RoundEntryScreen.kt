@@ -29,12 +29,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -83,6 +87,8 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -98,6 +104,7 @@ import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.models.findById
 import commanderpepper.labophase.models.locationById
 import commanderpepper.labophase.models.metaById
+import commanderpepper.labophase.models.searchByName
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -384,10 +391,6 @@ fun LeaderPlayerInTournamentSelection(
     expandedContent: @Composable () -> Unit = {}
 ) {
     val isExpanded = rememberSaveable { mutableStateOf(initiallyExpanded) }
-    val carouselState = rememberSaveable(
-        leaders.size,
-        saver = CarouselState.Saver
-    ) { CarouselState { leaders.count() } }
     val rotation by animateFloatAsState(
         targetValue = if (isExpanded.value) 180f else 0f,
         label = "leader_expand_rotation"
@@ -426,7 +429,6 @@ fun LeaderPlayerInTournamentSelection(
             Column {
                 LeaderSelection(
                     leaders = leaders,
-                    state = carouselState,
                     onLeaderSelected = onLeaderSelected
                 )
                 expandedContent()
@@ -435,26 +437,92 @@ fun LeaderPlayerInTournamentSelection(
     }
 }
 
+private const val MIN_CAROUSEL_ITEMS = 3
+private val LEADER_CARD_WIDTH = 128.dp
+private val LEADER_CARD_SPACING = 8.dp
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeaderSelection(
     leaders: List<Leader>,
-    state: CarouselState,
     onLeaderSelected: (Leader) -> Unit
 ) {
-    HorizontalCenteredHeroCarousel(
-        state = state,
-        maxItemWidth = 128.dp,
-        itemSpacing = 8.dp,
-        contentPadding = PaddingValues(horizontal = 16.dp)
-    ) { index ->
-        val leader = leaders[index]
-        ElevatedCard(modifier = Modifier.maskClip(shape = RoundedCornerShape(corner = CornerSize(2.dp)))) {
-            AsyncImage(
-                modifier = Modifier.clickable(onClick = { onLeaderSelected(leader) }),
-                model = "file:///android_asset/leader_images/${leader.cardId}.webp",
-                contentDescription = leader.name
+    var query by rememberSaveable { mutableStateOf("") }
+    val filteredLeaders = remember(leaders, query) { leaders.searchByName(query) }
+    val focusManager = LocalFocusManager.current
+    Column(modifier = Modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = { query = it },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            singleLine = true,
+            label = { Text(stringResource(R.string.label_search_leaders)) },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+            trailingIcon = {
+                if (query.isNotEmpty()) {
+                    IconButton(onClick = { query = "" }) {
+                        Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.cd_clear_search))
+                    }
+                }
+            },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() })
+        )
+        if (filteredLeaders.isEmpty() && query.isNotBlank()) {
+            Text(
+                text = stringResource(R.string.leader_search_no_results),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                style = MaterialTheme.typography.bodyMedium
             )
+        } else if (filteredLeaders.size < MIN_CAROUSEL_ITEMS) {
+            // The hero carousel shrinks and clips its items when it has fewer than three, so show a plain row
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(LEADER_CARD_SPACING)
+            ) {
+                filteredLeaders.forEach { leader ->
+                    ElevatedCard(
+                        modifier = Modifier.width(LEADER_CARD_WIDTH),
+                        shape = RoundedCornerShape(corner = CornerSize(2.dp))
+                    ) {
+                        AsyncImage(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(onClick = {
+                                    focusManager.clearFocus()
+                                    onLeaderSelected(leader)
+                                }),
+                            model = "file:///android_asset/leader_images/${leader.cardId}.webp",
+                            contentDescription = leader.name
+                        )
+                    }
+                }
+            }
+        } else {
+            // Keyed on the filtered list so the carousel resets to the first match when the results change
+            val state = rememberSaveable(filteredLeaders, saver = CarouselState.Saver) {
+                CarouselState { filteredLeaders.count() }
+            }
+            HorizontalCenteredHeroCarousel(
+                state = state,
+                maxItemWidth = LEADER_CARD_WIDTH,
+                itemSpacing = LEADER_CARD_SPACING,
+                contentPadding = PaddingValues(horizontal = 16.dp)
+            ) { index ->
+                val leader = filteredLeaders[index]
+                ElevatedCard(modifier = Modifier.maskClip(shape = RoundedCornerShape(corner = CornerSize(2.dp)))) {
+                    AsyncImage(
+                        modifier = Modifier.clickable(onClick = {
+                            focusManager.clearFocus()
+                            onLeaderSelected(leader)
+                        }),
+                        model = "file:///android_asset/leader_images/${leader.cardId}.webp",
+                        contentDescription = leader.name
+                    )
+                }
+            }
         }
     }
 }
@@ -527,10 +595,6 @@ fun RoundEntry(
     initiallyExpanded: Boolean = true
 ) {
     val isExpanded = rememberSaveable { mutableStateOf(initiallyExpanded) }
-    val carouselState = rememberSaveable(
-        leaders.size,
-        saver = CarouselState.Saver
-    ) { CarouselState { leaders.count() } }
     val rotation by animateFloatAsState(
         targetValue = if (isExpanded.value) 180f else 0f,
         label = "round_expand_rotation"
@@ -561,7 +625,7 @@ fun RoundEntry(
         }
         AnimatedVisibility(visible = isExpanded.value) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                LeaderSelection(leaders = leaders, state = carouselState) { leader ->
+                LeaderSelection(leaders = leaders) { leader ->
                     leaderSelected(round.roundId, leader)
                 }
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
@@ -920,8 +984,7 @@ private fun PreviewLeaderPlayerInTournamentSelection() {
 @Composable
 private fun PreviewLeaderSelection() {
     LabophaseTheme {
-        val state = remember { CarouselState { previewLeaders.count() } }
-        LeaderSelection(leaders = previewLeaders, state = state, onLeaderSelected = {})
+        LeaderSelection(leaders = previewLeaders, onLeaderSelected = {})
     }
 }
 

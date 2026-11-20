@@ -16,6 +16,7 @@
     <string name="cd_hide">Hide</string>
     <string name="cd_show">Show</string>
     <string name="cd_delete_entry">Delete entry</string>
+    <string name="cd_clear_search">Clear search</string>
 
     <!-- EntrySelectionScreen -->
     <string name="fab_new_entry">New Entry</string>
@@ -34,6 +35,8 @@
     <string name="label_meta">Meta</string>
     <string name="label_location">Location</string>
     <string name="label_none">None</string>
+    <string name="label_search_leaders">Search leaders</string>
+    <string name="leader_search_no_results">No leaders match</string>
 
     <!-- Navigation labels -->
     <string name="nav_entries">Entries</string>

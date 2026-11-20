@@ -6,6 +6,8 @@ import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Location
@@ -13,6 +15,7 @@ import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
 import commanderpepper.labophase.screens.roundentry.models.RoundUI
 import commanderpepper.labophase.ui.theme.LabophaseTheme
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -191,6 +194,54 @@ class RoundEntryScreenTest {
     fun punkRecordHeader_visibleWhenPunkRecordEntryIsNonEmpty() {
         setIdleContent(punkRecordEntry = "!PR add\nUG Luffy\nW R Shanks 1st")
         composeTestRule.onNodeWithText("Punk Record").assertIsDisplayed()
+    }
+
+    // endregion
+
+    // region — Leader search
+
+    private val searchLeaders = listOf(Leader.UGLuffy, Leader.GYRobin, Leader.RShanks, Leader.PYRobin)
+
+    private fun setLeaderSelection(onLeaderSelected: (Leader) -> Unit = {}) {
+        composeTestRule.setContent {
+            LabophaseTheme {
+                LeaderSelection(leaders = searchLeaders, onLeaderSelected = onLeaderSelected)
+            }
+        }
+    }
+
+    @Test
+    fun leaderSearch_filtersCarouselByName() {
+        setLeaderSelection()
+        composeTestRule.onNodeWithText("Search leaders").performTextInput("robin")
+        composeTestRule.onNodeWithContentDescription("GY Robin").assertExists()
+        composeTestRule.onNodeWithContentDescription("UG Luffy").assertDoesNotExist()
+        composeTestRule.onNodeWithContentDescription("R Shanks").assertDoesNotExist()
+    }
+
+    @Test
+    fun leaderSearch_noMatches_showsMessage() {
+        setLeaderSelection()
+        composeTestRule.onNodeWithText("Search leaders").performTextInput("zoro")
+        composeTestRule.onNodeWithText("No leaders match").assertIsDisplayed()
+    }
+
+    @Test
+    fun leaderSearch_clearButton_restoresFullList() {
+        setLeaderSelection()
+        composeTestRule.onNodeWithText("Search leaders").performTextInput("shanks")
+        composeTestRule.onNodeWithContentDescription("UG Luffy").assertDoesNotExist()
+        composeTestRule.onNodeWithContentDescription("Clear search").performClick()
+        composeTestRule.onNodeWithContentDescription("UG Luffy").assertExists()
+    }
+
+    @Test
+    fun leaderSearch_tappingResult_selectsLeader() {
+        var selected: Leader? = null
+        setLeaderSelection { selected = it }
+        composeTestRule.onNodeWithText("Search leaders").performTextInput("shanks")
+        composeTestRule.onNodeWithContentDescription("R Shanks").performClick()
+        assertEquals(Leader.RShanks, selected)
     }
 
     // endregion
