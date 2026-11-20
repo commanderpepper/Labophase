@@ -39,8 +39,8 @@ class LeaderSearchTest {
 
     @Test
     fun `matches a card name that differs from the display name`() {
-        val withSunday = leaders + Leader.UAllSunday
-        assertEquals(listOf(Leader.UAllSunday), withSunday.searchByName("ms. all"))
+        val withSunday = leaders + Leader.USunday
+        assertEquals(listOf(Leader.USunday), withSunday.searchByName("ms. all"))
         assertEquals(listOf(Leader.RGOden), listOf(Leader.RGOden, Leader.RShanks).searchByName("kouzuki"))
     }
 

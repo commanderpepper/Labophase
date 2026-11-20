@@ -152,7 +152,7 @@ sealed class Leader(
     object URKaroo : Leader(name = "UR Karoo", cardName = "Karoo", sets = listOf(Set.OP18), cardId = "OP18-001", leaderColors = listOf(LeaderColor.Blue, LeaderColor.Red))
     object GPFranky : Leader(name = "GP Franky", cardName = "Franky", sets = listOf(Set.OP18), cardId = "OP18-021", leaderColors = listOf(LeaderColor.Green, LeaderColor.Purple))
     object GLuffy : Leader(name = "G Luffy", cardName = "Monkey.D.Luffy", sets = listOf(Set.OP18), cardId = "OP18-022", leaderColors = listOf(LeaderColor.Green))
-    object UAllSunday : Leader(name = "U AllSunday", cardName = "Ms. All Sunday", sets = listOf(Set.OP18), cardId = "OP18-041", leaderColors = listOf(LeaderColor.Blue))
+    object USunday : Leader(name = "U Sunday", cardName = "Ms. All Sunday", sets = listOf(Set.OP18), cardId = "OP18-041", leaderColors = listOf(LeaderColor.Blue))
     object PBGunko : Leader(name = "PB Gunko", cardName = "Saint Gunko", sets = listOf(Set.OP18), cardId = "OP18-060", leaderColors = listOf(LeaderColor.Purple, LeaderColor.Black))
     object BYSpandam : Leader(name = "BY Spandam", cardName = "Spandam", sets = listOf(Set.OP18), cardId = "OP18-079", leaderColors = listOf(LeaderColor.Black, LeaderColor.Yellow))
     object ULuffy : Leader(name = "U Luffy", cardName = "Monkey.D.Luffy", sets = listOf(Set.PROMOS), cardId = "P-047", leaderColors = listOf(LeaderColor.Blue), blockNumber = 2)
@@ -377,7 +377,7 @@ val LEADERS_LIST = listOf(
     Leader.URKaroo,
     Leader.GPFranky,
     Leader.GLuffy,
-    Leader.UAllSunday,
+    Leader.USunday,
     Leader.PBGunko,
     Leader.BYSpandam,
     Leader.ULuffy,
