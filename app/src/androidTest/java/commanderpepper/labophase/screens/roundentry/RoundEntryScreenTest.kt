@@ -4,6 +4,7 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.assert
@@ -16,6 +17,7 @@ import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Location
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
+import commanderpepper.labophase.screens.roundentry.models.RoundDraft
 import commanderpepper.labophase.screens.roundentry.models.RoundUI
 import commanderpepper.labophase.ui.theme.LabophaseTheme
 import org.junit.Assert.assertEquals
@@ -58,12 +60,9 @@ class RoundEntryScreenTest {
                     title = title,
                     date = date,
                     locationId = locationId,
-                    addNewRound = {},
                     transformEntry = {},
                     chooseLeader = {},
-                    chooseRoundLeader = { _, _ -> },
-                    chooseRoundTurnOrder = { _, _ -> },
-                    chooseRoundResult = { _, _ -> },
+                    saveRound = { _, _ -> },
                     removeRound = {}
                 )
             }
@@ -85,12 +84,9 @@ class RoundEntryScreenTest {
                     punkRecordEntry = "",
                     isLoading = true,
                     errorMessage = null,
-                    addNewRound = {},
                     transformEntry = {},
                     chooseLeader = {},
-                    chooseRoundLeader = { _, _ -> },
-                    chooseRoundTurnOrder = { _, _ -> },
-                    chooseRoundResult = { _, _ -> },
+                    saveRound = { _, _ -> },
                     removeRound = {}
                 )
             }
@@ -111,12 +107,9 @@ class RoundEntryScreenTest {
                     punkRecordEntry = "",
                     isLoading = false,
                     errorMessage = "Something went wrong",
-                    addNewRound = {},
                     transformEntry = {},
                     chooseLeader = {},
-                    chooseRoundLeader = { _, _ -> },
-                    chooseRoundTurnOrder = { _, _ -> },
-                    chooseRoundResult = { _, _ -> },
+                    saveRound = { _, _ -> },
                     removeRound = {}
                 )
             }
@@ -196,6 +189,93 @@ class RoundEntryScreenTest {
     fun punkRecordHeader_visibleWhenPunkRecordEntryIsNonEmpty() {
         setIdleContent(punkRecordEntry = "!PR add\nUG Luffy\nW R Shanks 1st")
         composeTestRule.onNodeWithText("Punk Record").assertIsDisplayed()
+    }
+
+    // endregion
+
+    // region — Round editor sheet
+
+    private fun setSheetContent(
+        rounds: List<RoundUI> = emptyList(),
+        saveRound: (Int?, RoundDraft) -> Unit = { _, _ -> },
+        removeRound: (Int) -> Unit = {}
+    ) {
+        composeTestRule.setContent {
+            LabophaseTheme {
+                RoundEntryScreen(
+                    leaderSelected = Leader.UGLuffy,
+                    rounds = rounds,
+                    playerLeaderList = emptyList(),
+                    roundLeaderList = listOf(Leader.RShanks, Leader.GYRobin),
+                    punkRecordEntry = "",
+                    isLoading = false,
+                    errorMessage = null,
+                    transformEntry = {},
+                    chooseLeader = {},
+                    saveRound = saveRound,
+                    removeRound = removeRound
+                )
+            }
+        }
+    }
+
+    @Test
+    fun roundRow_showsEditButtonInsteadOfDelete() {
+        setSheetContent(rounds = listOf(sampleRound))
+        composeTestRule.onNodeWithContentDescription("Edit round").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Delete").assertDoesNotExist()
+    }
+
+    @Test
+    fun newRound_opensSheetWithoutDelete() {
+        setSheetContent()
+        composeTestRule.onNodeWithText("New round").performClick()
+        composeTestRule.onNodeWithText("Save").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Delete").assertDoesNotExist()
+    }
+
+    @Test
+    fun newRound_save_addsRoundWithNullId() {
+        var saved: Pair<Int?, RoundDraft>? = null
+        setSheetContent(saveRound = { id, draft -> saved = id to draft })
+        composeTestRule.onNodeWithText("New round").performClick()
+        composeTestRule.onNodeWithText("2nd").performClick()
+        composeTestRule.onNodeWithText("Save").performClick()
+        composeTestRule.waitUntil { saved != null }
+        assertEquals(null, saved!!.first)
+        assertEquals(TurnOrder.Second, saved!!.second.turnOrder)
+    }
+
+    @Test
+    fun newRound_cancel_savesNothing() {
+        var saveCalls = 0
+        setSheetContent(saveRound = { _, _ -> saveCalls++ })
+        composeTestRule.onNodeWithText("New round").performClick()
+        composeTestRule.onNodeWithText("Cancel").performClick()
+        composeTestRule.waitUntil { composeTestRule.onAllNodesWithText("Cancel").fetchSemanticsNodes().isEmpty() }
+        assertEquals(0, saveCalls)
+    }
+
+    @Test
+    fun editRound_save_passesRoundIdAndExistingValues() {
+        var saved: Pair<Int?, RoundDraft>? = null
+        setSheetContent(rounds = listOf(sampleRound), saveRound = { id, draft -> saved = id to draft })
+        composeTestRule.onNodeWithContentDescription("Edit round").performClick()
+        composeTestRule.onNodeWithText("Edit round").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Save").performClick()
+        composeTestRule.waitUntil { saved != null }
+        assertEquals(sampleRound.roundId, saved!!.first)
+        assertEquals(Leader.RShanks, saved!!.second.leader)
+    }
+
+    @Test
+    fun editRound_delete_removesRound() {
+        var removed: Int? = null
+        setSheetContent(rounds = listOf(sampleRound), removeRound = { removed = it })
+        composeTestRule.onNodeWithContentDescription("Edit round").performClick()
+        composeTestRule.onNodeWithText("Delete").performClick()
+        composeTestRule.waitUntil { removed != null }
+        assertEquals(sampleRound.roundId, removed)
     }
 
     // endregion

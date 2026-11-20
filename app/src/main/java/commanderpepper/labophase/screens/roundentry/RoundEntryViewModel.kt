@@ -3,6 +3,7 @@ package commanderpepper.labophase.screens.roundentry
 import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.RoundResult
 import commanderpepper.labophase.models.TurnOrder
+import commanderpepper.labophase.screens.roundentry.models.RoundDraft
 import commanderpepper.labophase.screens.roundentry.models.RoundEntryUIState
 import kotlinx.coroutines.flow.StateFlow
 
@@ -27,6 +28,9 @@ interface RoundEntryViewModel {
     fun roundOpponentSet(roundId: Int, opponentId: Int?)
 
     fun roundNotesSet(roundId: Int, notes: String)
+
+    /** Adds the draft as a new round when [roundId] is null, otherwise replaces that round. */
+    fun saveRound(roundId: Int?, draft: RoundDraft)
 
     fun removeRound(roundId: Int)
 

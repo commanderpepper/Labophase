@@ -16,6 +16,7 @@ import commanderpepper.labophase.models.LOCATIONS_LIST
 import commanderpepper.labophase.models.leaderByCardId
 import commanderpepper.labophase.models.locationById
 import java.time.LocalDate
+import commanderpepper.labophase.screens.roundentry.models.RoundDraft
 import commanderpepper.labophase.screens.roundentry.models.RoundEntryUIState
 import commanderpepper.labophase.screens.roundentry.models.RoundUI
 import java.util.concurrent.atomic.AtomicBoolean
@@ -200,6 +201,24 @@ class RoundEntryViewModelImpl(
     override fun roundNotesSet(roundId: Int, notes: String) {
         // Not trimmed here, so spaces typed between words survive; the repository trims on save
         updateRound(roundId) { it.copy(notes = notes.takeIf { n -> n.isNotBlank() }) }
+    }
+
+    override fun saveRound(roundId: Int?, draft: RoundDraft) {
+        val existing = if (roundId == null) null else roundsMap[roundId] ?: return
+        val id = existing?.roundId ?: this.roundId++
+        val round = Round(
+            roundId = id,
+            roundNumber = existing?.roundNumber ?: 1,
+            leader = draft.leader,
+            roundResult = draft.roundResult,
+            turnOrder = draft.turnOrder,
+            dieRoll = draft.dieRoll,
+            opponentId = draft.opponentId,
+            notes = draft.notes.takeIf { it.isNotBlank() }
+        )
+        // Replacing a key keeps its position, so an edited round stays where it was
+        roundsMap = roundsMap + (id to round)
+        _uiState.update { it.copy(rounds = roundsMap.values.map { r -> r.toRoundUI() }) }
     }
 
     override fun removeRound(roundId: Int) {

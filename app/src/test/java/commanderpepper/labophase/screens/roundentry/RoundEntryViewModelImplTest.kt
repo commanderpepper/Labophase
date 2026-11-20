@@ -16,6 +16,7 @@ import commanderpepper.labophase.models.Leader
 import commanderpepper.labophase.models.Location
 import commanderpepper.labophase.models.Meta
 import commanderpepper.labophase.models.LOCATIONS_LIST
+import commanderpepper.labophase.screens.roundentry.models.RoundDraft
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -607,6 +608,90 @@ class RoundEntryViewModelImplTest {
         advanceUntilIdle()
 
         assertEquals("Top-decked the counter", vm.uiState.value.rounds.first().notes)
+    }
+
+    // endregion
+
+    // region — saveRound (round editor sheet)
+
+    private val sampleDraft = RoundDraft(
+        leader = Leader.RShanks,
+        roundResult = RoundResult.Loss,
+        turnOrder = TurnOrder.Second,
+        dieRoll = "Win",
+        opponentId = 3,
+        notes = "Missed lethal"
+    )
+
+    @Test
+    fun `saveRound with null id adds a round with the draft values`() = runTest {
+        val vm = createViewModel()
+
+        vm.saveRound(null, sampleDraft)
+
+        val round = vm.uiState.value.rounds.single()
+        assertEquals(Leader.RShanks, round.leader)
+        assertEquals(RoundResult.Loss, round.roundResult)
+        assertEquals(TurnOrder.Second, round.turnOrder)
+        assertEquals("Win", round.dieRoll)
+        assertEquals(3, round.opponentId)
+        assertEquals("Missed lethal", round.notes)
+    }
+
+    @Test
+    fun `saveRound with null id twice adds two rounds with distinct ids`() = runTest {
+        val vm = createViewModel()
+
+        vm.saveRound(null, sampleDraft)
+        vm.saveRound(null, RoundDraft())
+
+        val rounds = vm.uiState.value.rounds
+        assertEquals(2, rounds.size)
+        assertEquals(2, rounds.map { it.roundId }.toSet().size)
+    }
+
+    @Test
+    fun `saveRound with an existing id replaces that round in place`() = runTest {
+        val vm = createViewModel()
+        vm.saveRound(null, RoundDraft())
+        vm.saveRound(null, RoundDraft())
+        val firstId = vm.uiState.value.rounds.first().roundId
+
+        vm.saveRound(firstId, sampleDraft)
+
+        val rounds = vm.uiState.value.rounds
+        assertEquals(2, rounds.size)
+        assertEquals(firstId, rounds.first().roundId)
+        assertEquals(Leader.RShanks, rounds.first().leader)
+    }
+
+    @Test
+    fun `saveRound with an unknown id changes nothing`() = runTest {
+        val vm = createViewModel()
+        vm.saveRound(null, RoundDraft())
+        val before = vm.uiState.value.rounds
+
+        vm.saveRound(999, sampleDraft)
+
+        assertEquals(before, vm.uiState.value.rounds)
+    }
+
+    @Test
+    fun `saveRound stores blank notes as null`() = runTest {
+        val vm = createViewModel()
+
+        vm.saveRound(null, RoundDraft(notes = "   "))
+
+        assertNull(vm.uiState.value.rounds.single().notes)
+    }
+
+    @Test
+    fun `saveRound updates the round summary`() = runTest {
+        val vm = createViewModel()
+
+        vm.saveRound(null, sampleDraft)
+
+        assertEquals("R Shanks, L, 2, 🎲", vm.uiState.value.rounds.single().summary)
     }
 
     // endregion

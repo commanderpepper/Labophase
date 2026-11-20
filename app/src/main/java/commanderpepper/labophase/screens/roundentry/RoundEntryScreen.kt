@@ -33,6 +33,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -44,11 +46,13 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ViewCarousel
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
@@ -64,11 +68,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -121,7 +127,9 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import commanderpepper.labophase.screens.roundentry.models.RoundDraft
 import commanderpepper.labophase.screens.roundentry.models.RoundUI
+import commanderpepper.labophase.screens.roundentry.models.toDraft
 import commanderpepper.labophase.screens.settings.SettingsViewModel
 import commanderpepper.labophase.screens.settings.SettingsViewModelImpl
 import commanderpepper.labophase.ui.theme.LabophaseTheme
@@ -160,15 +168,9 @@ fun RoundEntryScreen(
         locationId = uiState.value.locationId,
         locationList = uiState.value.locationList,
         opponentList = uiState.value.opponentList,
-        addNewRound = roundEntryViewModel::addNewRound,
         transformEntry = roundEntryViewModel::transformEntry,
         chooseLeader = roundEntryViewModel::chooseLeader,
-        chooseRoundLeader = roundEntryViewModel::roundLeaderSelect,
-        chooseRoundTurnOrder = roundEntryViewModel::roundTurnOrderSelect,
-        chooseRoundResult = roundEntryViewModel::roundResultSelect,
-        chooseDieRoll = roundEntryViewModel::roundDieRollSelect,
-        chooseOpponent = roundEntryViewModel::roundOpponentSet,
-        chooseNotes = roundEntryViewModel::roundNotesSet,
+        saveRound = roundEntryViewModel::saveRound,
         removeRound = roundEntryViewModel::removeRound,
         onTitleChanged = roundEntryViewModel::setTitle,
         onDateChanged = roundEntryViewModel::setDate,
@@ -197,21 +199,17 @@ fun RoundEntryScreen(
     locationId: Int? = null,
     locationList: List<Location> = LOCATIONS_LIST,
     opponentList: List<Opponent> = emptyList(),
-    addNewRound: () -> Unit,
     transformEntry: () -> Unit,
     chooseLeader: (Leader) -> Unit,
-    chooseRoundLeader: (Int, Leader) -> Unit,
-    chooseRoundTurnOrder: (Int, TurnOrder) -> Unit,
-    chooseRoundResult: (Int, RoundResult) -> Unit,
-    chooseDieRoll: (Int, String?) -> Unit = { _, _ -> },
-    chooseOpponent: (Int, Int?) -> Unit = { _, _ -> },
-    chooseNotes: (Int, String) -> Unit = { _, _ -> },
+    saveRound: (Int?, RoundDraft) -> Unit,
     removeRound: (Int) -> Unit,
     onTitleChanged: (String?) -> Unit = {},
     onDateChanged: (String) -> Unit = {},
     onMetaSelected: (Int) -> Unit = {},
     onLocationSelected: (Int?) -> Unit = {}
 ) {
+    // The round open in the editor sheet; null when the sheet is closed
+    var roundEditor by remember { mutableStateOf<RoundEditorRequest?>(null) }
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -287,7 +285,9 @@ fun RoundEntryScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Button(onClick = { transformEntry() }) { Text(stringResource(R.string.btn_save_punk_record)) }
-                        OutlinedButton(onClick = { addNewRound() }) { Text(stringResource(R.string.btn_new_round)) }
+                        OutlinedButton(onClick = { roundEditor = RoundEditorRequest(roundId = null, draft = RoundDraft()) }) {
+                            Text(stringResource(R.string.btn_new_round))
+                        }
                     }
                 }
                 if (punkRecordEntry.isNotEmpty()) {
@@ -318,20 +318,22 @@ fun RoundEntryScreen(
                 items(rounds, key = { it.roundId }) { round ->
                     RoundEntry(
                         round = round,
-                        leaders = roundLeaderList,
-                        opponentList = opponentList,
-                        initiallyExpanded = leaderSelectExpanded,
-                        leaderSelected = chooseRoundLeader,
-                        roundResult = chooseRoundResult,
-                        turnOrder = chooseRoundTurnOrder,
-                        dieRoll = chooseDieRoll,
-                        opponentSet = chooseOpponent,
-                        notesSet = chooseNotes,
-                        showingDieRoll = showingDieRoll,
-                        removeRound = removeRound
+                        onEdit = { roundEditor = RoundEditorRequest(roundId = round.roundId, draft = round.toDraft()) }
                     )
                 }
             }
+        }
+        roundEditor?.let { request ->
+            RoundEditorSheet(
+                isNewRound = request.roundId == null,
+                initialDraft = request.draft,
+                leaders = roundLeaderList,
+                opponentList = opponentList,
+                showingDieRoll = showingDieRoll,
+                onSave = { draft -> saveRound(request.roundId, draft) },
+                onDelete = request.roundId?.let { id -> { removeRound(id) } },
+                onDismiss = { roundEditor = null }
+            )
         }
         } // WithSharedBorderAngle
     }
@@ -645,89 +647,117 @@ fun DieRollSelection(dieRoll: String?, onDieRollSelected: (String?) -> Unit) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+/** A round in the entry's list. Tapping the row or the pencil opens it in [RoundEditorSheet]. */
 @Composable
 fun RoundEntry(
     modifier: Modifier = Modifier,
     round: RoundUI,
-    leaders: List<Leader>,
-    opponentList: List<Opponent> = emptyList(),
-    removeRound: (Int) -> Unit,
-    leaderSelected: (Int, Leader) -> Unit,
-    roundResult: (Int, RoundResult) -> Unit,
-    turnOrder: (Int, TurnOrder) -> Unit,
-    dieRoll: (Int, String?) -> Unit = { _, _ -> },
-    opponentSet: (Int, Int?) -> Unit = { _, _ -> },
-    notesSet: (Int, String) -> Unit = { _, _ -> },
-    showingDieRoll: Boolean = false,
-    initiallyExpanded: Boolean = true
+    onEdit: () -> Unit
 ) {
-    val isExpanded = rememberSaveable { mutableStateOf(initiallyExpanded) }
     val showNotes = rememberSaveable { mutableStateOf(false) }
-    val rotation by animateFloatAsState(
-        targetValue = if (isExpanded.value) 180f else 0f,
-        label = "round_expand_rotation"
-    )
     Column(modifier.padding(vertical = 4.dp)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = { isExpanded.value = !isExpanded.value }),
+                .clickable(onClick = onEdit),
             verticalAlignment = Alignment.CenterVertically
         ) {
             LeaderThumbnail(leader = round.leader)
             Spacer(modifier = Modifier.width(8.dp))
             Text(round.summary, modifier = Modifier.weight(1f))
-            // Notes are written in the expanded section
             RoundNotesButton(notes = round.notes, showing = showNotes.value) { showNotes.value = !showNotes.value }
-            IconButton(onClick = { isExpanded.value = !isExpanded.value }) {
-                Icon(
-                    Icons.Default.ExpandMore,
-                    contentDescription = if (isExpanded.value) stringResource(R.string.cd_collapse) else stringResource(R.string.cd_expand),
-                    modifier = Modifier.rotate(rotation)
-                )
-            }
-            IconButton(onClick = { removeRound(round.roundId) }) {
-                Icon(
-                    Icons.Default.DeleteForever,
-                    contentDescription = stringResource(R.string.action_delete)
-                )
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.cd_edit_round))
             }
         }
         RoundNotesText(notes = round.notes, visible = showNotes.value)
-        AnimatedVisibility(visible = isExpanded.value) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                LeaderSelection(leaders = leaders) { leader ->
-                    leaderSelected(round.roundId, leader)
+    }
+}
+
+/** Which round the editor sheet is open for: [roundId] is null for a new round. */
+private data class RoundEditorRequest(val roundId: Int?, val draft: RoundDraft)
+
+/**
+ * Adds or edits a round in a bottom sheet. Changes stay in a local draft until Save, so
+ * dismissing the sheet (Cancel, swipe down, tap outside) discards them. The sheet's insets
+ * include the keyboard, and the content scrolls, so the notes field stays reachable.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RoundEditorSheet(
+    isNewRound: Boolean,
+    initialDraft: RoundDraft,
+    leaders: List<Leader>,
+    opponentList: List<Opponent>,
+    showingDieRoll: Boolean,
+    onSave: (RoundDraft) -> Unit,
+    onDelete: (() -> Unit)?,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+    var draft by remember { mutableStateOf(initialDraft) }
+
+    // Animate the sheet away, then run the action and close
+    fun closeThen(action: () -> Unit) {
+        scope.launch { sheetState.hide() }.invokeOnCompletion {
+            action()
+            onDismiss()
+        }
+    }
+
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = stringResource(if (isNewRound) R.string.btn_new_round else R.string.title_edit_round),
+                style = MaterialTheme.typography.titleLarge
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                LeaderThumbnail(leader = draft.leader)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(draft.leader.name, style = MaterialTheme.typography.titleMedium)
+            }
+            LeaderSelection(leaders = leaders) { leader -> draft = draft.copy(leader = leader) }
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+                RoundResultSelection(draft.roundResult) { draft = draft.copy(roundResult = it) }
+                TurnOrderSelection(draft.turnOrder) { draft = draft.copy(turnOrder = it) }
+                if (showingDieRoll) {
+                    DieRollSelection(dieRoll = draft.dieRoll) { draft = draft.copy(dieRoll = it) }
                 }
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-                    RoundResultSelection(round.roundResult) { result ->
-                        roundResult(round.roundId, result)
-                    }
-                    TurnOrderSelection(round.turnOrder) { order ->
-                        turnOrder(round.roundId, order)
-                    }
-                    if (showingDieRoll) {
-                        DieRollSelection(dieRoll = round.dieRoll) { result ->
-                            dieRoll(round.roundId, result)
-                        }
+            }
+            OpponentDropdown(
+                opponentId = draft.opponentId,
+                opponentList = opponentList,
+                onOpponentSelected = { draft = draft.copy(opponentId = it) }
+            )
+            OutlinedTextField(
+                value = draft.notes,
+                onValueChange = { draft = draft.copy(notes = it) },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.label_notes)) },
+                minLines = 2,
+                maxLines = 6
+            )
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                if (onDelete != null) {
+                    TextButton(
+                        onClick = { closeThen(onDelete) },
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Icon(Icons.Default.DeleteForever, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.action_delete))
                     }
                 }
-                OpponentDropdown(
-                    opponentId = round.opponentId,
-                    opponentList = opponentList,
-                    onOpponentSelected = { opponentSet(round.roundId, it) }
-                )
-                OutlinedTextField(
-                    value = round.notes.orEmpty(),
-                    onValueChange = { notesSet(round.roundId, it) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 4.dp),
-                    label = { Text(stringResource(R.string.label_notes)) },
-                    minLines = 2,
-                    maxLines = 6
-                )
+                Spacer(modifier = Modifier.weight(1f))
+                TextButton(onClick = { closeThen {} }) { Text(stringResource(R.string.action_cancel)) }
+                Button(onClick = { closeThen { onSave(draft) } }) { Text(stringResource(R.string.action_save)) }
             }
         }
     }
@@ -995,12 +1025,9 @@ private fun PreviewRoundEntryScreen() {
             showingDieRoll = true,
             isLoading = false,
             errorMessage = null,
-            addNewRound = {},
             transformEntry = {},
             chooseLeader = {},
-            chooseRoundLeader = { _, _ -> },
-            chooseRoundTurnOrder = { _, _ -> },
-            chooseRoundResult = { _, _ -> },
+            saveRound = { _, _ -> },
             removeRound = {}
         )
     }
@@ -1020,12 +1047,9 @@ private fun PreviewRoundEntryScreenEmpty() {
             showingDieRoll = true,
             isLoading = false,
             errorMessage = null,
-            addNewRound = {},
             transformEntry = {},
             chooseLeader = {},
-            chooseRoundLeader = { _, _ -> },
-            chooseRoundTurnOrder = { _, _ -> },
-            chooseRoundResult = { _, _ -> },
+            saveRound = { _, _ -> },
             removeRound = {}
         )
     }
@@ -1044,12 +1068,9 @@ private fun PreviewRoundEntryScreenLoading() {
             punkRecordEntry = "",
             isLoading = true,
             errorMessage = null,
-            addNewRound = {},
             transformEntry = {},
             chooseLeader = {},
-            chooseRoundLeader = { _, _ -> },
-            chooseRoundTurnOrder = { _, _ -> },
-            chooseRoundResult = { _, _ -> },
+            saveRound = { _, _ -> },
             removeRound = {}
         )
     }
@@ -1068,12 +1089,9 @@ private fun PreviewRoundEntryScreenError() {
             punkRecordEntry = "",
             isLoading = false,
             errorMessage = "Something went wrong",
-            addNewRound = {},
             transformEntry = {},
             chooseLeader = {},
-            chooseRoundLeader = { _, _ -> },
-            chooseRoundTurnOrder = { _, _ -> },
-            chooseRoundResult = { _, _ -> },
+            saveRound = { _, _ -> },
             removeRound = {}
         )
     }
@@ -1105,14 +1123,7 @@ private fun PreviewLeaderSelection() {
 @Composable
 private fun PreviewRoundEntry() {
     LabophaseTheme {
-        RoundEntry(
-            round = previewRound1,
-            leaders = previewLeaders,
-            leaderSelected = { _, _ -> },
-            roundResult = { _, _ -> },
-            turnOrder = { _, _ -> },
-            removeRound = {}
-        )
+        RoundEntry(round = previewRound1, onEdit = {})
     }
 }
 

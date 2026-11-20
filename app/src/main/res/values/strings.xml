@@ -30,6 +30,8 @@
     <!-- RoundEntryScreen -->
     <string name="btn_save_punk_record">Save punk record entry</string>
     <string name="btn_new_round">New round</string>
+    <string name="title_edit_round">Edit round</string>
+    <string name="cd_edit_round">Edit round</string>
     <string name="label_punk_record">Punk Record</string>
     <string name="wins_losses_format">W: %1$d - L: %2$d</string>
     <string name="wins_losses_pct_format">W: %1$d - L: %2$d (%3$d%%)</string>
