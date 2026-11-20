@@ -1,6 +1,7 @@
 package commanderpepper.labophase.screens.roundentry
 
 import android.content.ClipData
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -72,6 +73,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -707,58 +709,88 @@ fun RoundEditorSheet(
     }
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = stringResource(if (isNewRound) R.string.btn_new_round else R.string.title_edit_round),
-                style = MaterialTheme.typography.titleLarge
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                LeaderThumbnail(leader = draft.leader)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(draft.leader.name, style = MaterialTheme.typography.titleMedium)
+        RoundEditorContent(
+            isNewRound = isNewRound,
+            draft = draft,
+            onDraftChange = { draft = it },
+            leaders = leaders,
+            opponentList = opponentList,
+            showingDieRoll = showingDieRoll,
+            onSave = { closeThen { onSave(draft) } },
+            onCancel = { closeThen {} },
+            onDelete = onDelete?.let { delete -> { closeThen(delete) } }
+        )
+    }
+}
+
+/**
+ * The body of [RoundEditorSheet], kept separate so it can be previewed: a modal sheet opens in
+ * its own window, which Android Studio previews don't render. [onDelete] is null for a new round.
+ */
+@Composable
+fun RoundEditorContent(
+    isNewRound: Boolean,
+    draft: RoundDraft,
+    onDraftChange: (RoundDraft) -> Unit,
+    leaders: List<Leader>,
+    opponentList: List<Opponent>,
+    showingDieRoll: Boolean,
+    onSave: () -> Unit,
+    onCancel: () -> Unit,
+    onDelete: (() -> Unit)?,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = stringResource(if (isNewRound) R.string.btn_new_round else R.string.title_edit_round),
+            style = MaterialTheme.typography.titleLarge
+        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            LeaderThumbnail(leader = draft.leader)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(draft.leader.name, style = MaterialTheme.typography.titleMedium)
+        }
+        LeaderSelection(leaders = leaders) { leader -> onDraftChange(draft.copy(leader = leader)) }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+            RoundResultSelection(draft.roundResult) { onDraftChange(draft.copy(roundResult = it)) }
+            TurnOrderSelection(draft.turnOrder) { onDraftChange(draft.copy(turnOrder = it)) }
+            if (showingDieRoll) {
+                DieRollSelection(dieRoll = draft.dieRoll) { onDraftChange(draft.copy(dieRoll = it)) }
             }
-            LeaderSelection(leaders = leaders) { leader -> draft = draft.copy(leader = leader) }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
-                RoundResultSelection(draft.roundResult) { draft = draft.copy(roundResult = it) }
-                TurnOrderSelection(draft.turnOrder) { draft = draft.copy(turnOrder = it) }
-                if (showingDieRoll) {
-                    DieRollSelection(dieRoll = draft.dieRoll) { draft = draft.copy(dieRoll = it) }
+        }
+        OpponentDropdown(
+            opponentId = draft.opponentId,
+            opponentList = opponentList,
+            onOpponentSelected = { onDraftChange(draft.copy(opponentId = it)) }
+        )
+        OutlinedTextField(
+            value = draft.notes,
+            onValueChange = { onDraftChange(draft.copy(notes = it)) },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text(stringResource(R.string.label_notes)) },
+            minLines = 2,
+            maxLines = 6
+        )
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            if (onDelete != null) {
+                TextButton(
+                    onClick = onDelete,
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Icon(Icons.Default.DeleteForever, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(stringResource(R.string.action_delete))
                 }
             }
-            OpponentDropdown(
-                opponentId = draft.opponentId,
-                opponentList = opponentList,
-                onOpponentSelected = { draft = draft.copy(opponentId = it) }
-            )
-            OutlinedTextField(
-                value = draft.notes,
-                onValueChange = { draft = draft.copy(notes = it) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(stringResource(R.string.label_notes)) },
-                minLines = 2,
-                maxLines = 6
-            )
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                if (onDelete != null) {
-                    TextButton(
-                        onClick = { closeThen(onDelete) },
-                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                    ) {
-                        Icon(Icons.Default.DeleteForever, contentDescription = null)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.action_delete))
-                    }
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                TextButton(onClick = { closeThen {} }) { Text(stringResource(R.string.action_cancel)) }
-                Button(onClick = { closeThen { onSave(draft) } }) { Text(stringResource(R.string.action_save)) }
-            }
+            Spacer(modifier = Modifier.weight(1f))
+            TextButton(onClick = onCancel) { Text(stringResource(R.string.action_cancel)) }
+            Button(onClick = onSave) { Text(stringResource(R.string.action_save)) }
         }
     }
 }
@@ -1004,6 +1036,76 @@ private val previewRound2 = RoundUI(
     roundResult = RoundResult.Loss,
     turnOrder = TurnOrder.Second
 )
+private val previewOpponents = listOf(
+    Opponent(id = 1, name = "Alex Rivera", nickname = "Rivs"),
+    Opponent(id = 2, name = "Sam Chen", nickname = "Sammy")
+)
+
+/** Lets a round editor preview respond to taps in interactive mode. */
+@Composable
+private fun PreviewRoundEditor(
+    isNewRound: Boolean,
+    initialDraft: RoundDraft,
+    showingDieRoll: Boolean = false
+) {
+    var draft by remember { mutableStateOf(initialDraft) }
+    LabophaseTheme {
+        WithSharedBorderAngle {
+            Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                RoundEditorContent(
+                    isNewRound = isNewRound,
+                    draft = draft,
+                    onDraftChange = { draft = it },
+                    leaders = previewLeaders,
+                    opponentList = previewOpponents,
+                    showingDieRoll = showingDieRoll,
+                    onSave = {},
+                    onCancel = {},
+                    onDelete = if (isNewRound) null else ({})
+                )
+            }
+        }
+    }
+}
+
+@Preview(name = "Round editor – new round", showBackground = true, heightDp = 800)
+@Composable
+private fun PreviewRoundEditorNew() {
+    PreviewRoundEditor(isNewRound = true, initialDraft = RoundDraft())
+}
+
+@Preview(name = "Round editor – edit round", showBackground = true, heightDp = 800)
+@Composable
+private fun PreviewRoundEditorEdit() {
+    PreviewRoundEditor(
+        isNewRound = false,
+        initialDraft = RoundDraft(
+            leader = Leader.RShanks,
+            roundResult = RoundResult.Loss,
+            turnOrder = TurnOrder.Second,
+            dieRoll = "Loss",
+            opponentId = 2,
+            notes = "Missed lethal on turn 6. Should have kept the counter."
+        ),
+        showingDieRoll = true
+    )
+}
+
+@Preview(
+    name = "Round editor – edit round, dark",
+    showBackground = true,
+    heightDp = 800,
+    uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL
+)
+@Composable
+private fun PreviewRoundEditorEditDark() {
+    PreviewRoundEditor(
+        isNewRound = false,
+        initialDraft = RoundDraft(leader = Leader.GZoro, notes = "Went first, top-decked the finisher."),
+        showingDieRoll = true
+    )
+}
+
 private val previewPunkRecord = "!PR add\n" +
         "UG Luffy\n" +
         "W G Bonney 2nd\n" +
