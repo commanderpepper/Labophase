@@ -97,6 +97,7 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -391,6 +392,9 @@ fun LeaderThumbnail(leader: Leader, size: Dp = 48.dp) {
     }
 }
 
+/** Tags the entry's header row, whose name can also appear in the top bar or the title field. */
+internal const val ENTRY_HEADER_TEST_TAG = "entry_header"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeaderPlayerInTournamentSelection(
@@ -422,7 +426,9 @@ fun LeaderPlayerInTournamentSelection(
     }
     Column(modifier = Modifier.fillMaxWidth()) {
         ListItem(
-            modifier = Modifier.clickable { isExpanded.value = !isExpanded.value },
+            modifier = Modifier
+                .testTag(ENTRY_HEADER_TEST_TAG)
+                .clickable { isExpanded.value = !isExpanded.value },
             leadingContent = {
                 Box(modifier = Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
                     LeaderThumbnail(leader = leaderSelected)

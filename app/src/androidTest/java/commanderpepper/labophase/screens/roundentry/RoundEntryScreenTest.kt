@@ -6,6 +6,9 @@ import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -142,36 +145,35 @@ class RoundEntryScreenTest {
 
     // region — Row label
 
+    // The name also appears in the top bar (leader) or the title field (title), so check the header row itself
+    private fun assertHeaderShows(vararg texts: String) {
+        val header = composeTestRule.onNodeWithTag(ENTRY_HEADER_TEST_TAG)
+        header.assertIsDisplayed()
+        texts.forEach { header.assert(hasText(it)) }
+    }
+
     @Test
     fun rowLabel_noTitle_showsLeaderNameInHeadline() {
         setIdleContent()
-        composeTestRule.onNodeWithText("UG Luffy").assertIsDisplayed()
-        composeTestRule.onNodeWithText("on Jul 30, 2026").assertIsDisplayed()
-        composeTestRule.onNodeWithText("W: 0 - L: 0").assertIsDisplayed()
+        assertHeaderShows("UG Luffy", "on Jul 30, 2026", "W: 0 - L: 0")
     }
 
     @Test
     fun rowLabel_withTitle_showsTitleInHeadline() {
         setIdleContent(title = "Seattle Regional")
-        composeTestRule.onNodeWithText("Seattle Regional").assertIsDisplayed()
-        composeTestRule.onNodeWithText("on Jul 30, 2026").assertIsDisplayed()
-        composeTestRule.onNodeWithText("W: 0 - L: 0").assertIsDisplayed()
+        assertHeaderShows("Seattle Regional", "on Jul 30, 2026", "W: 0 - L: 0")
     }
 
     @Test
     fun rowLabel_withLocation_showsLocationInOverline() {
         setIdleContent(locationId = Location.ChronosGamesAndGifts.id)
-        composeTestRule.onNodeWithText("UG Luffy").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Chronos on Jul 30, 2026").assertIsDisplayed()
-        composeTestRule.onNodeWithText("W: 0 - L: 0").assertIsDisplayed()
+        assertHeaderShows("UG Luffy", "Chronos on Jul 30, 2026", "W: 0 - L: 0")
     }
 
     @Test
     fun rowLabel_withTitleAndLocation_showsTitleInHeadlineAndLocationInOverline() {
         setIdleContent(title = "Seattle Regional", locationId = Location.ChronosGamesAndGifts.id)
-        composeTestRule.onNodeWithText("Seattle Regional").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Chronos on Jul 30, 2026").assertIsDisplayed()
-        composeTestRule.onNodeWithText("W: 0 - L: 0").assertIsDisplayed()
+        assertHeaderShows("Seattle Regional", "Chronos on Jul 30, 2026", "W: 0 - L: 0")
     }
 
     @Test
